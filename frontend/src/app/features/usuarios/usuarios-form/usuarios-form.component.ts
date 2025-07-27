@@ -504,33 +504,39 @@ export class UsuariosFormComponent implements OnInit {
       next: (response) => {
         const user = response.data;
         if (user) {
-          // Encontrar el departamento del usuario para obtener su dirección
-          const userDepartamento = this.departamentos.find(
-            (dept) => dept._id === user.departamentoId
-          );
-          let direccionId = '';
-
-          if (userDepartamento) {
-            direccionId =
-              typeof userDepartamento.direccionId === 'object'
-                ? userDepartamento.direccionId._id
-                : userDepartamento.direccionId;
-          }
+          const direccionId =
+            typeof user.direccionId === 'object' && user.direccionId !== null
+              ? user.direccionId._id
+              : user.direccionId || '';
+          const departamentoId =
+            typeof user.departamentoId === 'object' &&
+            user.departamentoId !== null
+              ? user.departamentoId._id
+              : user.departamentoId || '';
+          const rolId =
+            Array.isArray(user.roleIds) && user.roleIds.length > 0
+              ? typeof user.roleIds[0] === 'object' && user.roleIds[0] !== null
+                ? user.roleIds[0]._id
+                : user.roleIds[0]
+              : '';
 
           this.usuarioForm.patchValue({
-            nombres: user.name.split(' ')[0] || '',
-            apellidos: user.name.split(' ').slice(1).join(' ') || '',
-            email: user.email,
+            nombres: user.name || '',
+            apellidos: user.lastName || '',
+            cedula: user.cedula || '',
+            telefono: user.phone || '',
+            cargo: user.position || '',
+            email: user.email || '',
             direccion: direccionId,
-            departamento: user.departamentoId,
-            rol: user.roleIds[0] || '',
+            departamento: departamentoId,
+            rol: rolId,
             activo: user.active,
           });
 
           // Filtrar departamentos después de establecer la dirección
           this.onDireccionChange();
           // Volver a establecer el departamento después del filtrado
-          this.usuarioForm.get('departamento')?.setValue(user.departamentoId);
+          this.usuarioForm.get('departamento')?.setValue(departamentoId);
         }
       },
       error: (error) => {
@@ -543,22 +549,18 @@ export class UsuariosFormComponent implements OnInit {
     const direccionSeleccionada = this.usuarioForm.get('direccion')?.value;
 
     this.departamentosFiltrados = this.departamentos.filter((dept) => {
-      // Si direccionId es un objeto (viene populated del backend)
       if (typeof dept.direccionId === 'object' && dept.direccionId !== null) {
         return dept.direccionId._id === direccionSeleccionada;
       }
-      // Si direccionId es un string (ID simple)
       return dept.direccionId === direccionSeleccionada;
     });
 
-    // Limpiar el departamento seleccionado si cambia la dirección
     this.usuarioForm.get('departamento')?.setValue('');
   }
 
   isFieldInvalid(fieldName: string): boolean {
     const field = this.usuarioForm.get(fieldName);
 
-    // Validación especial para confirmPassword
     if (fieldName === 'confirmPassword') {
       const password = this.usuarioForm.get('password')?.value;
       const confirmPassword = this.usuarioForm.get('confirmPassword')?.value;
@@ -585,14 +587,28 @@ export class UsuariosFormComponent implements OnInit {
       this.loading = true;
       const formData = this.usuarioForm.value;
 
-      // Crear objeto para la API
-      const userData = {
-        name: `${formData.nombres} ${formData.apellidos}`,
+      // Crear objeto para la API con todos los campos requeridos
+      const userData: any = {
+        name: formData.nombres,
+        lastName: formData.apellidos,
+        cedula: formData.cedula,
+        phone: formData.telefono,
+        position: formData.cargo,
         email: formData.email,
-        password: formData.password,
+        direccionId: formData.direccion,
         departamentoId: formData.departamento,
         roleIds: [formData.rol],
       };
+
+      if (!this.isEditing && formData.password) {
+        userData.password = formData.password;
+      } else if (
+        this.isEditing &&
+        formData.password &&
+        formData.password.length >= 6
+      ) {
+        userData.password = formData.password;
+      }
 
       if (this.isEditing) {
         this.userService.update(this.usuarioId!, userData).subscribe({

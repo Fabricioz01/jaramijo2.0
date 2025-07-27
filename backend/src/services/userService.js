@@ -3,14 +3,21 @@ const User = require('../models/User');
 
 class UserService {
   async create(userData) {
-    // Hash de la contraseña
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(userData.password, saltRounds);
 
     const user = new User({
-      ...userData,
+      name: userData.name,
+      lastName: userData.lastName,
+      cedula: userData.cedula,
+      phone: userData.phone,
+      position: userData.position,
+      email: userData.email,
       passwordHash,
-      password: undefined, // Remover password del objeto
+      direccionId: userData.direccionId,
+      departamentoId: userData.departamentoId,
+      roleIds: userData.roleIds,
+      active: userData.active !== undefined ? userData.active : true,
     });
 
     return await user.save();
@@ -26,8 +33,9 @@ class UserService {
 
   async getById(id) {
     const user = await User.findById(id)
-      .populate('departamentoId', 'name')
-      .populate('roleIds', 'name')
+      .populate('direccionId')
+      .populate('departamentoId')
+      .populate('roleIds')
       .select('-passwordHash');
 
     if (!user) {
@@ -54,20 +62,31 @@ class UserService {
       delete updateData.password;
     }
 
-    const user = await User.findByIdAndUpdate(
+    // Incluir direccionId y demás campos relevantes en la actualización
+    const updated = await User.findByIdAndUpdate(
       id,
-      { ...updateData, updatedAt: Date.now() },
+      {
+        name: updateData.name,
+        lastName: updateData.lastName,
+        cedula: updateData.cedula,
+        phone: updateData.phone,
+        position: updateData.position,
+        email: updateData.email,
+        direccionId: updateData.direccionId,
+        departamentoId: updateData.departamentoId,
+        roleIds: updateData.roleIds,
+        active: updateData.active,
+        updatedAt: Date.now(),
+      },
       { new: true, runValidators: true }
-    )
-      .populate('departamentoId', 'name')
-      .populate('roleIds', 'name')
-      .select('-passwordHash');
+    );
 
-    if (!user) {
+    if (!updated) {
       throw new Error('Usuario no encontrado');
     }
 
-    return user;
+    // Devolver el usuario actualizado sin populate (documento plano)
+    return updated;
   }
 
   async delete(id) {

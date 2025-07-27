@@ -6,6 +6,26 @@ const userSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  lastName: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  cedula: {
+    type: String,
+    required: true,
+    trim: true,
+    unique: true,
+  },
+  phone: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  position: {
+    type: String,
+    trim: true,
+  },
   email: {
     type: String,
     required: true,
@@ -16,6 +36,11 @@ const userSchema = new mongoose.Schema({
   passwordHash: {
     type: String,
     required: true,
+  },
+  direccionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Direccion',
+    required: false,
   },
   departamentoId: {
     type: mongoose.Schema.Types.ObjectId,
