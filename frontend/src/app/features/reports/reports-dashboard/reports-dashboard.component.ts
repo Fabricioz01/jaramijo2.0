@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ReportsService, ReportData } from '../../../core/services';
 import { AlertService } from '../../../core/services';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-reports-dashboard',
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="container-fluid">
+    <div class="container-fluid" *ngIf="canAccessModule()">
       <div class="row">
         <div class="col-12">
           <div class="d-flex justify-content-between align-items-center mb-4">
@@ -21,6 +22,7 @@ import { AlertService } from '../../../core/services';
               <button
                 class="btn btn-outline-primary"
                 (click)="exportReport('excel')"
+                *ngIf="canExportReport()"
               >
                 <i class="bi bi-file-earmark-excel me-2"></i>
                 Exportar Excel
@@ -28,6 +30,7 @@ import { AlertService } from '../../../core/services';
               <button
                 class="btn btn-outline-danger"
                 (click)="exportReport('pdf')"
+                *ngIf="canExportReport()"
               >
                 <i class="bi bi-file-earmark-pdf me-2"></i>
                 Exportar PDF
@@ -447,7 +450,8 @@ export class ReportsDashboardComponent implements OnInit {
 
   constructor(
     private reportsService: ReportsService,
-    private alertService: AlertService
+    private alertService: AlertService,
+    public authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -490,10 +494,14 @@ export class ReportsDashboardComponent implements OnInit {
 
   cargarReportData(): void {
     this.cargando = true;
-    
-    const fechaInicio = this.filtros.fechaInicio ? new Date(this.filtros.fechaInicio) : undefined;
-    const fechaFin = this.filtros.fechaFin ? new Date(this.filtros.fechaFin) : undefined;
-    
+
+    const fechaInicio = this.filtros.fechaInicio
+      ? new Date(this.filtros.fechaInicio)
+      : undefined;
+    const fechaFin = this.filtros.fechaFin
+      ? new Date(this.filtros.fechaFin)
+      : undefined;
+
     this.reportsService.getGeneralReport(fechaInicio, fechaFin).subscribe({
       next: (data) => {
         this.reportData = data;
@@ -507,7 +515,7 @@ export class ReportsDashboardComponent implements OnInit {
         this.reportData = demoData;
         this.cargando = false;
         this.alertService.warning('Usando datos de demostración');
-      }
+      },
     });
   }
 
@@ -534,7 +542,7 @@ export class ReportsDashboardComponent implements OnInit {
       error: (error) => {
         console.error('Error al exportar:', error);
         this.alertService.error('Error al exportar el reporte');
-      }
+      },
     });
   }
 
@@ -588,5 +596,12 @@ export class ReportsDashboardComponent implements OnInit {
 
   getTareasPorDepartamento(): any[] {
     return this.reportData?.tareas?.porDepartamento || [];
+  }
+
+  canAccessModule(): boolean {
+    return this.authService.canAccessModule('reportes');
+  }
+  canExportReport(): boolean {
+    return this.authService.canAccessAction('reportes', 'export');
   }
 }

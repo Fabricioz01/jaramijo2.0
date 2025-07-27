@@ -10,6 +10,7 @@ import { Router } from '@angular/router';
 import { TaskService } from '../../../core/services/task.service';
 import { AlertService } from '../../../core/services/alert.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
+import { AuthService } from '../../../core/services/auth.service';
 
 interface Estadisticas {
   total: number;
@@ -24,7 +25,7 @@ interface Estadisticas {
   imports: [CommonModule, ReactiveFormsModule, FormsModule, HeaderComponent],
   template: `
     <app-header></app-header>
-    <div class="container-fluid py-4">
+    <div class="container-fluid py-4" *ngIf="canAccessModule()">
       <!-- Header -->
       <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -36,6 +37,13 @@ interface Estadisticas {
             <i class="bi bi-arrow-left me-2"></i>Volver
           </button>
           <button class="btn btn-primary" (click)="navigateToForm()">
+            <i class="bi bi-plus-lg me-2"></i>Nueva Tarea
+          </button>
+          <button
+            class="btn btn-primary"
+            (click)="navigateToForm()"
+            *ngIf="canCreateTarea()"
+          >
             <i class="bi bi-plus-lg me-2"></i>Nueva Tarea
           </button>
         </div>
@@ -185,6 +193,7 @@ interface Estadisticas {
                               class="dropdown-item"
                               href="#"
                               (click)="editarTarea(tarea._id)"
+                              *ngIf="canEditTarea()"
                             >
                               <i class="bi bi-pencil me-2"></i>Editar
                             </a>
@@ -195,6 +204,7 @@ interface Estadisticas {
                               class="dropdown-item text-danger"
                               href="#"
                               (click)="eliminarTarea(tarea._id)"
+                              *ngIf="canDeleteTarea()"
                             >
                               <i class="bi bi-trash me-2"></i>Eliminar
                             </a>
@@ -296,13 +306,27 @@ export class TareasListComponent implements OnInit {
     private fb: FormBuilder,
     private router: Router,
     private taskService: TaskService,
-    private alertService: AlertService
+    private alertService: AlertService,
+    public authService: AuthService
   ) {
     this.filterForm = this.fb.group({
       estado: [''],
       departamento: [''],
       buscar: [''],
     });
+  }
+
+  canAccessModule(): boolean {
+    return this.authService.canAccessModule('tareas');
+  }
+  canCreateTarea(): boolean {
+    return this.authService.canAccessAction('tareas', 'create');
+  }
+  canEditTarea(): boolean {
+    return this.authService.canAccessAction('tareas', 'update');
+  }
+  canDeleteTarea(): boolean {
+    return this.authService.canAccessAction('tareas', 'delete');
   }
 
   ngOnInit(): void {

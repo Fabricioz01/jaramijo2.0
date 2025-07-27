@@ -5,6 +5,7 @@ import { FileService, FileUpload } from '../../../core/services/file.service';
 import { AlertService } from '../../../core/services/alert.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FileModel } from '../../../core/models/file.model';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-files-list',
@@ -12,7 +13,7 @@ import { FileModel } from '../../../core/models/file.model';
   imports: [CommonModule, FormsModule, HeaderComponent],
   template: `
     <app-header></app-header>
-    <div class="container-fluid py-4">
+    <div class="container-fluid py-4" *ngIf="canAccessModule()">
       <div class="row">
         <div class="col-12">
           <div class="d-flex justify-content-between align-items-center mb-4">
@@ -24,6 +25,7 @@ import { FileModel } from '../../../core/models/file.model';
               class="btn btn-primary"
               (click)="openUploadModal()"
               type="button"
+              *ngIf="canCreateFile()"
             >
               <i class="bi bi-cloud-upload me-2"></i>
               Subir Archivos
@@ -175,6 +177,7 @@ import { FileModel } from '../../../core/models/file.model';
                             class="btn btn-outline-danger"
                             (click)="eliminarArchivo(archivo)"
                             title="Eliminar"
+                            *ngIf="canDeleteFile()"
                           >
                             <i class="bi bi-trash"></i>
                           </button>
@@ -225,6 +228,7 @@ import { FileModel } from '../../../core/models/file.model';
                         <button
                           class="btn btn-outline-danger"
                           (click)="eliminarArchivo(archivo)"
+                          *ngIf="canDeleteFile()"
                         >
                           <i class="bi bi-trash"></i>
                         </button>
@@ -418,7 +422,8 @@ export class FilesListComponent implements OnInit {
 
   constructor(
     private fileService: FileService,
-    private alertService: AlertService
+    private alertService: AlertService,
+    public authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -673,5 +678,15 @@ export class FilesListComponent implements OnInit {
         createdAt: new Date('2024-01-10'),
       },
     ];
+  }
+
+  canAccessModule(): boolean {
+    return this.authService.canAccessModule('archivos');
+  }
+  canCreateFile(): boolean {
+    return this.authService.canAccessAction('archivos', 'create');
+  }
+  canDeleteFile(): boolean {
+    return this.authService.canAccessAction('archivos', 'delete');
   }
 }

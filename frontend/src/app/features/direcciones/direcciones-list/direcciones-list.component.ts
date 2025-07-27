@@ -10,6 +10,7 @@ import { Router } from '@angular/router';
 import { DireccionService } from '../../../core/services/direccion.service';
 import { AlertService } from '../../../core/services/alert.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-direcciones-list',
@@ -17,7 +18,7 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
   imports: [CommonModule, ReactiveFormsModule, FormsModule, HeaderComponent],
   template: `
     <app-header></app-header>
-    <div class="container-fluid py-4">
+    <div class="container-fluid py-4" *ngIf="canAccessModule()">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h1 class="h3 mb-0">Direcciones</h1>
@@ -27,7 +28,11 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
           <button class="btn btn-outline-secondary me-2" (click)="goBack()">
             <i class="bi bi-arrow-left me-2"></i>Volver
           </button>
-          <button class="btn btn-primary" (click)="navigateToForm()">
+          <button
+            class="btn btn-primary"
+            (click)="navigateToForm()"
+            *ngIf="canCreateDireccion()"
+          >
             <i class="bi bi-plus-circle me-2"></i>Nueva Dirección
           </button>
         </div>
@@ -100,6 +105,7 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
                             class="dropdown-item"
                             href="#"
                             (click)="editarDireccion(direccion)"
+                            *ngIf="canEditDireccion()"
                           >
                             <i class="bi bi-pencil me-2"></i>Editar
                           </a>
@@ -109,6 +115,7 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
                             class="dropdown-item text-danger"
                             href="#"
                             (click)="eliminarDireccion(direccion._id)"
+                            *ngIf="canDeleteDireccion()"
                           >
                             <i class="bi bi-trash me-2"></i>Eliminar
                           </a>
@@ -204,7 +211,8 @@ export class DireccionesListComponent implements OnInit {
     private router: Router,
     private fb: FormBuilder,
     private direccionService: DireccionService,
-    private alertService: AlertService
+    private alertService: AlertService,
+    public authService: AuthService
   ) {
     this.filterForm = this.fb.group({
       buscar: [''],
@@ -279,5 +287,18 @@ export class DireccionesListComponent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/dashboard']);
+  }
+
+  canAccessModule(): boolean {
+    return this.authService.canAccessModule('direcciones');
+  }
+  canCreateDireccion(): boolean {
+    return this.authService.canAccessAction('direcciones', 'create');
+  }
+  canEditDireccion(): boolean {
+    return this.authService.canAccessAction('direcciones', 'edit');
+  }
+  canDeleteDireccion(): boolean {
+    return this.authService.canAccessAction('direcciones', 'delete');
   }
 }

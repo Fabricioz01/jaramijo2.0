@@ -11,6 +11,7 @@ import { DepartamentoService } from '../../../core/services/departamento.service
 import { DireccionService } from '../../../core/services/direccion.service';
 import { AlertService } from '../../../core/services/alert.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-departamentos-list',
@@ -18,7 +19,7 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
   imports: [CommonModule, ReactiveFormsModule, FormsModule, HeaderComponent],
   template: `
     <app-header></app-header>
-    <div class="container-fluid py-4">
+    <div class="container-fluid py-4" *ngIf="canAccessModule()">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h1 class="h3 mb-0">Departamentos</h1>
@@ -32,6 +33,7 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
             type="button"
             class="btn btn-primary"
             (click)="navigateToForm()"
+            *ngIf="canCreateDepartamento()"
           >
             <i class="bi bi-plus-lg me-2"></i>Nuevo Departamento
           </button>
@@ -106,6 +108,7 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
                             class="dropdown-item"
                             href="#"
                             (click)="editarDepartamento(depto)"
+                            *ngIf="canEditDepartamento()"
                           >
                             <i class="bi bi-pencil me-2"></i>Editar
                           </a>
@@ -115,6 +118,7 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
                             class="dropdown-item text-danger"
                             href="#"
                             (click)="eliminarDepartamento(depto._id)"
+                            *ngIf="canDeleteDepartamento()"
                           >
                             <i class="bi bi-trash me-2"></i>Eliminar
                           </a>
@@ -177,7 +181,8 @@ export class DepartamentosListComponent implements OnInit {
     private router: Router,
     private departamentoService: DepartamentoService,
     private direccionService: DireccionService,
-    private alertService: AlertService
+    private alertService: AlertService,
+    public authService: AuthService
   ) {
     this.filterForm = this.fb.group({
       direccion: [''],
@@ -276,5 +281,18 @@ export class DepartamentosListComponent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/dashboard']);
+  }
+
+  canAccessModule(): boolean {
+    return this.authService.canAccessModule('departamentos');
+  }
+  canCreateDepartamento(): boolean {
+    return this.authService.canAccessAction('departamentos', 'create');
+  }
+  canEditDepartamento(): boolean {
+    return this.authService.canAccessAction('departamentos', 'edit');
+  }
+  canDeleteDepartamento(): boolean {
+    return this.authService.canAccessAction('departamentos', 'delete');
   }
 }

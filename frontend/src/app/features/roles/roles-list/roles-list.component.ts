@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
 import { RoleService } from '../../../core/services/role.service';
 import { AlertService } from '../../../core/services/alert.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 
 @Component({
@@ -12,13 +13,17 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
   imports: [CommonModule, ReactiveFormsModule, HeaderComponent],
   template: `
     <app-header></app-header>
-    <div class="container-fluid py-4">
+    <div class="container-fluid py-4" *ngIf="canAccessModule()">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h1 class="h3 mb-0">Roles del Sistema</h1>
           <p class="text-muted">Gestión de roles y permisos</p>
         </div>
-        <button class="btn btn-primary" (click)="navigateToForm()">
+        <button
+          class="btn btn-primary"
+          (click)="navigateToForm()"
+          *ngIf="canCreateRole()"
+        >
           <i class="bi bi-shield-plus me-2"></i>Nuevo Rol
         </button>
       </div>
@@ -70,12 +75,20 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
                   </button>
                   <ul class="dropdown-menu">
                     <li>
-                      <a class="dropdown-item" (click)="editarRol(rol._id)">
+                      <a
+                        class="dropdown-item"
+                        (click)="editarRol(rol._id)"
+                        *ngIf="canEditRole()"
+                      >
                         <i class="bi bi-pencil me-2"></i>Editar</a
                       >
                     </li>
                     <li>
-                      <a class="dropdown-item" (click)="duplicarRol(rol._id)">
+                      <a
+                        class="dropdown-item"
+                        (click)="duplicarRol(rol._id)"
+                        *ngIf="canCreateRole()"
+                      >
                         <i class="bi bi-files me-2"></i>Duplicar</a
                       >
                     </li>
@@ -84,6 +97,7 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
                       <a
                         class="dropdown-item text-danger"
                         (click)="eliminarRol(rol._id)"
+                        *ngIf="canDeleteRole()"
                       >
                         <i class="bi bi-trash me-2"></i>Eliminar</a
                       >
@@ -134,12 +148,15 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
         <i class="bi bi-shield-exclamation display-1 text-muted"></i>
         <h4 class="mt-3">No hay roles</h4>
         <p class="text-muted">Comienza creando roles para el sistema</p>
-
         <div class="d-flex gap-2 justify-content-center mt-4">
           <button class="btn btn-outline-primary" (click)="goBack()">
             <i class="bi bi-arrow-left me-2"></i>Volver al Dashboard
           </button>
-          <button class="btn btn-primary" (click)="navigateToForm()">
+          <button
+            class="btn btn-primary"
+            (click)="navigateToForm()"
+            *ngIf="canCreateRole()"
+          >
             <i class="bi bi-shield-plus me-2"></i>Crear Rol
           </button>
         </div>
@@ -212,7 +229,8 @@ export class RolesListComponent implements OnInit {
     private fb: FormBuilder,
     private router: Router,
     private roleService: RoleService,
-    private alertService: AlertService
+    private alertService: AlertService,
+    public authService: AuthService
   ) {
     this.filterForm = this.fb.group({
       buscar: [''],
@@ -339,5 +357,18 @@ export class RolesListComponent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/dashboard']);
+  }
+
+  canAccessModule(): boolean {
+    return this.authService.canAccessModule('roles');
+  }
+  canCreateRole(): boolean {
+    return this.authService.canAccessAction('roles', 'create');
+  }
+  canEditRole(): boolean {
+    return this.authService.canAccessAction('roles', 'update');
+  }
+  canDeleteRole(): boolean {
+    return this.authService.canAccessAction('roles', 'delete');
   }
 }
