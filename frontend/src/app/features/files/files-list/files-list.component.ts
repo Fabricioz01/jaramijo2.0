@@ -1,19 +1,18 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import {
-  FileService,
-  FileUpload,
-  FileInfo,
-} from '../../../core/services/file.service';
+import { FileService, FileUpload } from '../../../core/services/file.service';
 import { AlertService } from '../../../core/services/alert.service';
+import { HeaderComponent } from '../../../shared/components/header/header.component';
+import { FileModel } from '../../../core/models/file.model';
 
 @Component({
   selector: 'app-files-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HeaderComponent],
   template: `
-    <div class="container-fluid">
+    <app-header></app-header>
+    <div class="container-fluid py-4">
       <div class="row">
         <div class="col-12">
           <div class="d-flex justify-content-between align-items-center mb-4">
@@ -24,8 +23,7 @@ import { AlertService } from '../../../core/services/alert.service';
             <button
               class="btn btn-primary"
               (click)="openUploadModal()"
-              data-bs-toggle="modal"
-              data-bs-target="#uploadModal"
+              type="button"
             >
               <i class="bi bi-cloud-upload me-2"></i>
               Subir Archivos
@@ -144,30 +142,26 @@ import { AlertService } from '../../../core/services/alert.service';
                       <td>
                         <div class="d-flex align-items-center">
                           <i
-                            [class]="getFileIcon(archivo.mimetype)"
+                            [class]="getFileIcon(archivo.mimeType)"
                             class="me-2"
                           ></i>
                           <div>
-                            <div class="fw-medium">{{ archivo.nombre }}</div>
-                            <small
-                              class="text-muted"
-                              *ngIf="archivo.descripcion"
-                            >
-                              {{ archivo.descripcion }}
-                            </small>
+                            <div class="fw-medium">
+                              {{ archivo.originalName }}
+                            </div>
                           </div>
                         </div>
                       </td>
                       <td>
                         <span class="badge bg-light text-dark">
-                          {{ getFileType(archivo.mimetype) }}
+                          {{ getFileType(archivo.mimeType) }}
                         </span>
                       </td>
-                      <td>{{ formatFileSize(archivo.tamanio) }}</td>
+                      <td>{{ formatFileSize(archivo.size) }}</td>
                       <td>
-                        {{ archivo.fechaSubida | date : 'dd/MM/yyyy HH:mm' }}
+                        {{ archivo.createdAt | date : 'dd/MM/yyyy HH:mm' }}
                       </td>
-                      <td>{{ archivo.subidoPor }}</td>
+                      <td>Usuario</td>
                       <td>
                         <div class="btn-group btn-group-sm">
                           <button
@@ -207,18 +201,18 @@ import { AlertService } from '../../../core/services/alert.service';
                   <div class="card h-100">
                     <div class="card-body text-center">
                       <i
-                        [class]="getFileIcon(archivo.mimetype)"
+                        [class]="getFileIcon(archivo.mimeType)"
                         style="font-size: 3rem;"
                       ></i>
                       <h6
                         class="card-title mt-2 text-truncate"
-                        [title]="archivo.nombre"
+                        [title]="archivo.originalName"
                       >
-                        {{ archivo.nombre }}
+                        {{ archivo.originalName }}
                       </h6>
                       <p class="card-text">
                         <small class="text-muted">
-                          {{ formatFileSize(archivo.tamanio) }}
+                          {{ formatFileSize(archivo.size) }}
                         </small>
                       </p>
                       <div class="btn-group btn-group-sm">
@@ -257,7 +251,7 @@ import { AlertService } from '../../../core/services/alert.service';
             <button
               type="button"
               class="btn-close"
-              data-bs-dismiss="modal"
+              (click)="closeUploadModal()"
             ></button>
           </div>
           <div class="modal-body">
@@ -272,14 +266,14 @@ import { AlertService } from '../../../core/services/alert.service';
               <i class="bi bi-cloud-upload display-1 text-muted"></i>
               <h5>Arrastra archivos aquí o haz clic para seleccionar</h5>
               <p class="text-muted">
-                Archivos permitidos: PDF, Excel, Word, Imágenes<br />
+                Archivos permitidos: PDF y Excel únicamente<br />
                 Tamaño máximo: 10MB por archivo
               </p>
               <input
                 type="file"
                 #fileInput
                 multiple
-                accept=".pdf,.xlsx,.xls,.docx,.doc,.jpg,.jpeg,.png,.gif"
+                accept=".pdf,.xlsx,.xls"
                 class="d-none"
                 (change)="onFileSelected($event)"
               />
@@ -360,7 +354,7 @@ import { AlertService } from '../../../core/services/alert.service';
             <button
               type="button"
               class="btn btn-secondary"
-              data-bs-dismiss="modal"
+              (click)="closeUploadModal()"
             >
               Cancelar
             </button>
@@ -408,8 +402,8 @@ import { AlertService } from '../../../core/services/alert.service';
   ],
 })
 export class FilesListComponent implements OnInit {
-  archivos: FileInfo[] = [];
-  archivosFiltrados: FileInfo[] = [];
+  archivos: FileModel[] = [];
+  archivosFiltrados: FileModel[] = [];
   archivosSubida: FileUpload[] = [];
   cargando = false;
   subiendoArchivos = false;
@@ -454,19 +448,19 @@ export class FilesListComponent implements OnInit {
     this.archivosFiltrados = this.archivos.filter((archivo) => {
       const cumpleTermino =
         !this.filtros.termino ||
-        archivo.nombre
+        archivo.originalName
           .toLowerCase()
           .includes(this.filtros.termino.toLowerCase());
 
       const cumpleTipo =
         !this.filtros.tipo ||
-        this.getFileType(archivo.mimetype)
+        this.getFileType(archivo.mimeType)
           .toLowerCase()
           .includes(this.filtros.tipo);
 
       const cumplePeriodo =
         !this.filtros.periodo ||
-        this.verificarPeriodo(archivo.fechaSubida, this.filtros.periodo);
+        this.verificarPeriodo(archivo.createdAt, this.filtros.periodo);
 
       return cumpleTermino && cumpleTipo && cumplePeriodo;
     });
@@ -532,57 +526,41 @@ export class FilesListComponent implements OnInit {
   }
 
   subirArchivos(): void {
-    console.log(
-      '🔍 FilesListComponent - Iniciando subida de archivos:',
-      this.archivosSubida.length
-    );
-
-    if (this.archivosSubida.length === 0) {
-      console.warn('⚠️ FilesListComponent - No hay archivos para subir');
-      return;
-    }
-
     this.subiendoArchivos = true;
+    const files = this.archivosSubida.map((u) => u.file);
 
-    this.archivosSubida.forEach((upload, index) => {
-      upload.uploading = true;
-
-      this.fileService.uploadFile(upload.file).subscribe({
-        next: (result) => {
-          upload.progress = result.progress;
-          if (result.result) {
-            upload.result = result.result;
-            upload.uploading = false;
-          }
-        },
-        error: (error) => {
-          upload.error = error.message;
-          upload.uploading = false;
-        },
-      });
+    this.fileService.uploadMultipleFiles(files).subscribe({
+      next: (uploads) => {
+        this.archivosSubida = uploads;
+      },
+      complete: () => {
+        this.subiendoArchivos = false;
+        this.alertService.success('Archivos subidos correctamente');
+        this.closeUploadModal();
+        this.cargarArchivos();
+      },
+      error: (err) => {
+        this.subiendoArchivos = false;
+        this.alertService.error('Error al subir archivos');
+      },
     });
-
-    // Simular finalización
-    setTimeout(() => {
-      this.subiendoArchivos = false;
-      this.alertService.success('Archivos subidos exitosamente');
-      this.cargarArchivos();
-    }, 3000);
   }
 
-  descargarArchivo(archivo: FileInfo): void {
-    this.fileService.downloadFile(archivo.id, archivo.nombre);
+  descargarArchivo(archivo: FileModel): void {
+    console.log('Descargando archivo:', archivo);
+    this.fileService.downloadFile(archivo._id, archivo.originalName);
     this.alertService.success('Descargando archivo...');
   }
 
-  eliminarArchivo(archivo: FileInfo): void {
+  eliminarArchivo(archivo: FileModel): void {
     if (confirm('¿Estás seguro de que deseas eliminar este archivo?')) {
-      this.fileService.delete(archivo.id).subscribe({
+      this.fileService.delete(archivo._id).subscribe({
         next: () => {
           this.alertService.success('Archivo eliminado exitosamente');
           this.cargarArchivos();
         },
         error: (error) => {
+          console.error('Error al eliminar archivo:', error);
           this.alertService.error('Error al eliminar archivo');
         },
       });
@@ -592,6 +570,43 @@ export class FilesListComponent implements OnInit {
   openUploadModal(): void {
     console.log('🔍 FilesListComponent - Abriendo modal de subida de archivos');
     this.archivosSubida = [];
+
+    // Manually open the modal using DOM manipulation
+    const modalElement = document.getElementById('uploadModal');
+    if (modalElement) {
+      modalElement.style.display = 'block';
+      modalElement.classList.add('show');
+      modalElement.setAttribute('aria-modal', 'true');
+      modalElement.removeAttribute('aria-hidden');
+
+      // Add backdrop
+      const backdrop = document.createElement('div');
+      backdrop.className = 'modal-backdrop fade show';
+      backdrop.id = 'modal-backdrop';
+      document.body.appendChild(backdrop);
+
+      // Prevent body scroll
+      document.body.classList.add('modal-open');
+    }
+  }
+
+  closeUploadModal(): void {
+    const modalElement = document.getElementById('uploadModal');
+    if (modalElement) {
+      modalElement.style.display = 'none';
+      modalElement.classList.remove('show');
+      modalElement.setAttribute('aria-hidden', 'true');
+      modalElement.removeAttribute('aria-modal');
+
+      // Remove backdrop
+      const backdrop = document.getElementById('modal-backdrop');
+      if (backdrop) {
+        backdrop.remove();
+      }
+
+      // Restore body scroll
+      document.body.classList.remove('modal-open');
+    }
   }
 
   getFileIcon(mimetype: string): string {
@@ -636,42 +651,26 @@ export class FilesListComponent implements OnInit {
     }
   }
 
-  private generarArchivosDemo(): FileInfo[] {
+  private generarArchivosDemo(): FileModel[] {
     return [
       {
-        id: '1',
-        nombre: 'Informe_Municipal_2024.pdf',
-        nombreOriginal: 'Informe Municipal 2024.pdf',
-        mimetype: 'application/pdf',
-        tamanio: 2548736,
-        ruta: '/uploads/informe_2024.pdf',
-        fechaSubida: new Date('2024-01-15'),
-        subidoPor: 'Juan Pérez',
-        descripcion: 'Informe anual del municipio',
+        _id: '1',
+        filename: 'informe_municipal_2024.pdf',
+        originalName: 'Informe Municipal 2024.pdf',
+        mimeType: 'application/pdf',
+        size: 2548736,
+        uploaderId: 'user1',
+        createdAt: new Date('2024-01-15'),
       },
       {
-        id: '2',
-        nombre: 'Presupuesto_2024.xlsx',
-        nombreOriginal: 'Presupuesto 2024.xlsx',
-        mimetype:
+        _id: '2',
+        filename: 'presupuesto_2024.xlsx',
+        originalName: 'Presupuesto 2024.xlsx',
+        mimeType:
           'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        tamanio: 1024000,
-        ruta: '/uploads/presupuesto_2024.xlsx',
-        fechaSubida: new Date('2024-01-10'),
-        subidoPor: 'María González',
-        descripcion: 'Presupuesto municipal anual',
-      },
-      {
-        id: '3',
-        nombre: 'Acta_Reunion_Enero.docx',
-        nombreOriginal: 'Acta Reunión Enero.docx',
-        mimetype:
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        tamanio: 756000,
-        ruta: '/uploads/acta_enero.docx',
-        fechaSubida: new Date('2024-01-08'),
-        subidoPor: 'Carlos López',
-        descripcion: 'Acta de reunión mensual',
+        size: 1024000,
+        uploaderId: 'user2',
+        createdAt: new Date('2024-01-10'),
       },
     ];
   }

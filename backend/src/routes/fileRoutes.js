@@ -7,6 +7,11 @@ const router = express.Router();
 // Aplicar middleware de autenticación a todas las rutas
 router.use(authJwt);
 
+const upload = require('../middlewares/multerUpload');
+
+// POST /api/v1/files - Subir archivo PDF o Excel
+router.post('/', upload.single('file'), fileController.upload);
+
 // GET /api/v1/files - Obtener todos los archivos
 router.get('/', fileController.getAll);
 

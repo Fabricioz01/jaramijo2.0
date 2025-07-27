@@ -1,6 +1,32 @@
 const fileService = require('../services/fileService');
 
 class FileController {
+  async upload(req, res, next) {
+    try {
+      if (!req.file) {
+        return res
+          .status(400)
+          .json({ success: false, message: 'No se envió ningún archivo.' });
+      }
+      const fileData = {
+        filename: req.file.filename,
+        originalName: req.file.originalname,
+        mimeType: req.file.mimetype,
+        size: req.file.size,
+        uploaderId: req.user._id,
+        createdAt: new Date(),
+      };
+      const file = await require('../services/fileService').create(fileData);
+      res.status(201).json({
+        success: true,
+        message: 'Archivo subido exitosamente',
+        data: file,
+      });
+    } catch (error) {
+      error.status = 500;
+      next(error);
+    }
+  }
   async getAll(req, res, next) {
     try {
       const files = await fileService.getAll();

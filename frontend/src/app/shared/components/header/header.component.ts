@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -22,13 +22,16 @@ import { AuthService } from '../../../core/services/auth.service';
         <button
           class="navbar-toggler"
           type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
+          (click)="toggleMobileMenu()"
         >
           <span class="navbar-toggler-icon"></span>
         </button>
 
-        <div class="collapse navbar-collapse" id="navbarNav">
+        <div
+          class="collapse navbar-collapse"
+          [class.show]="showMobileMenu"
+          id="navbarNav"
+        >
           <ul class="navbar-nav me-auto">
             <li class="nav-item">
               <a
@@ -42,7 +45,7 @@ import { AuthService } from '../../../core/services/auth.service';
 
             <!-- Organización -->
             <li
-              class="nav-item dropdown"
+              class="nav-item dropdown position-relative"
               *ngIf="
                 canAccessModule('direcciones') ||
                 canAccessModule('departamentos')
@@ -52,12 +55,15 @@ import { AuthService } from '../../../core/services/auth.service';
                 class="nav-link dropdown-toggle"
                 href="#"
                 role="button"
-                data-bs-toggle="dropdown"
+                (click)="toggleDropdown('organizacion', $event)"
                 style="cursor: pointer;"
               >
                 <i class="bi bi-people me-1"></i>Organización
               </a>
-              <ul class="dropdown-menu">
+              <ul
+                class="dropdown-menu"
+                [class.show]="activeDropdown === 'organizacion'"
+              >
                 <li *ngIf="canAccessModule('direcciones')">
                   <a
                     class="dropdown-item"
@@ -81,19 +87,22 @@ import { AuthService } from '../../../core/services/auth.service';
 
             <!-- Usuarios y Permisos -->
             <li
-              class="nav-item dropdown"
+              class="nav-item dropdown position-relative"
               *ngIf="canAccessModule('usuarios') || canAccessModule('roles')"
             >
               <a
                 class="nav-link dropdown-toggle"
                 href="#"
                 role="button"
-                data-bs-toggle="dropdown"
+                (click)="toggleDropdown('usuarios', $event)"
                 style="cursor: pointer;"
               >
                 <i class="bi bi-person-gear me-1"></i>Usuarios y Permisos
               </a>
-              <ul class="dropdown-menu">
+              <ul
+                class="dropdown-menu"
+                [class.show]="activeDropdown === 'usuarios'"
+              >
                 <li *ngIf="canAccessModule('usuarios')">
                   <a
                     class="dropdown-item"
@@ -151,14 +160,13 @@ import { AuthService } from '../../../core/services/auth.service';
 
           <div class="navbar-nav">
             <!-- Notificaciones -->
-            <div class="nav-item dropdown">
+            <div class="nav-item dropdown position-relative">
               <a
                 class="nav-link position-relative"
                 href="#"
                 role="button"
-                data-bs-toggle="dropdown"
+                (click)="toggleDropdown('notificaciones', $event)"
                 style="cursor: pointer;"
-                (click)="showNotifications()"
               >
                 <i class="bi bi-bell"></i>
                 <span
@@ -168,7 +176,11 @@ import { AuthService } from '../../../core/services/auth.service';
                   <span class="visually-hidden">notificaciones no leídas</span>
                 </span>
               </a>
-              <ul class="dropdown-menu dropdown-menu-end" style="width: 300px;">
+              <ul
+                class="dropdown-menu dropdown-menu-end"
+                [class.show]="activeDropdown === 'notificaciones'"
+                style="width: 300px;"
+              >
                 <li>
                   <h6 class="dropdown-header">Notificaciones</h6>
                 </li>
@@ -222,18 +234,21 @@ import { AuthService } from '../../../core/services/auth.service';
             </div>
 
             <!-- Usuario -->
-            <div class="nav-item dropdown">
+            <div class="nav-item dropdown position-relative">
               <a
                 class="nav-link dropdown-toggle d-flex align-items-center"
                 href="#"
                 role="button"
-                data-bs-toggle="dropdown"
+                (click)="toggleDropdown('usuario', $event)"
                 style="cursor: pointer;"
               >
                 <i class="bi bi-person-circle me-2"></i>
                 <span>{{ user?.name || 'Usuario' }}</span>
               </a>
-              <ul class="dropdown-menu dropdown-menu-end">
+              <ul
+                class="dropdown-menu dropdown-menu-end"
+                [class.show]="activeDropdown === 'usuario'"
+              >
                 <li>
                   <h6 class="dropdown-header">{{ user?.email }}</h6>
                 </li>
@@ -278,10 +293,19 @@ import { AuthService } from '../../../core/services/auth.service';
 export class HeaderComponent implements OnInit {
   user: any = null;
   userPermissions: string[] = [];
+  showMobileMenu = false;
+  activeDropdown: string | null = null;
 
   constructor(private authService: AuthService, private router: Router) {}
 
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    // Cerrar dropdowns cuando se hace clic fuera de ellos
+    this.activeDropdown = null;
+  }
+
   ngOnInit(): void {
+    console.log('🔧 HeaderComponent - Inicializando componente');
     this.authService.currentUser$.subscribe((user) => {
       console.log('🔍 HeaderComponent - Usuario recibido:', user);
       this.user = user;
@@ -296,7 +320,6 @@ export class HeaderComponent implements OnInit {
     );
 
     if (this.user?.roles) {
-      // La estructura del backend usa 'roles' no 'roleIds'
       const permissions = this.user.roles.flatMap(
         (role: any) => role.permissionIds?.map((permId: string) => permId) || []
       );
@@ -319,7 +342,6 @@ export class HeaderComponent implements OnInit {
   canAccessModule(module: string): boolean {
     console.log(`🔍 HeaderComponent - Verificando acceso a módulo: ${module}`);
 
-    // Si es admin, puede acceder a todo
     if (this.isAdmin()) {
       console.log(
         '✅ HeaderComponent - Usuario es administrador, acceso permitido'
@@ -327,12 +349,8 @@ export class HeaderComponent implements OnInit {
       return true;
     }
 
-    // Por ahora, permitir acceso a todos los módulos hasta configurar permisos específicos
     console.log('✅ HeaderComponent - Acceso permitido (temporal)');
     return true;
-
-    // TODO: Implementar verificación específica de permisos cuando esté configurado
-    // return this.userPermissions.includes(module);
   }
 
   private isAdmin(): boolean {
@@ -345,35 +363,52 @@ export class HeaderComponent implements OnInit {
     return isAdmin;
   }
 
-  navigateTo(route: string): void {
-    console.log('🔍 HeaderComponent - Navegando a:', route);
-    // Agregar /dashboard como prefijo para las rutas que lo necesitan
-    if (route.startsWith('/usuarios') || route.startsWith('/roles')) {
-      this.router.navigate([`/dashboard${route}`]);
+  toggleMobileMenu(): void {
+    this.showMobileMenu = !this.showMobileMenu;
+    console.log(
+      '📱 HeaderComponent - Mobile menu toggled:',
+      this.showMobileMenu
+    );
+  }
+
+  toggleDropdown(dropdownName: string, event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (this.activeDropdown === dropdownName) {
+      this.activeDropdown = null;
+      console.log(`🔽 HeaderComponent - Cerrando dropdown: ${dropdownName}`);
     } else {
-      this.router.navigate([route]);
+      this.activeDropdown = dropdownName;
+      console.log(`🔽 HeaderComponent - Abriendo dropdown: ${dropdownName}`);
     }
   }
 
+  navigateTo(route: string): void {
+    console.log('🔍 HeaderComponent - Navegando a:', route);
+    this.activeDropdown = null; // Cerrar dropdown después de navegar
+    this.router.navigate([route]);
+  }
+
+  navigateToProfile(): void {
+    console.log('👤 HeaderComponent - Navegando a perfil');
+    this.activeDropdown = null;
+    this.router.navigate(['/usuarios/perfil']);
+  }
+
+  navigateToSettings(): void {
+    console.log('⚙️ HeaderComponent - Navegando a configuración');
+    this.activeDropdown = null;
+    this.router.navigate(['/configuracion']);
+  }
+
   logout(): void {
+    console.log('🚪 HeaderComponent - Cerrando sesión');
+    this.activeDropdown = null;
     this.authService.logout().subscribe({
       complete: () => {
         this.router.navigate(['/login']);
       },
     });
-  }
-
-  navigateToProfile(): void {
-    this.router.navigate(['/dashboard/usuarios/perfil']);
-  }
-
-  navigateToSettings(): void {
-    this.router.navigate(['/dashboard/configuracion']);
-  }
-
-  showNotifications(): void {
-    // Implementar lógica para mostrar notificaciones
-    console.log('Mostrando notificaciones...');
-    // Aquí puedes agregar la lógica para cargar y mostrar notificaciones
   }
 }

@@ -2,22 +2,16 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
-
-interface Rol {
-  _id: string;
-  nombre: string;
-  descripcion: string;
-  permisos: string[];
-  activo: boolean;
-  usuariosCount: number;
-  fechaCreacion: Date;
-}
+import { RoleService } from '../../../core/services/role.service';
+import { AlertService } from '../../../core/services/alert.service';
+import { HeaderComponent } from '../../../shared/components/header/header.component';
 
 @Component({
   selector: 'app-roles-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, HeaderComponent],
   template: `
+    <app-header></app-header>
     <div class="container-fluid py-4">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -33,15 +27,7 @@ interface Rol {
       <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
           <form [formGroup]="filterForm" class="row g-3">
-            <div class="col-md-6">
-              <label for="estado" class="form-label">Estado</label>
-              <select class="form-select" id="estado" formControlName="estado">
-                <option value="">Todos los estados</option>
-                <option value="activo">Activos</option>
-                <option value="inactivo">Inactivos</option>
-              </select>
-            </div>
-            <div class="col-md-6">
+            <div class="col-md-12">
               <label for="buscar" class="form-label">Buscar</label>
               <input
                 type="text"
@@ -66,18 +52,13 @@ interface Rol {
                 <div class="d-flex align-items-center">
                   <div
                     class="role-icon me-3"
-                    [class]="getRoleIconClass(rol.nombre)"
+                    [class]="getRoleIconClass(rol.name)"
                   >
-                    <i [class]="getRoleIcon(rol.nombre)"></i>
+                    <i [class]="getRoleIcon(rol.name)"></i>
                   </div>
                   <div>
-                    <h6 class="card-title mb-0 fw-bold">{{ rol.nombre }}</h6>
-                    <span
-                      class="badge"
-                      [class]="rol.activo ? 'bg-success' : 'bg-secondary'"
-                    >
-                      {{ rol.activo ? 'Activo' : 'Inactivo' }}
-                    </span>
+                    <h6 class="card-title mb-0 fw-bold">{{ rol.name }}</h6>
+                    <span class="badge bg-success"> Activo </span>
                   </div>
                 </div>
                 <div class="dropdown">
@@ -111,44 +92,37 @@ interface Rol {
                 </div>
               </div>
 
-              <p class="card-text text-muted mb-3">{{ rol.descripcion }}</p>
-
               <div class="mb-3">
                 <div
                   class="d-flex justify-content-between align-items-center mb-2"
                 >
                   <small class="text-muted fw-semibold">PERMISOS</small>
                   <span class="badge bg-light text-dark">{{
-                    rol.permisos.length
+                    rol.permissionIds?.length || 0
                   }}</span>
                 </div>
                 <div class="permisos-preview">
                   <span
                     class="badge bg-primary me-1 mb-1"
-                    *ngFor="let permiso of rol.permisos.slice(0, 3)"
+                    *ngFor="
+                      let permiso of (rol.permissionIds || []).slice(0, 3)
+                    "
                   >
-                    {{ permiso }}
+                    {{ getPermissionDisplay(permiso) }}
                   </span>
                   <span
                     class="badge bg-secondary"
-                    *ngIf="rol.permisos.length > 3"
+                    *ngIf="(rol.permissionIds?.length || 0) > 3"
                   >
-                    +{{ rol.permisos.length - 3 }} más
+                    +{{ (rol.permissionIds?.length || 0) - 3 }} más
                   </span>
                 </div>
               </div>
 
               <div class="d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center">
-                  <i class="bi bi-people me-2 text-muted"></i>
-                  <span class="text-muted">
-                    {{ rol.usuariosCount }} usuario{{
-                      rol.usuariosCount !== 1 ? 's' : ''
-                    }}
-                  </span>
-                </div>
                 <small class="text-muted">
-                  {{ formatDate(rol.fechaCreacion) }}
+                  <i class="bi bi-calendar me-1"></i>
+                  {{ formatDate(rol.createdAt) }}
                 </small>
               </div>
             </div>
@@ -230,74 +204,43 @@ interface Rol {
 })
 export class RolesListComponent implements OnInit {
   filterForm: FormGroup;
-  roles: Rol[] = [
-    {
-      _id: '1',
-      nombre: 'Administrador',
-      descripcion:
-        'Acceso completo al sistema. Puede gestionar usuarios, roles y todas las funcionalidades.',
-      permisos: [
-        'users.create',
-        'users.read',
-        'users.update',
-        'users.delete',
-        'roles.manage',
-        'tasks.manage',
-        'reports.view',
-      ],
-      activo: true,
-      usuariosCount: 2,
-      fechaCreacion: new Date('2024-01-01'),
-    },
-    {
-      _id: '2',
-      nombre: 'Supervisor',
-      descripcion:
-        'Gestión de su departamento y tareas asignadas. Puede supervisar empleados.',
-      permisos: [
-        'tasks.create',
-        'tasks.read',
-        'tasks.update',
-        'tasks.assign',
-        'reports.department',
-      ],
-      activo: true,
-      usuariosCount: 5,
-      fechaCreacion: new Date('2024-01-05'),
-    },
-    {
-      _id: '3',
-      nombre: 'Empleado',
-      descripcion:
-        'Acceso básico para gestionar sus tareas asignadas y ver información departamental.',
-      permisos: ['tasks.read', 'tasks.update', 'profile.update'],
-      activo: true,
-      usuariosCount: 15,
-      fechaCreacion: new Date('2024-01-10'),
-    },
-    {
-      _id: '4',
-      nombre: 'Invitado',
-      descripcion:
-        'Acceso de solo lectura para consultar información básica del sistema.',
-      permisos: ['tasks.read', 'reports.basic'],
-      activo: false,
-      usuariosCount: 0,
-      fechaCreacion: new Date('2024-01-15'),
-    },
-  ];
-  rolesFiltrados: Rol[] = [];
+  roles: any[] = [];
+  rolesFiltrados: any[] = [];
+  loading = false;
 
-  constructor(private fb: FormBuilder, private router: Router) {
+  constructor(
+    private fb: FormBuilder,
+    private router: Router,
+    private roleService: RoleService,
+    private alertService: AlertService
+  ) {
     this.filterForm = this.fb.group({
-      estado: [''],
       buscar: [''],
     });
   }
 
   ngOnInit(): void {
-    this.rolesFiltrados = [...this.roles];
+    this.cargarRoles();
     this.setupFilters();
+  }
+
+  cargarRoles(): void {
+    this.loading = true;
+    this.roleService.getAll().subscribe({
+      next: (response) => {
+        console.log('✅ Roles cargados:', response);
+        this.roles = response.data || [];
+        this.rolesFiltrados = [...this.roles];
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('❌ Error cargando roles:', error);
+        this.alertService.error('Error al cargar roles');
+        this.roles = [];
+        this.rolesFiltrados = [];
+        this.loading = false;
+      },
+    });
   }
 
   setupFilters(): void {
@@ -309,17 +252,11 @@ export class RolesListComponent implements OnInit {
   aplicarFiltros(): void {
     const filtros = this.filterForm.value;
     this.rolesFiltrados = this.roles.filter((rol) => {
-      const estadoMatch =
-        !filtros.estado ||
-        (filtros.estado === 'activo' && rol.activo) ||
-        (filtros.estado === 'inactivo' && !rol.activo);
-
       const buscarMatch =
         !filtros.buscar ||
-        rol.nombre.toLowerCase().includes(filtros.buscar.toLowerCase()) ||
-        rol.descripcion.toLowerCase().includes(filtros.buscar.toLowerCase());
+        rol.name.toLowerCase().includes(filtros.buscar.toLowerCase());
 
-      return estadoMatch && buscarMatch;
+      return buscarMatch;
     });
   }
 
@@ -353,6 +290,21 @@ export class RolesListComponent implements OnInit {
     return new Date(date).toLocaleDateString('es-ES');
   }
 
+  getPermissionDisplay(permiso: any): string {
+    if (typeof permiso === 'string') {
+      return permiso;
+    }
+
+    if (typeof permiso === 'object' && permiso) {
+      // Format: action + resource (e.g., "create archivos")
+      const action = permiso.action || '';
+      const resource = permiso.resource || '';
+      return `${action} ${resource}`.trim();
+    }
+
+    return 'Permiso';
+  }
+
   navigateToForm(): void {
     this.router.navigate(['/roles/nuevo']);
   }
@@ -372,8 +324,16 @@ export class RolesListComponent implements OnInit {
         '¿Está seguro de eliminar este rol? Esta acción no se puede deshacer.'
       )
     ) {
-      console.log('Eliminar rol:', id);
-      // Implementar lógica de eliminación
+      this.roleService.delete(id).subscribe({
+        next: () => {
+          this.alertService.success('Rol eliminado exitosamente');
+          this.cargarRoles();
+        },
+        error: (error) => {
+          console.error('Error eliminando rol:', error);
+          this.alertService.error('Error al eliminar rol');
+        },
+      });
     }
   }
 

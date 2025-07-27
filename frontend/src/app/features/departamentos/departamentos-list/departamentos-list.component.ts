@@ -8,13 +8,16 @@ import {
 } from '@angular/forms';
 import { Router } from '@angular/router';
 import { DepartamentoService } from '../../../core/services/departamento.service';
+import { DireccionService } from '../../../core/services/direccion.service';
 import { AlertService } from '../../../core/services/alert.service';
+import { HeaderComponent } from '../../../shared/components/header/header.component';
 
 @Component({
   selector: 'app-departamentos-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, HeaderComponent],
   template: `
+    <app-header></app-header>
     <div class="container-fluid py-4">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -43,11 +46,12 @@ import { AlertService } from '../../../core/services/alert.service';
               <label class="form-label">Filtrar por dirección</label>
               <select class="form-select" formControlName="direccion">
                 <option value="">Todas las direcciones</option>
-                <option value="planificacion">
-                  Dirección de Planificación
+                <option
+                  *ngFor="let direccion of direcciones"
+                  [value]="direccion.name"
+                >
+                  {{ direccion.name }}
                 </option>
-                <option value="obras">Dirección de Obras Públicas</option>
-                <option value="ambiente">Dirección de Ambiente</option>
               </select>
             </div>
             <div class="col-md-6">
@@ -87,7 +91,7 @@ import { AlertService } from '../../../core/services/alert.service';
                     class="d-flex justify-content-between align-items-start mb-2"
                   >
                     <h6 class="card-title text-primary mb-0">
-                      {{ depto.nombre }}
+                      {{ depto.name }}
                     </h6>
                     <div class="dropdown">
                       <button
@@ -119,24 +123,15 @@ import { AlertService } from '../../../core/services/alert.service';
                     </div>
                   </div>
                   <p class="text-muted small mb-2">
-                    <i class="bi bi-building me-1"></i
-                    >{{ depto.direccion?.nombre || 'Sin dirección' }}
-                  </p>
-                  <p class="card-text text-muted mb-2">
-                    {{ depto.descripcion }}
+                    <i class="bi bi-building me-1"></i>
+                    {{ getDireccionName(depto) }}
                   </p>
                   <div
-                    class="d-flex justify-content-between align-items-center"
+                    class="d-flex justify-content-between align-items-center mt-3"
                   >
-                    <span
-                      class="badge"
-                      [class]="depto.activo ? 'bg-success' : 'bg-secondary'"
-                    >
-                      {{ depto.activo ? 'Activo' : 'Inactivo' }}
-                    </span>
                     <small class="text-muted">
-                      <i class="bi bi-person me-1"></i
-                      >{{ depto.responsable || 'Sin responsable' }}
+                      <i class="bi bi-calendar me-1"></i>
+                      {{ depto.createdAt | date : 'short' }}
                     </small>
                   </div>
                 </div>
@@ -174,12 +169,14 @@ export class DepartamentosListComponent implements OnInit {
   filterForm: FormGroup;
   departamentos: any[] = [];
   departamentosFiltrados: any[] = [];
+  direcciones: any[] = [];
   cargando = false;
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
     private departamentoService: DepartamentoService,
+    private direccionService: DireccionService,
     private alertService: AlertService
   ) {
     this.filterForm = this.fb.group({
@@ -189,9 +186,21 @@ export class DepartamentosListComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.cargarDirecciones();
     this.cargarDepartamentos();
     this.filterForm.valueChanges.subscribe(() => {
       this.filtrarDepartamentos();
+    });
+  }
+
+  cargarDirecciones(): void {
+    this.direccionService.getAll().subscribe({
+      next: (response) => {
+        this.direcciones = response.data || [];
+      },
+      error: (error) => {
+        console.error('Error al cargar direcciones:', error);
+      },
     });
   }
 
@@ -214,18 +223,29 @@ export class DepartamentosListComponent implements OnInit {
     });
   }
 
+  getDireccionName(departamento: any): string {
+    if (
+      typeof departamento.direccionId === 'object' &&
+      departamento.direccionId?.name
+    ) {
+      return departamento.direccionId.name;
+    }
+    return 'Sin dirección';
+  }
+
   filtrarDepartamentos(): void {
     const filtros = this.filterForm.value;
     this.departamentosFiltrados = this.departamentos.filter((depto) => {
+      const direccionName =
+        typeof depto.direccionId === 'object' ? depto.direccionId.name : '';
+
       const matchesDireccion =
         !filtros.direccion ||
-        depto.direccion?.nombre
-          ?.toLowerCase()
-          .includes(filtros.direccion.toLowerCase());
+        direccionName.toLowerCase().includes(filtros.direccion.toLowerCase());
+
       const matchesBuscar =
         !filtros.buscar ||
-        depto.nombre.toLowerCase().includes(filtros.buscar.toLowerCase()) ||
-        depto.descripcion?.toLowerCase().includes(filtros.buscar.toLowerCase());
+        depto.name.toLowerCase().includes(filtros.buscar.toLowerCase());
 
       return matchesDireccion && matchesBuscar;
     });

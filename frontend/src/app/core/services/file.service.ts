@@ -51,13 +51,19 @@ export class FileService {
   }
 
   downloadFile(id: string, filename: string): void {
-    this.download(id).subscribe((blob) => {
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      link.click();
-      window.URL.revokeObjectURL(url);
+    console.log('Descargando archivo con ID:', id);
+    this.download(id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (error) => {
+        console.error('Error al descargar archivo:', error);
+      },
     });
   }
 
@@ -72,7 +78,7 @@ export class FileService {
     }
 
     return this.http
-      .post(`${this.API_URL}/upload`, formData, {
+      .post(`${this.API_URL}`, formData, {
         reportProgress: true,
         observe: 'events',
       })
@@ -98,24 +104,32 @@ export class FileService {
       uploading: true,
     }));
 
-    files.forEach((file, index) => {
-      this.uploadFile(file).subscribe({
-        next: (result) => {
-          uploads[index].progress = result.progress;
-          if (result.result) {
-            uploads[index].result = result.result;
-            uploads[index].uploading = false;
-          }
-        },
-        error: (error) => {
-          uploads[index].error = error.message;
-          uploads[index].uploading = false;
-        },
-      });
-    });
+    return new Observable<FileUpload[]>((observer) => {
+      let completed = 0;
 
-    return new Observable((observer) => {
-      observer.next(uploads);
+      files.forEach((file, index) => {
+        this.uploadFile(file).subscribe({
+          next: (result) => {
+            uploads[index].progress = result.progress;
+            if (result.result) {
+              uploads[index].result = result.result;
+              uploads[index].uploading = false;
+            }
+            observer.next([...uploads]);
+          },
+          error: (error) => {
+            uploads[index].error = error.message;
+            uploads[index].uploading = false;
+            observer.next([...uploads]);
+          },
+          complete: () => {
+            completed++;
+            if (completed === files.length) {
+              observer.complete();
+            }
+          },
+        });
+      });
     });
   }
 
@@ -125,11 +139,6 @@ export class FileService {
       'application/pdf',
       'application/vnd.ms-excel',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'image/jpeg',
-      'image/png',
-      'image/gif',
     ];
 
     if (file.size > maxSize) {
@@ -137,7 +146,7 @@ export class FileService {
     }
 
     if (!allowedTypes.includes(file.type)) {
-      return { valid: false, error: 'Formato de archivo no permitido' };
+      return { valid: false, error: 'Solo se permiten archivos PDF y Excel' };
     }
 
     return { valid: true };

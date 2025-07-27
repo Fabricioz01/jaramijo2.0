@@ -12,12 +12,14 @@ import { DepartamentoService } from '../../../core/services/departamento.service
 import { RoleService } from '../../../core/services/role.service';
 import { DireccionService } from '../../../core/services/direccion.service';
 import { Departamento, Role, Direccion } from '../../../core/models';
+import { HeaderComponent } from '../../../shared/components/header/header.component';
 
 @Component({
   selector: 'app-usuarios-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, HeaderComponent],
   template: `
+    <app-header></app-header>
     <div class="container-fluid py-4">
       <div class="row justify-content-center">
         <div class="col-md-10">
@@ -37,6 +39,38 @@ import { Departamento, Role, Direccion } from '../../../core/models';
                 }}
               </p>
             </div>
+          </div>
+
+          <div
+            *ngIf="usuarioForm.invalid && usuarioForm.touched"
+            class="alert alert-danger mb-3"
+          >
+            <strong>Por favor corrija los siguientes errores:</strong>
+            <ul class="mb-0">
+              <li *ngIf="isFieldInvalid('nombres')">Nombres es obligatorio.</li>
+              <li *ngIf="isFieldInvalid('apellidos')">
+                Apellidos es obligatorio.
+              </li>
+              <li *ngIf="isFieldInvalid('cedula')">
+                Cédula es obligatoria y debe tener 10 dígitos.
+              </li>
+              <li *ngIf="isFieldInvalid('email')">
+                Email es obligatorio y debe ser válido.
+              </li>
+              <li *ngIf="isFieldInvalid('direccion')">
+                Dirección es obligatoria.
+              </li>
+              <li *ngIf="isFieldInvalid('departamento')">
+                Departamento es obligatorio.
+              </li>
+              <li *ngIf="isFieldInvalid('rol')">Rol es obligatorio.</li>
+              <li *ngIf="isFieldInvalid('password') && !isEditing">
+                Contraseña es obligatoria y debe tener al menos 6 caracteres.
+              </li>
+              <li *ngIf="isFieldInvalid('confirmPassword') && !isEditing">
+                Las contraseñas no coinciden.
+              </li>
+            </ul>
           </div>
 
           <div class="card border-0 shadow-sm">
@@ -571,6 +605,6 @@ export class UsuariosFormComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/dashboard/usuarios']);
+    this.router.navigate(['/usuarios']);
   }
 }

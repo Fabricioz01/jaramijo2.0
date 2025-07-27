@@ -17,78 +17,76 @@ export const routes: Routes = [
     canActivate: [LoginGuard],
   },
   {
-    path: '',
+    path: 'dashboard',
     loadComponent: () =>
-      import('./shared/components/main-layout/main-layout.component').then(
-        (m) => m.MainLayoutComponent
+      import('./features/dashboard/dashboard.component').then(
+        (m) => m.DashboardComponent
       ),
     canActivate: [AuthGuard],
-    children: [
-      {
-        path: 'dashboard',
-        loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then(
-            (m) => m.DashboardComponent
-          ),
-      },
-      {
-        path: 'direcciones',
-        loadChildren: () =>
-          import('./features/direcciones/direcciones.routes').then(
-            (m) => m.DIRECCIONES_ROUTES
-          ),
-      },
-      {
-        path: 'departamentos',
-        loadChildren: () =>
-          import('./features/departamentos/departamentos.routes').then(
-            (m) => m.departamentosRoutes
-          ),
-      },
-      {
-        path: 'usuarios',
-        loadChildren: () =>
-          import('./features/usuarios/usuarios.routes').then(
-            (m) => m.usuariosRoutes
-          ),
-      },
-      {
-        path: 'roles',
-        loadChildren: () =>
-          import('./features/roles/roles.routes').then((m) => m.rolesRoutes),
-      },
-      {
-        path: 'tareas',
-        loadChildren: () =>
-          import('./features/tareas/tareas.routes').then((m) => m.tareasRoutes),
-      },
-      {
-        path: 'archivos',
-        loadChildren: () =>
-          import('./features/files/files.routes').then((m) => m.filesRoutes),
-      },
-      {
-        path: 'reportes',
-        loadChildren: () =>
-          import('./features/reports/reports.routes').then(
-            (m) => m.reportsRoutes
-          ),
-      },
-      {
-        path: 'dashboard/usuarios/perfil',
-        loadComponent: () =>
-          import('./features/usuarios/profile/profile.component').then(
-            (m) => m.ProfileComponent
-          ),
-      },
-      {
-        path: 'dashboard/configuracion',
-        loadComponent: () =>
-          import('./features/configuracion/configuracion.component').then(
-            (m) => m.ConfiguracionComponent
-          ),
-      },
-    ],
+  },
+  {
+    path: 'direcciones',
+    loadChildren: () =>
+      import('./features/direcciones/direcciones.routes').then(
+        (m) => m.DIRECCIONES_ROUTES
+      ),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'departamentos',
+    loadChildren: () =>
+      import('./features/departamentos/departamentos.routes').then(
+        (m) => m.departamentosRoutes
+      ),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'usuarios',
+    loadChildren: () =>
+      import('./features/usuarios/usuarios.routes').then(
+        (m) => m.usuariosRoutes
+      ),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'roles',
+    loadChildren: () =>
+      import('./features/roles/roles.routes').then((m) => m.rolesRoutes),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'tareas',
+    loadChildren: () =>
+      import('./features/tareas/tareas.routes').then((m) => m.tareasRoutes),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'archivos',
+    loadChildren: () =>
+      import('./features/files/files.routes').then((m) => m.filesRoutes),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'reportes',
+    loadChildren: () =>
+      import('./features/reports/reports.routes').then((m) => m.reportsRoutes),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'usuarios/perfil',
+    loadComponent: () =>
+      import('./features/usuarios/profile/profile.component').then(
+        (m) => m.ProfileComponent
+      ),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'configuracion',
+    loadComponent: () =>
+      import('./features/configuracion/configuracion.component').then(
+        (m) => m.ConfiguracionComponent
+      ),
+    canActivate: [AuthGuard],
   },
   {
     path: '**',

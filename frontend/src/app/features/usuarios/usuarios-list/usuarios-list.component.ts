@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { UserService } from '../../../core/services/user.service';
 import { AlertService } from '../../../core/services/alert.service';
 import { User } from '../../../core/models';
+import { DepartamentoService } from '../../../core/services/departamento.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 
 @Component({
@@ -46,8 +47,9 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
               <label class="form-label">Departamento</label>
               <select class="form-select" formControlName="departamento">
                 <option value="">Todos</option>
-                <option value="admin">Administración</option>
-                <option value="sistemas">Sistemas</option>
+                <option *ngFor="let dep of departamentos" [value]="dep._id">
+                  {{ dep.name }}
+                </option>
               </select>
             </div>
             <div class="col-md-4">
@@ -225,11 +227,14 @@ export class UsuariosListComponent implements OnInit {
   usuariosFiltrados: User[] = [];
   cargando = false;
 
+  departamentos: any[] = [];
+
   constructor(
     private fb: FormBuilder,
     private router: Router,
     private userService: UserService,
-    private alertService: AlertService
+    private alertService: AlertService,
+    private departamentoService: DepartamentoService
   ) {
     this.filterForm = this.fb.group({
       busqueda: [''],
@@ -239,9 +244,21 @@ export class UsuariosListComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.cargarDepartamentos();
     this.cargarUsuarios();
     this.filterForm.valueChanges.subscribe(() => {
       this.filtrarUsuarios();
+    });
+  }
+
+  cargarDepartamentos(): void {
+    this.departamentoService.getAll().subscribe({
+      next: (response) => {
+        this.departamentos = response.data || [];
+      },
+      error: (error) => {
+        this.alertService.error('Error al cargar departamentos');
+      },
     });
   }
 
@@ -323,10 +340,11 @@ export class UsuariosListComponent implements OnInit {
   }
 
   getDepartamentoName(departamentoId: any): string {
-    if (typeof departamentoId === 'object' && departamentoId?.name) {
-      return departamentoId.name;
-    }
-    return 'Sin asignar';
+    if (!departamentoId) return 'Sin asignar';
+    const found = this.departamentos.find(
+      (dep) => dep._id === departamentoId || dep.id === departamentoId
+    );
+    return found ? found.name : 'Sin asignar';
   }
 
   getRoleNames(roleIds: any[]): string {
@@ -349,7 +367,11 @@ export class UsuariosListComponent implements OnInit {
   }
 
   navigateToEdit(usuario: User): void {
-    this.router.navigate(['/usuarios/editar', usuario._id]);
+    console.log(
+      '🔍 UsuariosListComponent - Navegando a editar usuario:',
+      usuario._id
+    );
+    this.router.navigate(['/usuarios', usuario._id, 'editar']);
   }
 
   goBack(): void {

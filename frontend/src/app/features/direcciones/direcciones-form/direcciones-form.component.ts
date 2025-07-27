@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   ReactiveFormsModule,
@@ -6,13 +6,17 @@ import {
   FormGroup,
   Validators,
 } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
+import { DireccionService } from '../../../core/services/direccion.service';
+import { AlertService } from '../../../core/services/alert.service';
+import { HeaderComponent } from '../../../shared/components/header/header.component';
 
 @Component({
   selector: 'app-direcciones-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, HeaderComponent],
   template: `
+    <app-header></app-header>
     <div class="container-fluid py-4">
       <div class="row justify-content-center">
         <div class="col-md-8">
@@ -21,9 +25,15 @@ import { Router } from '@angular/router';
               <i class="bi bi-arrow-left"></i>
             </button>
             <div>
-              <h1 class="h3 mb-0">Nueva Dirección</h1>
+              <h1 class="h3 mb-0">
+                {{ isEditing ? 'Editar' : 'Nueva' }} Dirección
+              </h1>
               <p class="text-muted mb-0">
-                Crear una nueva dirección organizacional
+                {{
+                  isEditing
+                    ? 'Modificar información de la dirección'
+                    : 'Crear una nueva dirección organizacional'
+                }}
               </p>
             </div>
           </div>
@@ -40,7 +50,7 @@ import { Router } from '@angular/router';
                       type="text"
                       class="form-control"
                       id="nombre"
-                      formControlName="nombre"
+                      formControlName="name"
                       placeholder="Ej: Dirección de Planificación"
                     />
                   </div>
@@ -126,7 +136,7 @@ import { Router } from '@angular/router';
                       class="spinner-border spinner-border-sm me-2"
                       role="status"
                     ></span>
-                    Guardar Dirección
+                    {{ isEditing ? 'Actualizar' : 'Guardar' }} Dirección
                   </button>
                 </div>
               </form>
@@ -158,31 +168,98 @@ import { Router } from '@angular/router';
     `,
   ],
 })
-export class DireccionesFormComponent {
+export class DireccionesFormComponent implements OnInit {
   direccionForm: FormGroup;
   loading = false;
+  isEditing = false;
+  direccionId: string | null = null;
 
-  constructor(private fb: FormBuilder, private router: Router) {
+  constructor(
+    private fb: FormBuilder,
+    private router: Router,
+    private route: ActivatedRoute,
+    private direccionService: DireccionService,
+    private alertService: AlertService
+  ) {
     this.direccionForm = this.fb.group({
-      nombre: ['', [Validators.required, Validators.minLength(3)]],
-      descripcion: [''],
-      responsable: [''],
-      telefono: [''],
-      ubicacion: [''],
+      name: ['', [Validators.required, Validators.minLength(3)]],
       activo: [true],
+    });
+  }
+
+  ngOnInit(): void {
+    this.direccionId = this.route.snapshot.paramMap.get('id');
+    this.isEditing = !!this.direccionId;
+
+    if (this.isEditing) {
+      this.loadDireccion();
+    }
+  }
+
+  loadDireccion(): void {
+    if (!this.direccionId) return;
+
+    this.direccionService.getById(this.direccionId).subscribe({
+      next: (response) => {
+        const direccion = response.data;
+        if (direccion) {
+          this.direccionForm.patchValue({
+            name: direccion.name,
+            activo: true, // Por defecto activo ya que el modelo no tiene este campo
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar dirección:', error);
+        this.alertService.error('Error al cargar la dirección');
+      },
     });
   }
 
   onSubmit(): void {
     if (this.direccionForm.valid) {
       this.loading = true;
+      const formData = this.direccionForm.value;
 
-      // Simulamos el guardado
-      setTimeout(() => {
-        console.log('Dirección a guardar:', this.direccionForm.value);
-        this.loading = false;
-        this.goBack();
-      }, 1000);
+      const direccionData = {
+        name: formData.name,
+      };
+
+      if (this.isEditing) {
+        this.direccionService
+          .update(this.direccionId!, direccionData)
+          .subscribe({
+            next: (response) => {
+              console.log('Dirección actualizada:', response);
+              this.alertService.success('Dirección actualizada exitosamente');
+              this.loading = false;
+              this.goBack();
+            },
+            error: (error) => {
+              console.error('Error al actualizar dirección:', error);
+              this.alertService.error('Error al actualizar la dirección');
+              this.loading = false;
+            },
+          });
+      } else {
+        this.direccionService.create(direccionData).subscribe({
+          next: (response) => {
+            console.log('Dirección creada:', response);
+            this.alertService.success('Dirección creada exitosamente');
+            this.loading = false;
+            this.goBack();
+          },
+          error: (error) => {
+            console.error('Error al crear dirección:', error);
+            this.alertService.error('Error al crear la dirección');
+            this.loading = false;
+          },
+        });
+      }
+    } else {
+      Object.keys(this.direccionForm.controls).forEach((key) => {
+        this.direccionForm.get(key)?.markAsTouched();
+      });
     }
   }
 

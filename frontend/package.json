@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve --proxy-config proxy.conf.js --port 4200 --host 0.0.0.0",
-    "dev": "ng serve --proxy-config proxy.conf.js --port 4200 --host 0.0.0.0 --open",
+    "start": "ng serve --proxy-config proxy.conf.json --port 4200 --host 0.0.0.0",
+    "dev": "ng serve --proxy-config proxy.conf.json --port 4200 --host 0.0.0.0 --open",
     "dev-server": "node dev-server.js",
     "custom-server": "node simple-server.js",
     "build": "ng build --configuration=production",
