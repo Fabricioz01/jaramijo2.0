@@ -154,7 +154,7 @@ function getDeleteMessage(this: any): string {
                     </div>
                   </div>
                   <p class="card-text text-muted mb-3">
-                    {{ direccion.description || 'Sin descripción' }}
+                    {{ direccion.descripcion ? direccion.descripcion : 'Sin descripción' }}
                   </p>
                   <div
                     class="d-flex justify-content-between align-items-center"

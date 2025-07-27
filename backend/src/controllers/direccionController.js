@@ -29,16 +29,7 @@ class DireccionController {
       // Devolver todos los campos del modelo
       res.json({
         message: 'Direcciones obtenidas exitosamente',
-        data: direcciones.map(d => ({
-          _id: d._id,
-          name: d.name,
-          descripcion: d.descripcion !== undefined ? d.descripcion : null,
-          ubicacion: d.ubicacion !== undefined ? d.ubicacion : null,
-          activo: d.activo,
-          createdAt: d.createdAt,
-          updatedAt: d.updatedAt,
-          __v: d.__v
-        })),
+        data: direcciones.map((d) => d.toObject()),
       });
     } catch (error) {
       next(error);
@@ -58,7 +49,7 @@ class DireccionController {
           activo: d.activo,
           createdAt: d.createdAt,
           updatedAt: d.updatedAt,
-          __v: d.__v
+          __v: d.__v,
         },
       });
     } catch (error) {
