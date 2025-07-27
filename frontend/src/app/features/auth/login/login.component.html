@@ -1,0 +1,106 @@
+<div class="login-container">
+  <div class="container-fluid vh-100">
+    <div class="row vh-100">
+      <!-- Lado izquierdo - Información -->
+      <div
+        class="col-md-6 d-flex align-items-center justify-content-center bg-primary text-white"
+      >
+        <div class="text-center">
+          <h1 class="display-4 fw-bold mb-4">Municipio Jaramijó</h1>
+          <h3 class="mb-4">Sistema de Gestión de Tareas</h3>
+          <p class="lead">
+            Organiza, asigna y controla las tareas de tu organización de manera
+            eficiente.
+          </p>
+        </div>
+      </div>
+
+      <!-- Lado derecho - Formulario de login -->
+      <div class="col-md-6 d-flex align-items-center justify-content-center">
+        <div
+          class="card shadow-lg border-0"
+          style="width: 100%; max-width: 400px"
+        >
+          <div class="card-body p-5">
+            <div class="text-center mb-4">
+              <h2 class="h3 fw-bold text-primary">Iniciar Sesión</h2>
+              <p class="text-muted">Ingresa tus credenciales para acceder</p>
+            </div>
+
+            <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+              <!-- Email -->
+              <div class="mb-3">
+                <label for="email" class="form-label">Correo Electrónico</label>
+                <input
+                  type="email"
+                  class="form-control"
+                  id="email"
+                  formControlName="email"
+                  [class.is-invalid]="email?.invalid && email?.touched"
+                  placeholder="tu@email.com"
+                />
+                <div
+                  class="invalid-feedback"
+                  *ngIf="email?.invalid && email?.touched"
+                >
+                  <small *ngIf="email?.errors?.['required']"
+                    >El correo es requerido</small
+                  >
+                  <small *ngIf="email?.errors?.['email']"
+                    >Ingresa un correo válido</small
+                  >
+                </div>
+              </div>
+
+              <!-- Password -->
+              <div class="mb-4">
+                <label for="password" class="form-label">Contraseña</label>
+                <input
+                  type="password"
+                  class="form-control"
+                  id="password"
+                  formControlName="password"
+                  [class.is-invalid]="password?.invalid && password?.touched"
+                  placeholder="Tu contraseña"
+                />
+                <div
+                  class="invalid-feedback"
+                  *ngIf="password?.invalid && password?.touched"
+                >
+                  <small *ngIf="password?.errors?.['required']"
+                    >La contraseña es requerida</small
+                  >
+                  <small *ngIf="password?.errors?.['minlength']"
+                    >Mínimo 6 caracteres</small
+                  >
+                </div>
+              </div>
+
+              <!-- Error message -->
+              <div class="alert alert-danger" *ngIf="error" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                {{ error }}
+              </div>
+
+              <!-- Submit button -->
+              <div class="d-grid">
+                <button
+                  type="submit"
+                  class="btn btn-primary btn-lg"
+                  [disabled]="loginForm.invalid || loading"
+                >
+                  <span
+                    *ngIf="loading"
+                    class="spinner-border spinner-border-sm me-2"
+                    role="status"
+                  ></span>
+                  {{ loading ? "Iniciando sesión..." : "Iniciar Sesión" }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
