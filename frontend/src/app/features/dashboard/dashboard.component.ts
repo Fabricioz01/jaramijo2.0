@@ -1,3 +1,4 @@
+// ...existing code...
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
@@ -24,6 +25,13 @@ import { DashboardChartsComponent } from './dashboard-charts.component';
   styleUrl: './dashboard.component.scss',
 })
 export class DashboardComponent implements OnInit {
+  canAccessAction(resource: string, action: string): boolean {
+    return this.authService.canAccessAction(resource, action);
+  }
+
+  canAccessModule(resource: string): boolean {
+    return this.authService.canAccessModule(resource);
+  }
   user: any = null;
   report: ReportData | null = null;
 

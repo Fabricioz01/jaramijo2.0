@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { AuthService } from '../../../core/services/auth.service';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -24,7 +25,11 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
           <button class="btn btn-outline-secondary me-2" (click)="goBack()">
             <i class="bi bi-arrow-left me-2"></i>Volver
           </button>
-          <button class="btn btn-primary" (click)="navigateToForm()">
+          <button
+            class="btn btn-primary"
+            (click)="navigateToForm()"
+            *ngIf="canCreateUser()"
+          >
             <i class="bi bi-person-plus me-2"></i>Nuevo Usuario
           </button>
         </div>
@@ -133,6 +138,7 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
                         class="btn btn-outline-primary"
                         (click)="navigateToEdit(usuario)"
                         title="Editar"
+                        *ngIf="canEditUser()"
                       >
                         <i class="bi bi-pencil"></i>
                       </button>
@@ -140,6 +146,7 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
                         class="btn btn-outline-danger"
                         (click)="eliminarUsuario(usuario)"
                         title="Eliminar"
+                        *ngIf="canDeleteUser()"
                       >
                         <i class="bi bi-trash"></i>
                       </button>
@@ -169,7 +176,11 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
               <button class="btn btn-outline-primary" (click)="goBack()">
                 <i class="bi bi-arrow-left me-2"></i>Volver al Dashboard
               </button>
-              <button class="btn btn-primary" (click)="navigateToForm()">
+              <button
+                class="btn btn-primary"
+                (click)="navigateToForm()"
+                *ngIf="canCreateUser()"
+              >
                 <i class="bi bi-person-plus me-2"></i>Crear Usuario
               </button>
             </div>
@@ -234,13 +245,25 @@ export class UsuariosListComponent implements OnInit {
     private router: Router,
     private userService: UserService,
     private alertService: AlertService,
-    private departamentoService: DepartamentoService
+    private departamentoService: DepartamentoService,
+    public authService: AuthService
   ) {
     this.filterForm = this.fb.group({
       busqueda: [''],
       departamento: [''],
       estado: [''],
     });
+  }
+
+  // Métodos de permisos para el template
+  canCreateUser(): boolean {
+    return this.authService.canAccessAction('usuarios', 'create');
+  }
+  canEditUser(): boolean {
+    return this.authService.canAccessAction('usuarios', 'update');
+  }
+  canDeleteUser(): boolean {
+    return this.authService.canAccessAction('usuarios', 'delete');
   }
 
   ngOnInit(): void {

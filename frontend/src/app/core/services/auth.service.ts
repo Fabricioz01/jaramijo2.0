@@ -14,6 +14,91 @@ import {
   providedIn: 'root',
 })
 export class AuthService {
+  /**
+   * Verifica si el usuario actual tiene permiso para una acción específica sobre un recurso.
+   * @param resource El recurso (ej: 'tareas', 'usuarios', etc)
+   * @param action La acción (ej: 'read', 'create', 'update', 'delete')
+   */
+  // Mapeo dinámico de permisos por recurso y acción (igual que en header)
+  private permissionMap: { [resource: string]: { [action: string]: string } } =
+    {
+      usuarios: {
+        create: '688280813f95573aed48feeb',
+        read: '688280813f95573aed48feec',
+        update: '688280813f95573aed48feed',
+        delete: '688280813f95573aed48feee',
+      },
+      roles: {
+        create: '688280813f95573aed48feef',
+        read: '688280813f95573aed48fef0',
+        update: '688280813f95573aed48fef1',
+        delete: '688280813f95573aed48fef2',
+      },
+      tareas: {
+        create: '688280813f95573aed48fef3',
+        read: '688280813f95573aed48fef4',
+        update: '688280813f95573aed48fef5',
+        delete: '688280813f95573aed48fef6',
+      },
+      departamentos: {
+        create: '688280813f95573aed48fef7',
+        read: '688280813f95573aed48fef8',
+        update: '688280813f95573aed48fef9',
+        delete: '688280813f95573aed48fefa',
+      },
+      archivos: {
+        create: '688280813f95573aed48fefb',
+        read: '688280813f95573aed48fefc',
+        delete: '688280813f95573aed48fefd',
+      },
+      reportes: {
+        create: '688280813f95573aed48feff',
+        read: '688280813f95573aed48fefe',
+      },
+    };
+
+  /**
+   * Verifica si el usuario actual tiene permiso para una acción específica sobre un recurso.
+   */
+  public canAccessAction(resource: string, action: string): boolean {
+    const user = this.getCurrentUser();
+    if (!user) return false;
+    // Si es admin, acceso total
+    if (this.isAdmin(user)) return true;
+    const permId = this.permissionMap[resource]?.[action];
+    if (!permId) return false;
+    const userPerms = this.getUserPermissions(user);
+    return userPerms.includes(permId);
+  }
+
+  /**
+   * Verifica si el usuario actual tiene acceso a un módulo (por ejemplo, para mostrar/ocultar menús o secciones).
+   */
+  public canAccessModule(resource: string): boolean {
+    const user = this.getCurrentUser();
+    if (!user) return false;
+    if (this.isAdmin(user)) return true;
+    const permId = this.permissionMap[resource]?.['read'];
+    if (!permId) return false;
+    const userPerms = this.getUserPermissions(user);
+    return userPerms.includes(permId);
+  }
+
+  private isAdmin(user: any): boolean {
+    // Si el usuario tiene un rol llamado 'administrador'
+    return user.roles?.some(
+      (role: any) => role.name?.toLowerCase() === 'administrador'
+    );
+  }
+
+  private getUserPermissions(user: any): string[] {
+    // Si el usuario tiene roles anidados (como en header), extraer los permissionIds
+    if (user.roles) {
+      return user.roles.flatMap((role: any) => role.permissionIds || []);
+    }
+    // Si solo tiene roleIds, no se puede mapear permisos
+    return [];
+  }
   private readonly API_URL = `${environment.apiUrl}/auth`;
   private currentUserSubject = new BehaviorSubject<AuthUser | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();

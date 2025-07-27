@@ -86,43 +86,51 @@ import { AuthService } from '../../../core/services/auth.service';
             </li>
 
             <!-- Usuarios y Permisos -->
-            <li
-              class="nav-item dropdown position-relative"
+            <ng-container
               *ngIf="canAccessModule('usuarios') || canAccessModule('roles')"
             >
-              <a
-                class="nav-link dropdown-toggle"
-                href="#"
-                role="button"
-                (click)="toggleDropdown('usuarios', $event)"
-                style="cursor: pointer;"
+              <li
+                class="nav-item dropdown position-relative"
+                *ngIf="canAccessModule('usuarios') || canAccessModule('roles')"
               >
-                <i class="bi bi-person-gear me-1"></i>Usuarios y Permisos
-              </a>
-              <ul
-                class="dropdown-menu"
-                [class.show]="activeDropdown === 'usuarios'"
-              >
-                <li *ngIf="canAccessModule('usuarios')">
-                  <a
-                    class="dropdown-item"
-                    (click)="navigateTo('/usuarios')"
-                    style="cursor: pointer;"
-                  >
-                    <i class="bi bi-people me-2"></i>Usuarios
-                  </a>
-                </li>
-                <li *ngIf="canAccessModule('roles')">
-                  <a
-                    class="dropdown-item"
-                    (click)="navigateTo('/roles')"
-                    style="cursor: pointer;"
-                  >
-                    <i class="bi bi-shield-check me-2"></i>Roles
-                  </a>
-                </li>
-              </ul>
-            </li>
+                <a
+                  class="nav-link dropdown-toggle"
+                  href="#"
+                  role="button"
+                  (click)="toggleDropdown('usuarios', $event)"
+                  style="cursor: pointer;"
+                >
+                  <i class="bi bi-person-gear me-1"></i>Usuarios y Permisos
+                </a>
+                <ul
+                  class="dropdown-menu"
+                  [class.show]="activeDropdown === 'usuarios'"
+                >
+                  <ng-container *ngIf="canAccessModule('usuarios')">
+                    <li>
+                      <a
+                        class="dropdown-item"
+                        (click)="navigateTo('/usuarios')"
+                        style="cursor: pointer;"
+                      >
+                        <i class="bi bi-people me-2"></i>Usuarios
+                      </a>
+                    </li>
+                  </ng-container>
+                  <ng-container *ngIf="canAccessModule('roles')">
+                    <li>
+                      <a
+                        class="dropdown-item"
+                        (click)="navigateTo('/roles')"
+                        style="cursor: pointer;"
+                      >
+                        <i class="bi bi-shield-check me-2"></i>Roles
+                      </a>
+                    </li>
+                  </ng-container>
+                </ul>
+              </li>
+            </ng-container>
 
             <!-- Tareas -->
             <li class="nav-item" *ngIf="canAccessModule('tareas')">
@@ -292,11 +300,10 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class HeaderComponent implements OnInit {
   user: any = null;
-  userPermissions: string[] = [];
   showMobileMenu = false;
   activeDropdown: string | null = null;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(public authService: AuthService, private router: Router) {}
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
@@ -309,60 +316,25 @@ export class HeaderComponent implements OnInit {
     this.authService.currentUser$.subscribe((user) => {
       console.log('🔍 HeaderComponent - Usuario recibido:', user);
       this.user = user;
-      this.loadUserPermissions();
     });
   }
 
-  private loadUserPermissions(): void {
-    console.log(
-      '🔍 HeaderComponent - Cargando permisos para usuario:',
-      this.user
-    );
+  // Eliminar lógica local de permisos. Usar solo AuthService
 
-    if (this.user?.roles) {
-      const permissions = this.user.roles.flatMap(
-        (role: any) => role.permissionIds?.map((permId: string) => permId) || []
-      );
-      this.userPermissions = [...new Set(permissions)].filter(
-        (p) => typeof p === 'string'
-      ) as string[];
+  // ---
 
-      console.log(
-        '🔍 HeaderComponent - Permisos extraídos:',
-        this.userPermissions
-      );
-      console.log('🔍 HeaderComponent - Roles del usuario:', this.user.roles);
-    } else {
-      console.warn(
-        '⚠️ HeaderComponent - No se encontraron roles en el usuario'
-      );
-    }
+  // Getters para exponer los métodos de AuthService al template
+  canAccessModule(resource: string): boolean {
+    return this.authService.canAccessModule(resource);
+  }
+  canAccessAction(
+    resource: string,
+    action: 'create' | 'read' | 'update' | 'delete'
+  ): boolean {
+    return this.authService.canAccessAction(resource, action);
   }
 
-  canAccessModule(module: string): boolean {
-    console.log(`🔍 HeaderComponent - Verificando acceso a módulo: ${module}`);
-
-    if (this.isAdmin()) {
-      console.log(
-        '✅ HeaderComponent - Usuario es administrador, acceso permitido'
-      );
-      return true;
-    }
-
-    console.log('✅ HeaderComponent - Acceso permitido (temporal)');
-    return true;
-  }
-
-  private isAdmin(): boolean {
-    const isAdmin =
-      this.user?.roles?.some(
-        (role: any) => role.name?.toLowerCase() === 'administrador'
-      ) || false;
-
-    console.log('🔍 HeaderComponent - ¿Es administrador?:', isAdmin);
-    return isAdmin;
-  }
-
+  // ---
   toggleMobileMenu(): void {
     this.showMobileMenu = !this.showMobileMenu;
     console.log(

@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { AuthService } from '../../../core/services/auth.service';
 import { CommonModule } from '@angular/common';
 import {
   ReactiveFormsModule,
@@ -20,10 +21,22 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
   imports: [CommonModule, ReactiveFormsModule, HeaderComponent],
   template: `
     <app-header></app-header>
-    <div class="container-fluid py-4">
+    <div class="container-fluid py-4" *ngIf="canAccessForm()">
       <div class="row justify-content-center">
         <div class="col-md-10">
           <div class="d-flex align-items-center mb-4">
+            <div
+              *ngIf="!canAccessForm()"
+              class="alert alert-danger mt-5 text-center"
+            >
+              <i class="bi bi-shield-lock display-4"></i>
+              <h4 class="mt-3">
+                No tienes permisos para acceder a este formulario
+              </h4>
+              <p class="text-muted">
+                Contacta con un administrador si crees que es un error.
+              </p>
+            </div>
             <button class="btn btn-outline-secondary me-3" (click)="goBack()">
               <i class="bi bi-arrow-left"></i>
             </button>
@@ -400,7 +413,8 @@ export class UsuariosFormComponent implements OnInit {
     private userService: UserService,
     private departamentoService: DepartamentoService,
     private roleService: RoleService,
-    private direccionService: DireccionService
+    private direccionService: DireccionService,
+    public authService: AuthService
   ) {
     this.usuarioForm = this.fb.group({
       nombres: ['', Validators.required],
@@ -416,6 +430,14 @@ export class UsuariosFormComponent implements OnInit {
       confirmPassword: [''],
       activo: [true],
     });
+  }
+
+  canAccessForm(): boolean {
+    if (this.isEditing) {
+      return this.authService.canAccessAction('usuarios', 'update');
+    } else {
+      return this.authService.canAccessAction('usuarios', 'create');
+    }
   }
 
   ngOnInit(): void {
