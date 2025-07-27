@@ -93,6 +93,7 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
                   <th>Roles</th>
                   <th>Estado</th>
                   <th>Fecha Registro</th>
+                  <th>Última Actualización</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -130,6 +131,11 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
                   <td>
                     <small class="text-muted">{{
                       usuario.createdAt | date : 'dd/MM/yyyy HH:mm'
+                    }}</small>
+                  </td>
+                  <td>
+                    <small class="text-muted">{{
+                      usuario.updatedAt | date : 'dd/MM/yyyy HH:mm'
                     }}</small>
                   </td>
                   <td>
@@ -364,6 +370,13 @@ export class UsuariosListComponent implements OnInit {
 
   getDepartamentoName(departamentoId: any): string {
     if (!departamentoId) return 'Sin asignar';
+    if (
+      typeof departamentoId === 'object' &&
+      departamentoId !== null &&
+      departamentoId.name
+    ) {
+      return departamentoId.name;
+    }
     const found = this.departamentos.find(
       (dep) => dep._id === departamentoId || dep.id === departamentoId
     );
