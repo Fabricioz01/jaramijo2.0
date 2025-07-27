@@ -54,43 +54,10 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
             </div>
           </div>
 
-          <div
-            *ngIf="usuarioForm.invalid && usuarioForm.touched"
-            class="alert alert-danger mb-3"
-          >
-            <strong>Por favor corrija los siguientes errores:</strong>
-            <ul class="mb-0">
-              <li *ngIf="isFieldInvalid('nombres')">Nombres es obligatorio.</li>
-              <li *ngIf="isFieldInvalid('apellidos')">
-                Apellidos es obligatorio.
-              </li>
-              <li *ngIf="isFieldInvalid('cedula')">
-                Cédula es obligatoria y debe tener 10 dígitos.
-              </li>
-              <li *ngIf="isFieldInvalid('email')">
-                Email es obligatorio y debe ser válido.
-              </li>
-              <li *ngIf="isFieldInvalid('direccion')">
-                Dirección es obligatoria.
-              </li>
-              <li *ngIf="isFieldInvalid('departamento')">
-                Departamento es obligatorio.
-              </li>
-              <li *ngIf="isFieldInvalid('rol')">Rol es obligatorio.</li>
-              <li *ngIf="isFieldInvalid('password') && !isEditing">
-                Contraseña es obligatoria y debe tener al menos 6 caracteres.
-              </li>
-              <li *ngIf="isFieldInvalid('confirmPassword') && !isEditing">
-                Las contraseñas no coinciden.
-              </li>
-            </ul>
-          </div>
-
           <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
               <form [formGroup]="usuarioForm" (ngSubmit)="onSubmit()">
                 <div class="row">
-                  <!-- Información Personal -->
                   <div class="col-12 mb-4">
                     <h5 class="text-primary border-bottom pb-2">
                       <i class="bi bi-person me-2"></i>Información Personal
