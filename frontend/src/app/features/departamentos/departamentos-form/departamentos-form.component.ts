@@ -166,11 +166,10 @@ export class DepartamentosFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
+
     this.departamentoId = this.route.snapshot.paramMap.get('id');
     this.isEditing = !!this.departamentoId;
-
     this.loadDirecciones();
-
     if (this.isEditing) {
       this.loadDepartamento();
     }

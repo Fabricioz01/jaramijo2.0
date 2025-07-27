@@ -9,14 +9,14 @@ export const departamentosRoutes: Routes = [
       ),
   },
   {
-    path: 'nuevo',
+    path: 'form',
     loadComponent: () =>
       import('./departamentos-form/departamentos-form.component').then(
         (m) => m.DepartamentosFormComponent
       ),
   },
   {
-    path: ':id/editar',
+    path: 'form/:id',
     loadComponent: () =>
       import('./departamentos-form/departamentos-form.component').then(
         (m) => m.DepartamentosFormComponent
