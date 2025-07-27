@@ -36,13 +36,12 @@
               </div>
               <div class="flex-grow-1 ms-3">
                 <div class="small text-muted">Tareas Activas</div>
-                <div class="h4 mb-0">24</div>
+                <div class="h4 mb-0">{{ getTareasActivas() }}</div>
               </div>
             </div>
           </div>
         </div>
       </div>
-
       <div class="col-md-3">
         <div class="card border-0 shadow-sm h-100">
           <div class="card-body">
@@ -54,13 +53,12 @@
               </div>
               <div class="flex-grow-1 ms-3">
                 <div class="small text-muted">Completadas</div>
-                <div class="h4 mb-0">18</div>
+                <div class="h4 mb-0">{{ getTareasCompletadas() }}</div>
               </div>
             </div>
           </div>
         </div>
       </div>
-
       <div class="col-md-3">
         <div class="card border-0 shadow-sm h-100">
           <div class="card-body">
@@ -72,13 +70,12 @@
               </div>
               <div class="flex-grow-1 ms-3">
                 <div class="small text-muted">Pendientes</div>
-                <div class="h4 mb-0">6</div>
+                <div class="h4 mb-0">{{ getTareasPendientes() }}</div>
               </div>
             </div>
           </div>
         </div>
       </div>
-
       <div class="col-md-3">
         <div class="card border-0 shadow-sm h-100">
           <div class="card-body">
@@ -90,24 +87,23 @@
               </div>
               <div class="flex-grow-1 ms-3">
                 <div class="small text-muted">Usuarios Activos</div>
-                <div class="h4 mb-0">12</div>
+                <div class="h4 mb-0">{{ getUsuariosActivos() }}</div>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- Quick Actions -->
-    <div class="row g-3">
-      <div class="col-md-8">
-        <div class="card border-0 shadow-sm">
-          <div class="card-header bg-transparent border-0">
+    <!-- Quick Actions y Mi Información -->
+    <div class="row g-3 mb-4">
+      <div class="col-lg-8 col-md-7">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-header bg-transparent border-0 pb-0">
             <h5 class="card-title mb-0">Acciones Rápidas</h5>
           </div>
-          <div class="card-body">
+          <div class="card-body pt-3">
             <div class="row g-3">
-              <div class="col-md-4">
+              <div class="col-12 col-md-4">
                 <div class="d-grid">
                   <button
                     class="btn btn-outline-primary"
@@ -117,7 +113,7 @@
                   </button>
                 </div>
               </div>
-              <div class="col-md-4">
+              <div class="col-12 col-md-4">
                 <div class="d-grid">
                   <button
                     class="btn btn-outline-success"
@@ -127,7 +123,7 @@
                   </button>
                 </div>
               </div>
-              <div class="col-md-4">
+              <div class="col-12 col-md-4">
                 <div class="d-grid">
                   <button
                     class="btn btn-outline-info"
@@ -141,13 +137,12 @@
           </div>
         </div>
       </div>
-
-      <div class="col-md-4">
-        <div class="card border-0 shadow-sm">
-          <div class="card-header bg-transparent border-0">
+      <div class="col-lg-4 col-md-5">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-header bg-transparent border-0 pb-0">
             <h6 class="card-title mb-0">Mi Información</h6>
           </div>
-          <div class="card-body">
+          <div class="card-body pt-3">
             <div class="d-flex align-items-center mb-3">
               <div class="flex-shrink-0">
                 <div class="rounded-circle bg-light p-2">
@@ -176,6 +171,18 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="row g-3">
+      <div class="col-12">
+        <app-dashboard-charts
+          [tareasPorEstado]="report?.tareas?.porEstado || []"
+          [tareasPorMes]="report?.rendimiento?.tareasCompletadasPorMes || []"
+          [archivosPorTipo]="report?.archivos?.porTipo || []"
+          [usuariosPorRol]="report?.usuarios?.porRol || []"
+        ></app-dashboard-charts>
       </div>
     </div>
   </div>
