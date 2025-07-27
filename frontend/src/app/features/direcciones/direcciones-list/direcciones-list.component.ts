@@ -1,4 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ViewChild,
+  ElementRef,
+  HostListener,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormsModule,
@@ -11,11 +17,24 @@ import { DireccionService } from '../../../core/services/direccion.service';
 import { AlertService } from '../../../core/services/alert.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { AuthService } from '../../../core/services/auth.service';
+import { ConfirmModalComponent } from '../../../shared/components/alerts/confirm-modal.component';
+
+function getDeleteMessage(this: any): string {
+  return this.direccionAEliminar
+    ? '¿Está seguro de eliminar la dirección \'" + this.direccionAEliminar.name + "\'? Esta acción no se puede deshacer.'
+    : '';
+}
 
 @Component({
   selector: 'app-direcciones-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, HeaderComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    HeaderComponent,
+    ConfirmModalComponent,
+  ],
   template: `
     <app-header></app-header>
     <div class="container-fluid py-4" *ngIf="canAccessModule()">
@@ -82,9 +101,11 @@ import { AuthService } from '../../../core/services/auth.service';
           <div *ngIf="!cargando && direccionesFiltradas.length > 0" class="row">
             <div
               class="col-md-6 col-lg-4 mb-4"
-              *ngFor="let direccion of direccionesFiltradas"
+              *ngFor="let direccion of direccionesFiltradas; let i = index"
             >
-              <div class="card h-100 border-start border-success border-4">
+              <div
+                class="card h-100 border-start border-success border-4 position-relative"
+              >
                 <div class="card-body">
                   <div
                     class="d-flex justify-content-between align-items-start mb-2"
@@ -92,33 +113,42 @@ import { AuthService } from '../../../core/services/auth.service';
                     <h6 class="card-title text-success mb-0">
                       {{ direccion.name }}
                     </h6>
-                    <div class="dropdown">
+                    <div
+                      class="action-menu-wrapper"
+                      [class.open]="openedMenuIndex === i"
+                    >
                       <button
-                        class="btn btn-sm btn-outline-secondary dropdown-toggle"
-                        data-bs-toggle="dropdown"
+                        class="btn btn-sm btn-outline-secondary action-menu-btn"
+                        (click)="toggleMenu(i, $event)"
+                        aria-label="Abrir menú de acciones"
+                        [attr.aria-expanded]="openedMenuIndex === i"
+                        [attr.aria-controls]="'actionMenu' + i"
+                        tabindex="0"
                       >
                         <i class="bi bi-three-dots"></i>
                       </button>
-                      <ul class="dropdown-menu">
-                        <li>
-                          <a
-                            class="dropdown-item"
-                            href="#"
-                            (click)="editarDireccion(direccion)"
-                            *ngIf="canEditDireccion()"
+                      <ul
+                        class="action-menu"
+                        *ngIf="openedMenuIndex === i"
+                        [attr.id]="'actionMenu' + i"
+                        role="menu"
+                      >
+                        <!-- Solo dejar editar -->
+                        <li role="menuitem" *ngIf="canEditDireccion()">
+                          <button
+                            class="action-item"
+                            (click)="editarDireccion(direccion); closeMenu()"
                           >
                             <i class="bi bi-pencil me-2"></i>Editar
-                          </a>
+                          </button>
                         </li>
-                        <li>
-                          <a
-                            class="dropdown-item text-danger"
-                            href="#"
-                            (click)="eliminarDireccion(direccion._id)"
-                            *ngIf="canDeleteDireccion()"
+                        <li role="menuitem" *ngIf="canDeleteDireccion()">
+                          <button
+                            class="action-item text-danger"
+                            (click)="openDeleteModal(direccion, i); closeMenu()"
                           >
                             <i class="bi bi-trash me-2"></i>Eliminar
-                          </a>
+                          </button>
                         </li>
                       </ul>
                     </div>
@@ -182,6 +212,13 @@ import { AuthService } from '../../../core/services/auth.service';
             </div>
           </div>
         </div>
+        <!-- Modal de confirmación -->
+        <app-confirm-modal
+          [visible]="showDeleteModal"
+          [message]="getDeleteMessage()"
+          (confirm)="confirmarEliminar()"
+          (cancel)="cancelarEliminar()"
+        ></app-confirm-modal>
       </div>
     </div>
   `,
@@ -190,22 +227,99 @@ import { AuthService } from '../../../core/services/auth.service';
       .display-1 {
         font-size: 4rem;
       }
-
       .card {
         border-radius: 1rem;
       }
-
       .btn {
         border-radius: 0.5rem;
+      }
+      .action-menu-wrapper {
+        position: relative;
+        display: inline-block;
+      }
+      .action-menu-btn {
+        border-radius: 50%;
+        width: 2.2rem;
+        height: 2.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s;
+      }
+      .action-menu {
+        position: absolute;
+        top: 120%;
+        right: 0;
+        min-width: 160px;
+        background: #fff;
+        border-radius: 0.75rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+        padding: 0.5rem 0;
+        z-index: 10;
+        animation: fadeInMenu 0.18s;
+        border: none;
+        list-style: none;
+      }
+      .action-item {
+        width: 100%;
+        background: none;
+        border: none;
+        text-align: left;
+        padding: 0.6rem 1.2rem;
+        font-size: 1rem;
+        color: #333;
+        border-radius: 0.5rem;
+        transition: background 0.13s, color 0.13s;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .action-item:hover,
+      .action-item:focus {
+        background: #f5f5f5;
+        color: #1976d2;
+        outline: none;
+      }
+      .action-item.text-danger {
+        color: #e53935;
+      }
+      .action-item.text-danger:hover {
+        background: #ffeaea;
+        color: #b71c1c;
+      }
+      @keyframes fadeInMenu {
+        from {
+          opacity: 0;
+          transform: translateY(-8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @media (max-width: 600px) {
+        .action-menu {
+          min-width: 120px;
+        }
       }
     `,
   ],
 })
 export class DireccionesListComponent implements OnInit {
+  getDeleteMessage(): string {
+    return this.direccionAEliminar
+      ? `¿Está seguro de eliminar la dirección '${this.direccionAEliminar.name}'? Esta acción no se puede deshacer.`
+      : '';
+  }
   filterForm: FormGroup;
   direcciones: any[] = [];
   direccionesFiltradas: any[] = [];
   cargando = false;
+
+  openedMenuIndex: number | null = null;
+  showDeleteModal = false;
+  direccionAEliminar: any = null;
 
   constructor(
     private router: Router,
@@ -231,13 +345,11 @@ export class DireccionesListComponent implements OnInit {
     this.cargando = true;
     this.direccionService.getAll().subscribe({
       next: (response: any) => {
-        console.log('✅ Direcciones cargadas:', response);
         this.direcciones = response.data || [];
         this.direccionesFiltradas = [...this.direcciones];
         this.cargando = false;
       },
       error: (error: any) => {
-        console.error('❌ Error cargando direcciones:', error);
         this.alertService.error('Error al cargar direcciones');
         this.direcciones = [];
         this.direccionesFiltradas = [];
@@ -262,23 +374,47 @@ export class DireccionesListComponent implements OnInit {
     });
   }
 
+  // Menú de acciones
+  toggleMenu(index: number, event: Event): void {
+    event.stopPropagation();
+    this.openedMenuIndex = this.openedMenuIndex === index ? null : index;
+  }
+  closeMenu(): void {
+    this.openedMenuIndex = null;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (this.openedMenuIndex !== null) {
+      this.openedMenuIndex = null;
+    }
+  }
+
   editarDireccion(direccion: any): void {
     this.router.navigate(['/direcciones', direccion._id, 'editar']);
   }
 
-  eliminarDireccion(id: string): void {
-    if (confirm('¿Está seguro de que desea eliminar esta dirección?')) {
-      this.direccionService.delete(id).subscribe({
-        next: () => {
-          this.alertService.success('Dirección eliminada exitosamente');
-          this.cargarDirecciones();
-        },
-        error: (error: any) => {
-          console.error('Error eliminando dirección:', error);
-          this.alertService.error('Error al eliminar dirección');
-        },
-      });
-    }
+  openDeleteModal(direccion: any, index: number): void {
+    this.direccionAEliminar = direccion;
+    this.showDeleteModal = true;
+  }
+  cancelarEliminar(): void {
+    this.showDeleteModal = false;
+    this.direccionAEliminar = null;
+  }
+  confirmarEliminar(): void {
+    if (!this.direccionAEliminar) return;
+    this.direccionService.delete(this.direccionAEliminar._id).subscribe({
+      next: () => {
+        this.alertService.success('Dirección eliminada exitosamente');
+        this.cargarDirecciones();
+        this.cancelarEliminar();
+      },
+      error: (error: any) => {
+        this.alertService.error('Error al eliminar dirección');
+        this.cancelarEliminar();
+      },
+    });
   }
 
   navigateToForm(): void {

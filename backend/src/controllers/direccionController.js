@@ -26,10 +26,19 @@ class DireccionController {
   async getAll(req, res, next) {
     try {
       const direcciones = await direccionService.getAll();
-
+      // Devolver todos los campos del modelo
       res.json({
         message: 'Direcciones obtenidas exitosamente',
-        data: direcciones,
+        data: direcciones.map(d => ({
+          _id: d._id,
+          name: d.name,
+          descripcion: d.descripcion !== undefined ? d.descripcion : null,
+          ubicacion: d.ubicacion !== undefined ? d.ubicacion : null,
+          activo: d.activo,
+          createdAt: d.createdAt,
+          updatedAt: d.updatedAt,
+          __v: d.__v
+        })),
       });
     } catch (error) {
       next(error);
@@ -38,11 +47,19 @@ class DireccionController {
 
   async getById(req, res, next) {
     try {
-      const direccion = await direccionService.getById(req.params.id);
-
+      const d = await direccionService.getById(req.params.id);
       res.json({
         message: 'Dirección obtenida exitosamente',
-        data: direccion,
+        data: {
+          _id: d._id,
+          name: d.name,
+          descripcion: d.descripcion !== undefined ? d.descripcion : null,
+          ubicacion: d.ubicacion !== undefined ? d.ubicacion : null,
+          activo: d.activo,
+          createdAt: d.createdAt,
+          updatedAt: d.updatedAt,
+          __v: d.__v
+        },
       });
     } catch (error) {
       error.status = 404;

@@ -7,6 +7,18 @@ const direccionSchema = new mongoose.Schema({
     unique: true,
     trim: true,
   },
+  descripcion: {
+    type: String,
+    trim: true,
+  },
+  ubicacion: {
+    type: String,
+    trim: true,
+  },
+  activo: {
+    type: Boolean,
+    default: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

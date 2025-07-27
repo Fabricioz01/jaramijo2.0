@@ -3,7 +3,14 @@ const Departamento = require('../models/Departamento');
 
 class DireccionService {
   async create(direccionData) {
-    const direccion = new Direccion(direccionData);
+    // Solo tomar los campos válidos del modelo
+    const data = {
+      name: direccionData.name,
+      descripcion: direccionData.descripcion,
+      ubicacion: direccionData.ubicacion,
+      activo: direccionData.activo !== undefined ? direccionData.activo : true,
+    };
+    const direccion = new Direccion(data);
     return await direccion.save();
   }
 
@@ -20,11 +27,18 @@ class DireccionService {
   }
 
   async update(id, updateData) {
-    const direccion = await Direccion.findByIdAndUpdate(
-      id,
-      { ...updateData, updatedAt: Date.now() },
-      { new: true, runValidators: true }
-    );
+    // Solo tomar los campos válidos del modelo
+    const data = {
+      name: updateData.name,
+      descripcion: updateData.descripcion,
+      ubicacion: updateData.ubicacion,
+      activo: updateData.activo,
+      updatedAt: Date.now(),
+    };
+    const direccion = await Direccion.findByIdAndUpdate(id, data, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!direccion) {
       throw new Error('Dirección no encontrada');

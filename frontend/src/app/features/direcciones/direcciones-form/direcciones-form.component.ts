@@ -54,7 +54,6 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
                       placeholder="Ej: Dirección de Planificación"
                     />
                   </div>
-
                   <div class="col-md-12 mb-3">
                     <label for="descripcion" class="form-label"
                       >Descripción</label
@@ -67,31 +66,6 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
                       placeholder="Descripción de las funciones de la dirección"
                     ></textarea>
                   </div>
-
-                  <div class="col-md-6 mb-3">
-                    <label for="responsable" class="form-label"
-                      >Responsable</label
-                    >
-                    <input
-                      type="text"
-                      class="form-control"
-                      id="responsable"
-                      formControlName="responsable"
-                      placeholder="Nombre del responsable"
-                    />
-                  </div>
-
-                  <div class="col-md-6 mb-3">
-                    <label for="telefono" class="form-label">Teléfono</label>
-                    <input
-                      type="tel"
-                      class="form-control"
-                      id="telefono"
-                      formControlName="telefono"
-                      placeholder="Número de contacto"
-                    />
-                  </div>
-
                   <div class="col-md-12 mb-3">
                     <label for="ubicacion" class="form-label">Ubicación</label>
                     <input
@@ -102,7 +76,6 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
                       placeholder="Ej: Edificio Principal, 2do Piso"
                     />
                   </div>
-
                   <div class="col-md-6 mb-3">
                     <div class="form-check">
                       <input
@@ -183,6 +156,8 @@ export class DireccionesFormComponent implements OnInit {
   ) {
     this.direccionForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
+      descripcion: [''],
+      ubicacion: [''],
       activo: [true],
     });
   }
@@ -198,14 +173,15 @@ export class DireccionesFormComponent implements OnInit {
 
   loadDireccion(): void {
     if (!this.direccionId) return;
-
     this.direccionService.getById(this.direccionId).subscribe({
       next: (response) => {
         const direccion = response.data;
         if (direccion) {
           this.direccionForm.patchValue({
             name: direccion.name,
-            activo: true, // Por defecto activo ya que el modelo no tiene este campo
+            descripcion: direccion.descripcion || '',
+            ubicacion: direccion.ubicacion || '',
+            activo: direccion.activo !== undefined ? direccion.activo : true,
           });
         }
       },
@@ -220,23 +196,22 @@ export class DireccionesFormComponent implements OnInit {
     if (this.direccionForm.valid) {
       this.loading = true;
       const formData = this.direccionForm.value;
-
       const direccionData = {
         name: formData.name,
+        descripcion: formData.descripcion,
+        ubicacion: formData.ubicacion,
+        activo: formData.activo,
       };
-
       if (this.isEditing) {
         this.direccionService
           .update(this.direccionId!, direccionData)
           .subscribe({
             next: (response) => {
-              console.log('Dirección actualizada:', response);
               this.alertService.success('Dirección actualizada exitosamente');
               this.loading = false;
               this.goBack();
             },
             error: (error) => {
-              console.error('Error al actualizar dirección:', error);
               this.alertService.error('Error al actualizar la dirección');
               this.loading = false;
             },
@@ -244,13 +219,11 @@ export class DireccionesFormComponent implements OnInit {
       } else {
         this.direccionService.create(direccionData).subscribe({
           next: (response) => {
-            console.log('Dirección creada:', response);
             this.alertService.success('Dirección creada exitosamente');
             this.loading = false;
             this.goBack();
           },
           error: (error) => {
-            console.error('Error al crear dirección:', error);
             this.alertService.error('Error al crear la dirección');
             this.loading = false;
           },
