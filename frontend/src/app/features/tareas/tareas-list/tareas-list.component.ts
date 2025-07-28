@@ -197,9 +197,9 @@ interface Estadisticas {
                       >
                       <span
                         class="badge bg-info text-dark"
-                        *ngIf="t.departamentoId"
+                        *ngIf="t.departamentoId && t.departamentoId.name"
                       >
-                        {{ t.departamentoId }}
+                        {{ t.departamentoId.name }}
                       </span>
                     </div>
 
@@ -208,8 +208,10 @@ interface Estadisticas {
                         <small class="text-muted d-block">Asignado a</small>
                         <small class="fw-bold">
                           {{
-                            t.assignedToIds && t.assignedToIds.length > 0
-                              ? t.assignedToIds[0]
+                            t.assignedToIds &&
+                            t.assignedToIds.length > 0 &&
+                            t.assignedToIds[0].name
+                              ? t.assignedToIds[0].name
                               : 'Sin asignar'
                           }}
                         </small>
@@ -401,7 +403,9 @@ export class TareasListComponent implements OnInit {
     this.tareasFiltradas = this.tareas.filter((t) => {
       if (!t) return false;
       const okEstado = !f.estado || t.status === f.estado;
-      const okDep = !f.departamento || t.departamentoId === f.departamento;
+      const okDep =
+        !f.departamento ||
+        (t.departamentoId && t.departamentoId.name === f.departamento);
       const q = f.buscar?.toLowerCase() || '';
       const okBuscar =
         !q ||
@@ -537,7 +541,11 @@ export class TareasListComponent implements OnInit {
 
   getDepartamentosUnicos() {
     return [
-      ...new Set(this.tareas.map((t) => t.departamentoId).filter((n) => n)),
+      ...new Set(
+        this.tareas
+          .filter((t) => t.departamentoId && t.departamentoId.name)
+          .map((t) => t.departamentoId.name)
+      ),
     ];
   }
 }
