@@ -134,8 +134,9 @@ import { AuthService } from '../../../core/services/auth.service';
                       <th>Archivo</th>
                       <th>Tipo</th>
                       <th>Tamaño</th>
-                      <th>Fecha</th>
+                      <th>Tarea asociada</th>
                       <th>Subido por</th>
+                      <th>Fecha</th>
                       <th width="120">Acciones</th>
                     </tr>
                   </thead>
@@ -161,9 +162,14 @@ import { AuthService } from '../../../core/services/auth.service';
                       </td>
                       <td>{{ formatFileSize(archivo.size) }}</td>
                       <td>
+                        {{ archivo.taskId?.title || '-' }}
+                      </td>
+                      <td>
+                        {{ getUploaderName(archivo.uploaderId) }}
+                      </td>
+                      <td>
                         {{ archivo.createdAt | date : 'dd/MM/yyyy HH:mm' }}
                       </td>
-                      <td>Usuario</td>
                       <td>
                         <div class="btn-group btn-group-sm">
                           <button
@@ -243,7 +249,6 @@ import { AuthService } from '../../../core/services/auth.service';
       </div>
     </div>
 
-    <!-- Modal de subida de archivos -->
     <div class="modal fade" id="uploadModal" tabindex="-1">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -463,12 +468,35 @@ export class FilesListComponent implements OnInit {
           .toLowerCase()
           .includes(this.filtros.tipo);
 
+      // Convertir createdAt a Date si es string
+      let fechaArchivo: Date;
+      if (typeof archivo.createdAt === 'string') {
+        fechaArchivo = new Date(archivo.createdAt);
+      } else {
+        fechaArchivo = archivo.createdAt;
+      }
+
       const cumplePeriodo =
         !this.filtros.periodo ||
-        this.verificarPeriodo(archivo.createdAt, this.filtros.periodo);
+        this.verificarPeriodo(fechaArchivo, this.filtros.periodo);
 
       return cumpleTermino && cumpleTipo && cumplePeriodo;
     });
+  }
+  getUploaderName(
+    uploader: string | { _id: string; name: string; email: string }
+  ): string {
+    if (
+      typeof uploader === 'object' &&
+      uploader !== null &&
+      'name' in uploader
+    ) {
+      return uploader.name;
+    }
+    if (typeof uploader === 'string') {
+      return uploader;
+    }
+    return '-';
   }
 
   onDragOver(event: DragEvent): void {

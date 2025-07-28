@@ -8,7 +8,16 @@ export interface FileModel {
   originalName: string;
   mimeType: FileMimeType;
   size: number;
-  uploaderId: string;
-  taskId?: string;
-  createdAt: Date;
+  uploaderId:
+    | {
+        _id: string;
+        name: string;
+        email: string;
+      }
+    | string;
+  taskId?: {
+    _id: string;
+    title: string;
+  };
+  createdAt: Date | string;
 }

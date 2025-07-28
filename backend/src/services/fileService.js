@@ -3,29 +3,28 @@ const fs = require('fs');
 const path = require('path');
 
 class FileService {
-  async create(fileData) {
-    const file = new File(fileData);
+  async create(data) {
+    const file = new File(data);
     return await file.save();
   }
 
   async getAll() {
     return await File.find()
+      .populate('taskId', 'title status dueDate')
       .populate('uploaderId', 'name email')
-      .populate('taskId', 'title')
       .sort({ createdAt: -1 });
   }
 
   async getById(id) {
-    const file = await File.findById(id)
-      .populate('uploaderId', 'name email')
-      .populate('taskId', 'title');
-
-    if (!file) {
-      throw new Error('Archivo no encontrado');
-    }
-
-    return file;
+    return await File.findById(id)
+      .populate('taskId', 'title status dueDate')
+      .populate('uploaderId', 'name email');
   }
+
+  async delete(id) {
+    return await File.findByIdAndDelete(id);
+  }
+
 
   async getByTask(taskId) {
     return await File.find({ taskId })
@@ -39,28 +38,28 @@ class FileService {
       .sort({ createdAt: -1 });
   }
 
-  async delete(id) {
-    const file = await File.findById(id);
+  // async delete(id) {
+  //   const file = await File.findById(id);
 
-    if (!file) {
-      throw new Error('Archivo no encontrado');
-    }
+  //   if (!file) {
+  //     throw new Error('Archivo no encontrado');
+  //   }
 
-    // Eliminar archivo físico
-    const filePath = path.join(__dirname, '../../uploads', file.filename);
+  //   // Eliminar archivo físico
+  //   const filePath = path.join(__dirname, '../../uploads', file.filename);
 
-    try {
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-    } catch (error) {
-      console.error('Error al eliminar archivo físico:', error);
-    }
+  //   try {
+  //     if (fs.existsSync(filePath)) {
+  //       fs.unlinkSync(filePath);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error al eliminar archivo físico:', error);
+  //   }
 
-    await File.findByIdAndDelete(id);
+  //   await File.findByIdAndDelete(id);
 
-    return file;
-  }
+  //   return file;
+  // }
 
   async getFilePath(id) {
     const file = await this.getById(id);

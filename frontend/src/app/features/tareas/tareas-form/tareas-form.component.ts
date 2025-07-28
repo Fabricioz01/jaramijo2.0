@@ -11,6 +11,7 @@ import { TaskService } from '../../../core/services/task.service';
 import { UserService } from '../../../core/services/user.service';
 import { DireccionService } from '../../../core/services/direccion.service';
 import { DepartamentoService } from '../../../core/services/departamento.service';
+import { FileService } from '../../../core/services/file.service';
 import { AlertService } from '../../../core/services/alert.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 
@@ -45,7 +46,7 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
             <div class="card-body p-4">
               <form [formGroup]="tareaForm" (ngSubmit)="onSubmit()">
                 <div class="row">
-                  <!-- Información Básica -->
+                  <!-- Información básica -->
                   <div class="col-12 mb-4">
                     <h5 class="text-primary border-bottom pb-2">
                       <i class="bi bi-info-circle me-2"></i>Información Básica
@@ -53,66 +54,46 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
                   </div>
 
                   <div class="col-md-12 mb-3">
-                    <label for="title" class="form-label"
-                      >Título de la Tarea *</label
-                    >
+                    <label class="form-label">Título *</label>
                     <input
                       type="text"
                       class="form-control"
-                      id="title"
                       formControlName="title"
-                      [class.is-invalid]="isFieldInvalid('title')"
-                      placeholder="Ej: Revisión del Plan de Desarrollo Urbano"
+                      [class.is-invalid]="invalid('title')"
+                      placeholder="Ej: Revisión del Plan Urbano"
                     />
-                    <div
-                      class="invalid-feedback"
-                      *ngIf="isFieldInvalid('title')"
-                    >
-                      El título es requerido y debe tener al menos 5 caracteres
-                    </div>
+                    <div class="invalid-feedback">Título requerido</div>
                   </div>
 
                   <div class="col-md-12 mb-3">
-                    <label for="description" class="form-label"
-                      >Descripción</label
-                    >
+                    <label class="form-label">Descripción</label>
                     <textarea
-                      class="form-control"
-                      id="description"
-                      formControlName="description"
                       rows="4"
-                      placeholder="Descripción detallada de la tarea..."
+                      class="form-control"
+                      formControlName="description"
+                      placeholder="Descripción detallada..."
                     ></textarea>
                   </div>
 
                   <div class="col-md-6 mb-3">
-                    <label for="status" class="form-label">Estado *</label>
+                    <label class="form-label">Estado *</label>
                     <select
                       class="form-select"
-                      id="status"
                       formControlName="status"
-                      [class.is-invalid]="isFieldInvalid('status')"
+                      [class.is-invalid]="invalid('status')"
                     >
-                      <option value="pending">📋 Pendiente</option>
-                      <option value="in_progress">⏳ En Progreso</option>
-                      <option value="completed">✅ Completada</option>
+                      <option value="pending">Pendiente</option>
+                      <option value="in_progress">En Progreso</option>
+                      <option value="completed">Completada</option>
                     </select>
-                    <div
-                      class="invalid-feedback"
-                      *ngIf="isFieldInvalid('status')"
-                    >
-                      Debe seleccionar un estado
-                    </div>
+                    <div class="invalid-feedback">Debe seleccionar estado</div>
                   </div>
 
                   <div class="col-md-6 mb-3">
-                    <label for="dueDate" class="form-label"
-                      >Fecha de Vencimiento</label
-                    >
+                    <label class="form-label">Fecha de vencimiento</label>
                     <input
                       type="date"
                       class="form-control"
-                      id="dueDate"
                       formControlName="dueDate"
                     />
                   </div>
@@ -125,81 +106,81 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
                   </div>
 
                   <div class="col-md-6 mb-3">
-                    <label for="direccionId" class="form-label"
-                      >Dirección *</label
-                    >
+                    <label class="form-label">Dirección *</label>
                     <select
                       class="form-select"
-                      id="direccionId"
                       formControlName="direccionId"
-                      [class.is-invalid]="isFieldInvalid('direccionId')"
+                      (change)="onDireccionChange()"
+                      [class.is-invalid]="invalid('direccionId')"
                     >
                       <option value="">Seleccionar dirección</option>
-                      <option
-                        *ngFor="let direccion of direcciones"
-                        [value]="direccion._id"
-                      >
-                        {{ direccion.name }}
+                      <option *ngFor="let d of direcciones" [value]="d._id">
+                        {{ d.name }}
                       </option>
                     </select>
-                    <div
-                      class="invalid-feedback"
-                      *ngIf="isFieldInvalid('direccionId')"
-                    >
-                      Debe seleccionar una dirección
+                    <div class="invalid-feedback">
+                      Debe seleccionar dirección
                     </div>
                   </div>
 
                   <div class="col-md-6 mb-3">
-                    <label for="departamentoId" class="form-label"
-                      >Departamento *</label
-                    >
+                    <label class="form-label">Departamento *</label>
                     <select
                       class="form-select"
-                      id="departamentoId"
                       formControlName="departamentoId"
-                      [class.is-invalid]="isFieldInvalid('departamentoId')"
+                      (change)="onDepartamentoChange()"
                       [disabled]="!tareaForm.get('direccionId')?.value"
+                      [class.is-invalid]="invalid('departamentoId')"
                     >
                       <option value="">Seleccionar departamento</option>
                       <option
-                        *ngFor="let depto of departamentosFiltrados"
-                        [value]="depto._id"
+                        *ngFor="let d of departamentosFiltrados"
+                        [value]="d._id"
                       >
-                        {{ depto.name }}
+                        {{ d.name }}
                       </option>
                     </select>
-                    <div
-                      class="invalid-feedback"
-                      *ngIf="isFieldInvalid('departamentoId')"
-                    >
-                      Debe seleccionar un departamento
+                    <div class="invalid-feedback">
+                      Debe seleccionar departamento
                     </div>
                   </div>
 
                   <div class="col-md-12 mb-3">
-                    <label for="assignedToIds" class="form-label"
-                      >Asignado a</label
-                    >
+                    <label class="form-label">Asignado a</label>
                     <select
                       class="form-select"
-                      id="assignedToIds"
                       formControlName="assignedToIds"
                       [disabled]="!tareaForm.get('departamentoId')?.value"
                     >
-                      <option value="">Seleccionar usuario (opcional)</option>
+                      <option value="">Sin asignar</option>
                       <option
-                        *ngFor="let usuario of usuariosFiltrados"
-                        [value]="usuario._id"
+                        *ngFor="let u of usuariosFiltrados"
+                        [value]="u._id"
                       >
-                        {{ usuario.firstName }} {{ usuario.lastName }} -
-                        {{ usuario.position }}
+                        {{ u.name }} {{ u.lastName }} - {{ u.position }}
                       </option>
                     </select>
                   </div>
+
+                  <!-- Archivos -->
+                  <div class="col-12 mb-3">
+                    <label class="form-label"
+                      >Archivos adjuntos (opcional)</label
+                    >
+                    <input
+                      type="file"
+                      multiple
+                      class="form-control"
+                      accept=".pdf,.xlsx,.xls"
+                      (change)="onFilesSelected($event)"
+                    />
+                    <ul class="mt-2" *ngIf="archivos.length">
+                      <li *ngFor="let f of archivos">{{ f.name }}</li>
+                    </ul>
+                  </div>
                 </div>
 
-                <div class="d-flex gap-2 justify-content-end pt-3 border-top">
+                <div class="d-flex justify-content-end gap-2 pt-3 border-top">
                   <button
                     type="button"
                     class="btn btn-outline-secondary"
@@ -215,7 +196,6 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
                     <span
                       *ngIf="loading"
                       class="spinner-border spinner-border-sm me-2"
-                      role="status"
                     ></span>
                     {{ isEditing ? 'Actualizar' : 'Crear' }} Tarea
                   </button>
@@ -232,28 +212,21 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
       .card {
         border-radius: 1rem;
       }
-
       .btn {
         border-radius: 0.5rem;
       }
-
       .form-control,
       .form-select {
         border-radius: 0.5rem;
       }
-
       .is-invalid {
         border-color: #dc3545;
-      }
-
-      .border-bottom {
-        border-bottom: 2px solid #e9ecef !important;
       }
     `,
   ],
 })
 export class TareasFormComponent implements OnInit {
-  tareaForm: FormGroup;
+  tareaForm!: FormGroup;
   loading = false;
   isEditing = false;
   tareaId: string | null = null;
@@ -264,6 +237,8 @@ export class TareasFormComponent implements OnInit {
   departamentosFiltrados: any[] = [];
   usuariosFiltrados: any[] = [];
 
+  archivos: File[] = [];
+
   constructor(
     private fb: FormBuilder,
     private router: Router,
@@ -272,8 +247,24 @@ export class TareasFormComponent implements OnInit {
     private userService: UserService,
     private direccionService: DireccionService,
     private departamentoService: DepartamentoService,
-    private alertService: AlertService
-  ) {
+    private fileService: FileService,
+    private alert: AlertService
+  ) {}
+
+  ngOnInit(): void {
+    this.buildForm();
+    this.tareaId = this.route.snapshot.paramMap.get('id');
+    this.isEditing = !!this.tareaId;
+
+    this.prefillDates();
+    this.loadData();
+
+    if (this.isEditing) {
+      this.loadTarea();
+    }
+  }
+
+  buildForm() {
     this.tareaForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(5)]],
       description: [''],
@@ -283,231 +274,205 @@ export class TareasFormComponent implements OnInit {
       assignedToIds: [''],
       dueDate: [''],
     });
+
+    this.tareaForm
+      .get('direccionId')
+      ?.valueChanges.subscribe(() => this.onDireccionChange());
+    this.tareaForm
+      .get('departamentoId')
+      ?.valueChanges.subscribe(() => this.onDepartamentoChange());
   }
 
-  ngOnInit(): void {
-    this.tareaId = this.route.snapshot.paramMap.get('id');
-    this.isEditing = !!this.tareaId;
-
-    // Set default dates
+  prefillDates() {
     const hoy = new Date();
-    const unaSemana = new Date(hoy);
-    unaSemana.setDate(hoy.getDate() + 7);
-
+    const vencimiento = new Date(hoy);
+    vencimiento.setDate(hoy.getDate() + 7);
     this.tareaForm.patchValue({
-      dueDate: unaSemana.toISOString().split('T')[0],
-    });
-
-    // Load data
-    this.loadDirecciones();
-    this.loadDepartamentos();
-    this.loadUsuarios();
-
-    // Watch direccion changes
-    this.tareaForm.get('direccionId')?.valueChanges.subscribe(() => {
-      this.onDireccionChange();
-    });
-
-    // Watch departamento changes
-    this.tareaForm.get('departamentoId')?.valueChanges.subscribe(() => {
-      this.onDepartamentoChange();
-    });
-
-    if (this.isEditing) {
-      this.loadTarea();
-    }
-  }
-
-  loadDirecciones(): void {
-    this.direccionService.getAll().subscribe({
-      next: (response) => {
-        this.direcciones = response.data || [];
-        console.log('Direcciones cargadas:', this.direcciones);
-      },
-      error: (error) => {
-        console.error('Error al cargar direcciones:', error);
-        this.alertService.error('Error al cargar direcciones');
-      },
+      dueDate: vencimiento.toISOString().split('T')[0],
     });
   }
 
-  loadDepartamentos(): void {
-    this.departamentoService.getAll().subscribe({
-      next: (response) => {
-        this.departamentos = response.data || [];
-        console.log('Departamentos cargados:', this.departamentos);
-      },
-      error: (error) => {
-        console.error('Error al cargar departamentos:', error);
-        this.alertService.error('Error al cargar departamentos');
-      },
-    });
-  }
-
-  loadUsuarios(): void {
-    this.userService.getAll().subscribe({
-      next: (response) => {
-        this.usuarios = response.data || [];
-        console.log('Usuarios cargados:', this.usuarios);
-      },
-      error: (error) => {
-        console.error('Error al cargar usuarios:', error);
-        this.alertService.error('Error al cargar usuariosss');
-      },
-    });
+  loadData() {
+    this.direccionService
+      .getAll()
+      .subscribe((r) => (this.direcciones = r.data || []));
+    this.departamentoService
+      .getAll()
+      .subscribe((r) => (this.departamentos = r.data || []));
+    this.userService.getAll().subscribe((r) => (this.usuarios = r.data || []));
   }
 
   loadTarea(): void {
     if (!this.tareaId) return;
 
     this.taskService.getById(this.tareaId).subscribe({
-      next: (response) => {
-        const tarea = response.data;
-        if (tarea) {
-          console.log('Tarea cargada:', tarea);
-          this.tareaForm.patchValue({
-            title: tarea.title,
-            description: tarea.description || '',
-            status: tarea.status,
-            departamentoId: tarea.departamentoId,
-            assignedToIds: tarea.assignedToIds?.[0] || '',
-            dueDate: tarea.dueDate
-              ? new Date(tarea.dueDate).toISOString().split('T')[0]
-              : '',
-          });
-
-          // Find direccion based on departamento
-          const departamento = this.departamentos.find(
-            (d) => d._id === tarea.departamentoId
-          );
-          if (departamento) {
-            this.tareaForm.patchValue({
-              direccionId:
-                typeof departamento.direccionId === 'object'
-                  ? departamento.direccionId._id
-                  : departamento.direccionId,
-            });
-            this.onDireccionChange();
-            this.onDepartamentoChange();
-          }
+      next: (res) => {
+        const t = res.data;
+        if (!t) {
+          this.alert.error('Tarea no encontrada');
+          return;
         }
+
+        // departamentoId puede ser string u objeto
+        let departamentoId: string = '';
+        if (
+          typeof t.departamentoId === 'object' &&
+          t.departamentoId !== null &&
+          '_id' in t.departamentoId
+        ) {
+          departamentoId = (t.departamentoId as any)._id;
+        } else if (typeof t.departamentoId === 'string') {
+          departamentoId = t.departamentoId;
+        }
+
+        // assignedToIds es string[]
+        let assignedToId = '';
+        if (Array.isArray(t.assignedToIds) && t.assignedToIds.length > 0) {
+          assignedToId = t.assignedToIds[0];
+        }
+
+        this.tareaForm.patchValue({
+          title: t.title,
+          description: t.description ?? '',
+          status: t.status,
+          departamentoId: departamentoId,
+          assignedToIds: assignedToId,
+          dueDate: t.dueDate
+            ? new Date(t.dueDate).toISOString().split('T')[0]
+            : '',
+        });
+
+        // localizar dirección asociada al departamento
+        const dep = this.departamentos.find((d) => d._id === departamentoId);
+        if (dep) {
+          let direccionId = '';
+          if (
+            typeof dep.direccionId === 'object' &&
+            dep.direccionId !== null &&
+            '_id' in dep.direccionId
+          ) {
+            direccionId = (dep.direccionId as any)._id;
+          } else if (typeof dep.direccionId === 'string') {
+            direccionId = dep.direccionId;
+          }
+          this.tareaForm.patchValue({
+            direccionId: direccionId,
+          });
+        }
+
+        this.onDireccionChange();
+        this.onDepartamentoChange();
       },
-      error: (error) => {
-        console.error('Error al cargar tarea:', error);
-        this.alertService.error('Error al cargar la tarea');
-      },
+      error: () => this.alert.error('Error al cargar la tarea'),
     });
   }
 
-  onDireccionChange(): void {
-    const direccionId = this.tareaForm.get('direccionId')?.value;
-    if (direccionId) {
-      this.departamentosFiltrados = this.departamentos.filter((depto) => {
-        return typeof depto.direccionId === 'object'
-          ? depto.direccionId._id === direccionId
-          : depto.direccionId === direccionId;
-      });
-      console.log('Departamentos filtrados:', this.departamentosFiltrados);
-    } else {
-      this.departamentosFiltrados = [];
-    }
-
-    // Reset departamento and usuario when direccion changes
+  onDireccionChange() {
+    const id = this.tareaForm.get('direccionId')?.value;
+    this.departamentosFiltrados = this.departamentos.filter((d: any) =>
+      typeof d.direccionId === 'object'
+        ? d.direccionId._id === id
+        : d.direccionId === id
+    );
     if (!this.isEditing) {
-      this.tareaForm.patchValue({
-        departamentoId: '',
-        assignedToIds: '',
-      });
+      this.tareaForm.patchValue({ departamentoId: '', assignedToIds: '' });
       this.usuariosFiltrados = [];
     }
   }
 
-  onDepartamentoChange(): void {
-    const departamentoId = this.tareaForm.get('departamentoId')?.value;
-    console.log('Departamento seleccionado:', departamentoId);
-    console.log('Todos los usuarios:', this.usuarios);
+  onDepartamentoChange() {
+    const id = this.tareaForm.get('departamentoId')?.value;
+    this.usuariosFiltrados = this.usuarios.filter((u: any) =>
+      typeof u.departamentoId === 'object'
+        ? u.departamentoId._id === id
+        : u.departamentoId === id
+    );
+    if (!this.isEditing) this.tareaForm.patchValue({ assignedToIds: '' });
+  }
 
-    if (departamentoId) {
-      this.usuariosFiltrados = this.usuarios.filter((usuario) => {
-        console.log(
-          'Usuario departamentoId:',
-          usuario.departamentoId,
-          'Comparando con:',
-          departamentoId
-        );
-        return typeof usuario.departamentoId === 'object'
-          ? usuario.departamentoId._id === departamentoId
-          : usuario.departamentoId === departamentoId;
+  onFilesSelected(e: Event) {
+    const files = Array.from((e.target as HTMLInputElement).files || []);
+    files.forEach((f) => {
+      const v = this.fileService.validateFile(f);
+      if (v.valid) this.archivos.push(f);
+      else this.alert.error(v.error || 'Archivo inválido');
+    });
+  }
+
+  invalid(c: string) {
+    const f = this.tareaForm.get(c);
+    return f && f.invalid && (f.dirty || f.touched);
+  }
+
+  onSubmit() {
+    if (this.tareaForm.invalid) {
+      Object.values(this.tareaForm.controls).forEach((c) => c.markAsTouched());
+      return;
+    }
+    this.loading = true;
+
+    const v = this.tareaForm.value;
+    const payload = {
+      title: v.title,
+      description: v.description || undefined,
+      status: v.status,
+      departamentoId: v.departamentoId,
+      assignedToIds: v.assignedToIds ? [v.assignedToIds] : [],
+      dueDate: v.dueDate ? new Date(v.dueDate) : undefined,
+    };
+
+    const finish = () => {
+      this.loading = false;
+      this.goBack();
+    };
+
+    const uploadAttachments = (taskId: string) => {
+      if (!this.archivos.length) return finish();
+      this.fileService.uploadMultipleFiles(this.archivos, taskId).subscribe({
+        complete: finish,
+        error: () => {
+          this.loading = false;
+          this.alert.error('Error subiendo archivos');
+        },
       });
-      console.log('Usuarios filtrados:', this.usuariosFiltrados);
+    };
+
+    if (this.isEditing) {
+      this.taskService.update(this.tareaId!, payload).subscribe({
+        next: (r) => {
+          const id = r.data?._id;
+          if (id) {
+            uploadAttachments(id);
+          } else {
+            this.loading = false;
+            this.alert.error('Error: respuesta inválida del servidor');
+          }
+        },
+        error: () => {
+          this.loading = false;
+          this.alert.error('Error al actualizar la tarea');
+        },
+      });
     } else {
-      this.usuariosFiltrados = [];
-    }
-
-    // Reset usuario when departamento changes (but not during editing load)
-    if (!this.isEditing) {
-      this.tareaForm.patchValue({ assignedToIds: '' });
-    }
-  }
-
-  isFieldInvalid(fieldName: string): boolean {
-    const field = this.tareaForm.get(fieldName);
-    return !!(field && field.invalid && (field.dirty || field.touched));
-  }
-
-  onSubmit(): void {
-    if (this.tareaForm.valid) {
-      this.loading = true;
-      const formData = this.tareaForm.value;
-
-      const tareaData = {
-        title: formData.title,
-        description: formData.description || undefined,
-        status: formData.status,
-        departamentoId: formData.departamentoId,
-        assignedToIds: formData.assignedToIds ? [formData.assignedToIds] : [],
-        dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
-      };
-
-      console.log('Datos a enviar:', tareaData);
-
-      if (this.isEditing) {
-        this.taskService.update(this.tareaId!, tareaData).subscribe({
-          next: (response) => {
-            console.log('Tarea actualizada:', response);
-            this.alertService.success('Tarea actualizada exitosamente');
+      this.taskService.create(payload).subscribe({
+        next: (r) => {
+          const id = r.data?._id;
+          if (id) {
+            uploadAttachments(id);
+          } else {
             this.loading = false;
-            this.goBack();
-          },
-          error: (error) => {
-            console.error('Error al actualizar tarea:', error);
-            this.alertService.error('Error al actualizar la tarea');
-            this.loading = false;
-          },
-        });
-      } else {
-        this.taskService.create(tareaData).subscribe({
-          next: (response) => {
-            console.log('Tarea creada:', response);
-            this.alertService.success('Tarea creada exitosamente');
-            this.loading = false;
-            this.goBack();
-          },
-          error: (error) => {
-            console.error('Error al crear tarea:', error);
-            this.alertService.error('Error al crear la tarea');
-            this.loading = false;
-          },
-        });
-      }
-    } else {
-      Object.keys(this.tareaForm.controls).forEach((key) => {
-        this.tareaForm.get(key)?.markAsTouched();
+            this.alert.error('Error: respuesta inválida del servidor');
+          }
+        },
+        error: () => {
+          this.loading = false;
+          this.alert.error('Error al crear la tarea');
+        },
       });
     }
   }
 
-  goBack(): void {
+  goBack() {
     this.router.navigate(['/tareas']);
   }
 }

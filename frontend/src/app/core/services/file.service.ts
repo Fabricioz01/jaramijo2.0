@@ -12,18 +12,6 @@ export interface FileUpload {
   result?: any;
 }
 
-export interface FileInfo {
-  id: string;
-  nombre: string;
-  nombreOriginal: string;
-  mimetype: string;
-  tamanio: number;
-  ruta: string;
-  fechaSubida: Date;
-  subidoPor: string;
-  descripcion?: string;
-}
-
 @Injectable({
   providedIn: 'root',
 })
@@ -51,45 +39,34 @@ export class FileService {
   }
 
   downloadFile(id: string, filename: string): void {
-    console.log('Descargando archivo con ID:', id);
-    this.download(id).subscribe({
-      next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
-        link.click();
-        window.URL.revokeObjectURL(url);
-      },
-      error: (error) => {
-        console.error('Error al descargar archivo:', error);
-      },
+    this.download(id).subscribe((blob) => {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
     });
   }
 
   uploadFile(
     file: File,
-    descripcion?: string
+    taskId?: string
   ): Observable<{ progress: number; result?: any }> {
     const formData = new FormData();
     formData.append('file', file);
-    if (descripcion) {
-      formData.append('descripcion', descripcion);
-    }
-
+    const url = taskId ? `/api/v1/tasks/${taskId}/attach` : this.API_URL;
     return this.http
-      .post(`${this.API_URL}`, formData, {
-        reportProgress: true,
-        observe: 'events',
-      })
+      .post(url, formData, { observe: 'events', reportProgress: true })
       .pipe(
-        map((event) => {
+        map((event: any) => {
           if (event.type === HttpEventType.UploadProgress) {
             const progress = Math.round(
               (100 * event.loaded) / (event.total || 1)
             );
             return { progress };
-          } else if (event.type === HttpEventType.Response) {
+          }
+          if (event.type === HttpEventType.Response) {
             return { progress: 100, result: event.body };
           }
           return { progress: 0 };
@@ -97,36 +74,35 @@ export class FileService {
       );
   }
 
-  uploadMultipleFiles(files: File[]): Observable<FileUpload[]> {
+  uploadMultipleFiles(
+    files: File[],
+    taskId?: string
+  ): Observable<FileUpload[]> {
     const uploads: FileUpload[] = files.map((file) => ({
       file,
       progress: 0,
       uploading: true,
     }));
-
     return new Observable<FileUpload[]>((observer) => {
-      let completed = 0;
-
-      files.forEach((file, index) => {
-        this.uploadFile(file).subscribe({
-          next: (result) => {
-            uploads[index].progress = result.progress;
-            if (result.result) {
-              uploads[index].result = result.result;
-              uploads[index].uploading = false;
+      let done = 0;
+      files.forEach((file, i) => {
+        this.uploadFile(file, taskId).subscribe({
+          next: (r) => {
+            uploads[i].progress = r.progress;
+            if (r.result) {
+              uploads[i].result = r.result;
+              uploads[i].uploading = false;
             }
             observer.next([...uploads]);
           },
-          error: (error) => {
-            uploads[index].error = error.message;
-            uploads[index].uploading = false;
+          error: (e) => {
+            uploads[i].uploading = false;
+            uploads[i].error = e.message;
             observer.next([...uploads]);
           },
           complete: () => {
-            completed++;
-            if (completed === files.length) {
-              observer.complete();
-            }
+            done++;
+            if (done === files.length) observer.complete();
           },
         });
       });
@@ -134,46 +110,34 @@ export class FileService {
   }
 
   validateFile(file: File): { valid: boolean; error?: string } {
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    const allowedTypes = [
+    const max = 10 * 1024 * 1024;
+    const ok = [
       'application/pdf',
       'application/vnd.ms-excel',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     ];
-
-    if (file.size > maxSize) {
+    if (file.size > max)
       return { valid: false, error: 'El archivo no puede superar los 10MB' };
-    }
-
-    if (!allowedTypes.includes(file.type)) {
+    if (!ok.includes(file.type))
       return { valid: false, error: 'Solo se permiten archivos PDF y Excel' };
-    }
-
     return { valid: true };
   }
 
-  getFileIcon(mimetype: string): string {
-    console.log('🔍 FileService - getFileIcon called with mimetype:', mimetype);
-
-    if (!mimetype || typeof mimetype !== 'string') {
-      console.warn('⚠️ FileService - Invalid mimetype:', mimetype);
-      return 'bi bi-file-earmark text-secondary';
-    }
-
-    if (mimetype.includes('pdf')) return 'bi bi-file-earmark-pdf text-danger';
-    if (mimetype.includes('excel') || mimetype.includes('spreadsheet'))
+  getFileIcon(type: string): string {
+    if (type.includes('pdf')) return 'bi bi-file-earmark-pdf text-danger';
+    if (type.includes('excel') || type.includes('spreadsheet'))
       return 'bi bi-file-earmark-excel text-success';
-    if (mimetype.includes('word') || mimetype.includes('document'))
+    if (type.includes('word') || type.includes('document'))
       return 'bi bi-file-earmark-word text-primary';
-    if (mimetype.includes('image')) return 'bi bi-file-earmark-image text-info';
+    if (type.includes('image')) return 'bi bi-file-earmark-image text-info';
     return 'bi bi-file-earmark text-secondary';
   }
 
-  formatFileSize(bytes: number): string {
-    if (bytes === 0) return '0 Bytes';
+  formatFileSize(b: number): string {
+    if (!b) return '0 Bytes';
     const k = 1024;
+    const i = Math.floor(Math.log(b) / Math.log(k));
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return parseFloat((b / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 }
