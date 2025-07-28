@@ -22,4 +22,11 @@ export const rolesRoutes: Routes = [
         (m) => m.RolesFormComponent
       ),
   },
+  {
+    path: ':id/detalle',
+    loadComponent: () =>
+      import('./roles-detail/roles-detail.component').then(
+        (m) => m.RolesDetailComponent
+      ),
+  },
 ];

@@ -1,19 +1,46 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  FormsModule,
+} from '@angular/forms';
 import { Router } from '@angular/router';
 import { RoleService } from '../../../core/services/role.service';
 import { AlertService } from '../../../core/services/alert.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
+import { ConfirmModalComponent } from '../../../shared/components/alerts/confirm-modal.component';
+import { Role, Permission } from '../../../core/models';
+
+type RoleWithPermissions = Role & { permissionIds: (string | Permission)[] };
 
 @Component({
   selector: 'app-roles-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, HeaderComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    HeaderComponent,
+    ConfirmModalComponent,
+  ],
   template: `
     <app-header></app-header>
+
+    <!-- Modal de confirmación -->
+    <app-confirm-modal
+      [visible]="showConfirmModal"
+      [message]="
+        '¿Está seguro de eliminar este rol? Esta acción no se puede deshacer.'
+      "
+      (confirm)="confirmarEliminarRol()"
+      (cancel)="cancelarEliminarRol()"
+    ></app-confirm-modal>
+
     <div class="container-fluid py-4" *ngIf="canAccessModule()">
+      <!-- Encabezado -->
       <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h1 class="h3 mb-0">Roles del Sistema</h1>
@@ -28,16 +55,15 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
         </button>
       </div>
 
-      <!-- Filtros -->
-      <div class="card border-0 shadow-sm mb-4">
+      <!-- Filtro -->
+      <div class="card mb-4">
         <div class="card-body">
           <form [formGroup]="filterForm" class="row g-3">
             <div class="col-md-12">
-              <label for="buscar" class="form-label">Buscar</label>
+              <label class="form-label">Buscar</label>
               <input
                 type="text"
                 class="form-control"
-                id="buscar"
                 formControlName="buscar"
                 placeholder="Buscar por nombre..."
               />
@@ -46,184 +72,200 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
         </div>
       </div>
 
-      <!-- Lista de roles -->
-      <div class="row">
-        <div class="col-md-6 col-lg-4 mb-4" *ngFor="let rol of rolesFiltrados">
+      <!-- Lista -->
+      <div class="row" *ngIf="!loading">
+        <div
+          class="col-md-6 col-lg-4 mb-4"
+          *ngFor="let rol of rolesFiltrados; let i = index"
+        >
           <div class="card h-100 border-0 shadow-sm">
             <div class="card-body">
-              <div
-                class="d-flex justify-content-between align-items-start mb-3"
-              >
-                <div class="d-flex align-items-center">
-                  <div
-                    class="role-icon me-3"
-                    [class]="getRoleIconClass(rol.name)"
-                  >
-                    <i [class]="getRoleIcon(rol.name)"></i>
-                  </div>
-                  <div>
-                    <h6 class="card-title mb-0 fw-bold">{{ rol.name }}</h6>
-                    <span class="badge bg-success"> Activo </span>
-                  </div>
-                </div>
-                <div class="dropdown">
+              <!-- Nombre y menú -->
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <h6 class="card-title fw-bold text-primary">{{ rol.name }}</h6>
+
+                <div
+                  class="action-menu-wrapper"
+                  [class.open]="openedMenuIndex === i"
+                >
                   <button
-                    class="btn btn-sm btn-outline-secondary dropdown-toggle"
-                    data-bs-toggle="dropdown"
+                    class="btn btn-sm btn-outline-secondary action-menu-btn"
+                    (click)="toggleMenu(i, $event)"
+                    aria-label="Abrir menú de acciones"
                   >
                     <i class="bi bi-three-dots"></i>
                   </button>
-                  <ul class="dropdown-menu">
-                    <li>
-                      <a
-                        class="dropdown-item"
-                        (click)="editarRol(rol._id)"
-                        *ngIf="canEditRole()"
+
+                  <ul class="action-menu" *ngIf="openedMenuIndex === i">
+                    <li *ngIf="canViewRole()">
+                      <button
+                        class="action-item"
+                        (click)="verRol(rol._id); closeMenu()"
                       >
-                        <i class="bi bi-pencil me-2"></i>Editar</a
-                      >
+                        <i class="bi bi-eye me-2"></i>Ver
+                      </button>
                     </li>
-                    <li>
-                      <a
-                        class="dropdown-item"
-                        (click)="duplicarRol(rol._id)"
-                        *ngIf="canCreateRole()"
+                    <li *ngIf="canEditRole()">
+                      <button
+                        class="action-item"
+                        (click)="editarRol(rol._id); closeMenu()"
                       >
-                        <i class="bi bi-files me-2"></i>Duplicar</a
-                      >
+                        <i class="bi bi-pencil me-2"></i>Editar
+                      </button>
                     </li>
-                    <li><hr class="dropdown-divider" /></li>
-                    <li>
-                      <a
-                        class="dropdown-item text-danger"
-                        (click)="eliminarRol(rol._id)"
-                        *ngIf="canDeleteRole()"
+                    <li *ngIf="canDeleteRole()">
+                      <button
+                        class="action-item text-danger"
+                        (click)="eliminarRol(rol._id); closeMenu()"
                       >
-                        <i class="bi bi-trash me-2"></i>Eliminar</a
-                      >
+                        <i class="bi bi-trash me-2"></i>Eliminar
+                      </button>
+                    </li>
+                    <li
+                      *ngIf="
+                        !canViewRole() && !canEditRole() && !canDeleteRole()
+                      "
+                    >
+                      <span class="action-item disabled text-muted">
+                        Sin acciones disponibles
+                      </span>
                     </li>
                   </ul>
                 </div>
               </div>
 
-              <div class="mb-3">
-                <div
-                  class="d-flex justify-content-between align-items-center mb-2"
-                >
-                  <small class="text-muted fw-semibold">PERMISOS</small>
-                  <span class="badge bg-light text-dark">{{
-                    rol.permissionIds?.length || 0
-                  }}</span>
-                </div>
-                <div class="permisos-preview">
-                  <span
-                    class="badge bg-primary me-1 mb-1"
-                    *ngFor="
-                      let permiso of (rol.permissionIds || []).slice(0, 3)
-                    "
-                  >
-                    {{ getPermissionDisplay(permiso) }}
-                  </span>
-                  <span
-                    class="badge bg-secondary"
-                    *ngIf="(rol.permissionIds?.length || 0) > 3"
-                  >
-                    +{{ (rol.permissionIds?.length || 0) - 3 }} más
-                  </span>
-                </div>
+              <!-- Permisos -->
+              <div class="mb-2">
+                <small class="text-muted fw-semibold">PERMISOS</small>
+                <span class="badge bg-light text-dark ms-2">{{
+                  rol.permissionIds.length
+                }}</span>
               </div>
 
-              <div class="d-flex justify-content-between align-items-center">
-                <small class="text-muted">
-                  <i class="bi bi-calendar me-1"></i>
-                  {{ formatDate(rol.createdAt) }}
-                </small>
+              <div class="d-flex flex-wrap gap-1 mb-3">
+                <span
+                  class="badge bg-primary"
+                  *ngFor="let p of rol.permissionIds.slice(0, 3)"
+                >
+                  {{ getPermissionDisplay(p) }}
+                </span>
+                <span
+                  class="badge bg-secondary"
+                  *ngIf="rol.permissionIds.length > 3"
+                >
+                  +{{ rol.permissionIds.length - 3 }} más
+                </span>
               </div>
+
+              <!-- Fecha -->
+              <small class="text-muted">
+                <i class="bi bi-calendar me-1"></i>{{ formatDate(rol.createdAt) }}
+              </small>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="text-center py-5" *ngIf="rolesFiltrados.length === 0">
+      <!-- Empty / Loading -->
+      <div
+        class="text-center py-5"
+        *ngIf="!loading && rolesFiltrados.length === 0"
+      >
         <i class="bi bi-shield-exclamation display-1 text-muted"></i>
         <h4 class="mt-3">No hay roles</h4>
         <p class="text-muted">Comienza creando roles para el sistema</p>
-        <div class="d-flex gap-2 justify-content-center mt-4">
-          <button class="btn btn-outline-primary" (click)="goBack()">
-            <i class="bi bi-arrow-left me-2"></i>Volver al Dashboard
-          </button>
-          <button
-            class="btn btn-primary"
-            (click)="navigateToForm()"
-            *ngIf="canCreateRole()"
-          >
-            <i class="bi bi-shield-plus me-2"></i>Crear Rol
-          </button>
-        </div>
+        <button
+          class="btn btn-primary"
+          (click)="navigateToForm()"
+          *ngIf="canCreateRole()"
+        >
+          <i class="bi bi-shield-plus me-2"></i>Crear Rol
+        </button>
+      </div>
+
+      <div class="text-center py-5" *ngIf="loading">
+        <span class="spinner-border" role="status"></span>
       </div>
     </div>
   `,
   styles: [
     `
-      .display-1 {
-        font-size: 4rem;
+      .action-menu-wrapper {
+        position: relative;
+        display: inline-block;
       }
-
-      .card {
-        border-radius: 1rem;
-        transition: transform 0.2s;
-      }
-
-      .card:hover {
-        transform: translateY(-2px);
-      }
-
-      .btn {
-        border-radius: 0.5rem;
-      }
-
-      .role-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
+      .action-menu-btn {
+        border-radius: 50%;
+        width: 2.2rem;
+        height: 2.2rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: white;
-        font-size: 18px;
+        transition: background 0.15s;
       }
-
-      .role-admin {
-        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+      .action-menu {
+        position: absolute;
+        top: 120%;
+        right: 0;
+        min-width: 160px;
+        background: #fff;
+        border-radius: 0.75rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+        padding: 0.5rem 0;
+        z-index: 10;
+        animation: fadeInMenu 0.18s;
+        list-style: none;
       }
-
-      .role-supervisor {
-        background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+      .action-item {
+        width: 100%;
+        background: none;
+        border: none;
+        text-align: left;
+        padding: 0.6rem 1.2rem;
+        font-size: 1rem;
+        color: #333;
+        border-radius: 0.5rem;
+        transition: background 0.13s, color 0.13s;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
       }
-
-      .role-empleado {
-        background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+      .action-item:hover,
+      .action-item:focus {
+        background: #f5f5f5;
+        color: #1976d2;
+        outline: none;
       }
-
-      .role-default {
-        background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+      .action-item.text-danger {
+        color: #e53935;
       }
-
-      .permisos-preview {
-        min-height: 32px;
+      .action-item.text-danger:hover {
+        background: #ffeaea;
+        color: #b71c1c;
       }
-
-      .badge {
-        font-size: 0.75em;
+      @keyframes fadeInMenu {
+        from {
+          opacity: 0;
+          transform: translateY(-8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
     `,
   ],
 })
 export class RolesListComponent implements OnInit {
   filterForm: FormGroup;
-  roles: any[] = [];
-  rolesFiltrados: any[] = [];
+  roles: RoleWithPermissions[] = [];
+  rolesFiltrados: RoleWithPermissions[] = [];
   loading = false;
+
+  openedMenuIndex: number | null = null;
+  showConfirmModal = false;
+  selectedRoleId: string | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -237,127 +279,79 @@ export class RolesListComponent implements OnInit {
     });
   }
 
+  /* ------------------- ciclo de vida ------------------- */
   ngOnInit(): void {
     this.cargarRoles();
-    this.setupFilters();
+    this.filterForm.valueChanges.subscribe(() => this.aplicarFiltros());
   }
 
+  /* ------------------- CRUD ------------------- */
   cargarRoles(): void {
     this.loading = true;
     this.roleService.getAll().subscribe({
-      next: (response) => {
-        console.log('✅ Roles cargados:', response);
-        this.roles = response.data || [];
+      next: (res) => {
+        this.roles = res.data as RoleWithPermissions[];
         this.rolesFiltrados = [...this.roles];
         this.loading = false;
       },
-      error: (error) => {
-        console.error('❌ Error cargando roles:', error);
+      error: () => {
         this.alertService.error('Error al cargar roles');
-        this.roles = [];
-        this.rolesFiltrados = [];
         this.loading = false;
       },
     });
   }
 
-  setupFilters(): void {
-    this.filterForm.valueChanges.subscribe(() => {
-      this.aplicarFiltros();
+  eliminarRol(id: string): void {
+    this.selectedRoleId = id;
+    this.showConfirmModal = true;
+  }
+
+  confirmarEliminarRol(): void {
+    if (!this.selectedRoleId) return;
+    this.roleService.delete(this.selectedRoleId).subscribe({
+      next: () => {
+        this.alertService.success('Rol eliminado exitosamente');
+        this.cargarRoles();
+        this.cancelarEliminarRol();
+      },
+      error: () => {
+        this.alertService.error('Error al eliminar rol');
+        this.cancelarEliminarRol();
+      },
     });
+  }
+
+  cancelarEliminarRol(): void {
+    this.showConfirmModal = false;
+    this.selectedRoleId = null;
+  }
+
+  navigateToForm(): void {
+    this.router.navigate(['/roles/nuevo']);
+  }
+  verRol(id: string): void {
+    this.router.navigate(['/roles', id, 'detalle']);
+  }
+  editarRol(id: string): void {
+    this.router.navigate(['/roles', id, 'editar']);
   }
 
   aplicarFiltros(): void {
-    const filtros = this.filterForm.value;
-    this.rolesFiltrados = this.roles.filter((rol) => {
-      const buscarMatch =
-        !filtros.buscar ||
-        rol.name.toLowerCase().includes(filtros.buscar.toLowerCase());
-
-      return buscarMatch;
-    });
-  }
-
-  getRoleIconClass(nombre: string): string {
-    switch (nombre.toLowerCase()) {
-      case 'administrador':
-        return 'role-admin';
-      case 'supervisor':
-        return 'role-supervisor';
-      case 'empleado':
-        return 'role-empleado';
-      default:
-        return 'role-default';
-    }
-  }
-
-  getRoleIcon(nombre: string): string {
-    switch (nombre.toLowerCase()) {
-      case 'administrador':
-        return 'bi bi-shield-fill-check';
-      case 'supervisor':
-        return 'bi bi-eye-fill';
-      case 'empleado':
-        return 'bi bi-person-fill';
-      default:
-        return 'bi bi-shield-fill';
-    }
+    const { buscar } = this.filterForm.value;
+    this.rolesFiltrados = this.roles.filter((r) =>
+      !buscar ? true : r.name.toLowerCase().includes(buscar.toLowerCase())
+    );
   }
 
   formatDate(date: Date): string {
     return new Date(date).toLocaleDateString('es-ES');
   }
 
-  getPermissionDisplay(permiso: any): string {
-    if (typeof permiso === 'string') {
-      return permiso;
-    }
+ getPermissionDisplay(p: Permission | string): string {
+  if (typeof p === 'string') return p;
+  return `${p.action} ${p.resource}`.replace(/^\w/, (c) => c.toUpperCase());
+}
 
-    if (typeof permiso === 'object' && permiso) {
-      // Format: action + resource (e.g., "create archivos")
-      const action = permiso.action || '';
-      const resource = permiso.resource || '';
-      return `${action} ${resource}`.trim();
-    }
-
-    return 'Permiso';
-  }
-
-  navigateToForm(): void {
-    this.router.navigate(['/roles/nuevo']);
-  }
-
-  editarRol(id: string): void {
-    this.router.navigate(['/roles', id, 'editar']);
-  }
-
-  duplicarRol(id: string): void {
-    console.log('Duplicar rol:', id);
-    // Implementar lógica de duplicación
-  }
-
-  eliminarRol(id: string): void {
-    if (
-      confirm(
-        '¿Está seguro de eliminar este rol? Esta acción no se puede deshacer.'
-      )
-    ) {
-      this.roleService.delete(id).subscribe({
-        next: () => {
-          this.alertService.success('Rol eliminado exitosamente');
-          this.cargarRoles();
-        },
-        error: (error) => {
-          console.error('Error eliminando rol:', error);
-          this.alertService.error('Error al eliminar rol');
-        },
-      });
-    }
-  }
-
-  goBack(): void {
-    this.router.navigate(['/dashboard']);
-  }
 
   canAccessModule(): boolean {
     return this.authService.canAccessModule('roles');
@@ -365,10 +359,25 @@ export class RolesListComponent implements OnInit {
   canCreateRole(): boolean {
     return this.authService.canAccessAction('roles', 'create');
   }
+  canViewRole(): boolean {
+    return this.authService.canAccessAction('roles', 'read');
+  }
   canEditRole(): boolean {
     return this.authService.canAccessAction('roles', 'update');
   }
   canDeleteRole(): boolean {
     return this.authService.canAccessAction('roles', 'delete');
+  }
+
+  toggleMenu(i: number, e: Event): void {
+    e.stopPropagation();
+    this.openedMenuIndex = this.openedMenuIndex === i ? null : i;
+  }
+  closeMenu(): void {
+    this.openedMenuIndex = null;
+  }
+  @HostListener('document:click')
+  onDocClick(): void {
+    this.closeMenu();
   }
 }

@@ -234,24 +234,26 @@ export class RolesFormComponent implements OnInit {
   }
 
   loadRol(): void {
-    if (!this.rolId) return;
+  if (!this.rolId) return;
 
-    this.roleService.getById(this.rolId).subscribe({
-      next: (response) => {
-        const role = response.data;
-        if (role) {
-          this.rolForm.patchValue({
-            name: role.name,
-          });
-          this.permisosSeleccionados = role.permissionIds || [];
-        }
-      },
-      error: (error) => {
-        console.error('Error al cargar rol:', error);
-        this.alertService.error('Error al cargar el rol');
-      },
-    });
-  }
+  this.roleService.getById(this.rolId).subscribe({
+    next: (response) => {
+      const role = response.data;
+      if (role) {
+        this.rolForm.patchValue({ name: role.name });
+
+        this.permisosSeleccionados = (role.permissionIds || []).map(
+          (p: any) => (typeof p === 'string' ? p : p._id)
+        );
+      }
+    },
+    error: () => {
+      console.error('Error al cargar rol');
+      this.alertService.error('Error al cargar el rol');
+    },
+  });
+}
+
 
   isPermisoSelected(permisoId: string): boolean {
     return this.permisosSeleccionados.includes(permisoId);
