@@ -199,17 +199,20 @@ interface Estadisticas {
                         class="badge bg-info text-dark"
                         *ngIf="t.departamentoId"
                       >
-                        {{ t.departamentoId.name }}
+                        {{ t.departamentoId }}
                       </span>
                     </div>
 
                     <div class="row text-center">
                       <div class="col">
                         <small class="text-muted d-block">Asignado a</small>
-                        <small
-                          class="fw-bold"
-                          >{{ t.assignedToIds?.[0]?.name || 'Sin asignar' }}</small
-                        >
+                        <small class="fw-bold">
+                          {{
+                            t.assignedToIds && t.assignedToIds.length > 0
+                              ? t.assignedToIds[0]
+                              : 'Sin asignar'
+                          }}
+                        </small>
                       </div>
                       <div class="col">
                         <small class="text-muted d-block">Vence</small>
@@ -396,14 +399,15 @@ export class TareasListComponent implements OnInit {
   apply() {
     const f = this.filterForm.value;
     this.tareasFiltradas = this.tareas.filter((t) => {
+      if (!t) return false;
       const okEstado = !f.estado || t.status === f.estado;
-      const okDep =
-        !f.departamento || t.departamentoId?.name === f.departamento;
+      const okDep = !f.departamento || t.departamentoId === f.departamento;
       const q = f.buscar?.toLowerCase() || '';
       const okBuscar =
         !q ||
-        t.title.toLowerCase().includes(q) ||
-        t.description?.toLowerCase().includes(q);
+        (typeof t.title === 'string' && t.title.toLowerCase().includes(q)) ||
+        (typeof t.description === 'string' &&
+          t.description.toLowerCase().includes(q));
       return okEstado && okDep && okBuscar;
     });
   }
@@ -411,10 +415,14 @@ export class TareasListComponent implements OnInit {
   countStats() {
     this.estadisticas = {
       total: this.tareas.length,
-      enProgreso: this.tareas.filter((t) => t.status === 'in_progress').length,
-      completadas: this.tareas.filter((t) => t.status === 'completed').length,
+      enProgreso: this.tareas.filter((t) => t && t.status === 'in_progress')
+        .length,
+      completadas: this.tareas.filter((t) => t && t.status === 'completed')
+        .length,
       urgentes: this.tareas.filter((t) => {
+        if (!t || !t.dueDate) return false;
         const v = new Date(t.dueDate);
+        if (isNaN(v.getTime())) return false;
         const d = Math.ceil((v.getTime() - Date.now()) / (1000 * 3600 * 24));
         return d <= 3 && t.status !== 'completed';
       }).length,
@@ -451,9 +459,10 @@ export class TareasListComponent implements OnInit {
   }
   getFechaVencimientoClass(f: string) {
     if (!f) return '';
-    const v = new Date(f).getTime();
+    const v = new Date(f);
+    if (isNaN(v.getTime())) return '';
     const h = Date.now();
-    const d = Math.ceil((v - h) / (1000 * 3600 * 24));
+    const d = Math.ceil((v.getTime() - h) / (1000 * 3600 * 24));
     if (d < 0) return 'text-danger';
     if (d <= 3) return 'text-warning';
     return 'text-success';
@@ -528,9 +537,7 @@ export class TareasListComponent implements OnInit {
 
   getDepartamentosUnicos() {
     return [
-      ...new Set(
-        this.tareas.map((t) => t.departamentoId?.name).filter((n) => n)
-      ),
+      ...new Set(this.tareas.map((t) => t.departamentoId).filter((n) => n)),
     ];
   }
 }

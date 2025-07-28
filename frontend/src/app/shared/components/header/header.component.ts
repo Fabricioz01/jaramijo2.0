@@ -312,9 +312,7 @@ export class HeaderComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    console.log('🔧 HeaderComponent - Inicializando componente');
     this.authService.currentUser$.subscribe((user) => {
-      console.log('🔍 HeaderComponent - Usuario recibido:', user);
       this.user = user;
     });
   }
@@ -337,10 +335,7 @@ export class HeaderComponent implements OnInit {
   // ---
   toggleMobileMenu(): void {
     this.showMobileMenu = !this.showMobileMenu;
-    console.log(
-      '📱 HeaderComponent - Mobile menu toggled:',
-      this.showMobileMenu
-    );
+
   }
 
   toggleDropdown(dropdownName: string, event: Event): void {
@@ -349,33 +344,27 @@ export class HeaderComponent implements OnInit {
 
     if (this.activeDropdown === dropdownName) {
       this.activeDropdown = null;
-      console.log(`🔽 HeaderComponent - Cerrando dropdown: ${dropdownName}`);
     } else {
       this.activeDropdown = dropdownName;
-      console.log(`🔽 HeaderComponent - Abriendo dropdown: ${dropdownName}`);
     }
   }
 
   navigateTo(route: string): void {
-    console.log('🔍 HeaderComponent - Navegando a:', route);
     this.activeDropdown = null; // Cerrar dropdown después de navegar
     this.router.navigate([route]);
   }
 
   navigateToProfile(): void {
-    console.log('👤 HeaderComponent - Navegando a perfil');
     this.activeDropdown = null;
     this.router.navigate(['/usuarios/perfil']);
   }
 
   navigateToSettings(): void {
-    console.log('⚙️ HeaderComponent - Navegando a configuración');
     this.activeDropdown = null;
     this.router.navigate(['/configuracion']);
   }
 
   logout(): void {
-    console.log('🚪 HeaderComponent - Cerrando sesión');
     this.activeDropdown = null;
     this.authService.logout().subscribe({
       complete: () => {

@@ -518,22 +518,14 @@ export class FilesListComponent implements OnInit {
   }
 
   onFileSelected(event: any): void {
-    console.log(
-      '🔍 FilesListComponent - Archivos seleccionados:',
-      event.target.files
-    );
+    
     const files = Array.from(event.target.files) as File[];
     this.procesarArchivos(files);
   }
 
   procesarArchivos(files: File[]): void {
-    console.log('🔍 FilesListComponent - Procesando archivos:', files);
     files.forEach((file) => {
-      console.log(
-        '🔍 FilesListComponent - Validando archivo:',
-        file.name,
-        file.type
-      );
+     
       const validation = this.fileService.validateFile(file);
       if (validation.valid) {
         this.archivosSubida.push({
@@ -541,9 +533,7 @@ export class FilesListComponent implements OnInit {
           progress: 0,
           uploading: false,
         });
-        console.log(
-          '✅ FilesListComponent - Archivo agregado a la lista de subida'
-        );
+        
       } else {
         console.error(
           '❌ FilesListComponent - Error de validación:',
@@ -601,7 +591,6 @@ export class FilesListComponent implements OnInit {
   }
 
   openUploadModal(): void {
-    console.log('🔍 FilesListComponent - Abriendo modal de subida de archivos');
     this.archivosSubida = [];
 
     // Manually open the modal using DOM manipulation
@@ -643,7 +632,6 @@ export class FilesListComponent implements OnInit {
   }
 
   getFileIcon(mimetype: string): string {
-    console.log('🔍 FilesListComponent - getFileIcon called with:', mimetype);
     return this.fileService.getFileIcon(mimetype || '');
   }
 

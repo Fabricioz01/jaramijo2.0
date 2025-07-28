@@ -38,28 +38,28 @@ class FileService {
       .sort({ createdAt: -1 });
   }
 
-  // async delete(id) {
-  //   const file = await File.findById(id);
+  async delete(id) {
+    const file = await File.findById(id);
 
-  //   if (!file) {
-  //     throw new Error('Archivo no encontrado');
-  //   }
+    if (!file) {
+      throw new Error('Archivo no encontrado');
+    }
 
-  //   // Eliminar archivo físico
-  //   const filePath = path.join(__dirname, '../../uploads', file.filename);
+    // Eliminar archivo físico
+    const filePath = path.join(__dirname, '../../uploads', file.filename);
 
-  //   try {
-  //     if (fs.existsSync(filePath)) {
-  //       fs.unlinkSync(filePath);
-  //     }
-  //   } catch (error) {
-  //     console.error('Error al eliminar archivo físico:', error);
-  //   }
+    try {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    } catch (error) {
+      console.error('Error al eliminar archivo físico:', error);
+    }
 
-  //   await File.findByIdAndDelete(id);
+    await File.findByIdAndDelete(id);
 
-  //   return file;
-  // }
+    return file;
+  }
 
   async getFilePath(id) {
     const file = await this.getById(id);
