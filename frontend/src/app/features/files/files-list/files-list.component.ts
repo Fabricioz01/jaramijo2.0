@@ -21,15 +21,6 @@ import { AuthService } from '../../../core/services/auth.service';
               <i class="bi bi-files me-2"></i>
               Gestión de Archivos
             </h1>
-            <button
-              class="btn btn-primary"
-              (click)="openUploadModal()"
-              type="button"
-              *ngIf="canCreateFile()"
-            >
-              <i class="bi bi-cloud-upload me-2"></i>
-              Subir Archivos
-            </button>
           </div>
 
           <!-- Filtros y búsqueda -->
@@ -248,142 +239,6 @@ import { AuthService } from '../../../core/services/auth.service';
         </div>
       </div>
     </div>
-
-    <div class="modal fade" id="uploadModal" tabindex="-1">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">
-              <i class="bi bi-cloud-upload me-2"></i>
-              Subir Archivos
-            </h5>
-            <button
-              type="button"
-              class="btn-close"
-              (click)="closeUploadModal()"
-            ></button>
-          </div>
-          <div class="modal-body">
-            <!-- Zona de drop -->
-            <div
-              class="border-dashed p-4 text-center mb-3"
-              [class.border-primary]="arrastrando"
-              (dragover)="onDragOver($event)"
-              (dragleave)="onDragLeave($event)"
-              (drop)="onDrop($event)"
-            >
-              <i class="bi bi-cloud-upload display-1 text-muted"></i>
-              <h5>Arrastra archivos aquí o haz clic para seleccionar</h5>
-              <p class="text-muted">
-                Archivos permitidos: PDF y Excel únicamente<br />
-                Tamaño máximo: 10MB por archivo
-              </p>
-              <input
-                type="file"
-                #fileInput
-                multiple
-                accept=".pdf,.xlsx,.xls"
-                class="d-none"
-                (change)="onFileSelected($event)"
-              />
-              <button class="btn btn-primary" (click)="fileInput.click()">
-                Seleccionar Archivos
-              </button>
-            </div>
-
-            <!-- Lista de archivos para subir -->
-            <div *ngIf="archivosSubida.length > 0">
-              <h6>Archivos seleccionados:</h6>
-              <div class="list-group">
-                <div
-                  class="list-group-item"
-                  *ngFor="let upload of archivosSubida; let i = index"
-                >
-                  <div
-                    class="d-flex justify-content-between align-items-center"
-                  >
-                    <div class="flex-grow-1">
-                      <div class="d-flex align-items-center">
-                        <i
-                          [class]="getFileIcon(upload.file.type)"
-                          class="me-2"
-                        ></i>
-                        <div>
-                          <div class="fw-medium">{{ upload.file.name }}</div>
-                          <small class="text-muted">
-                            {{ formatFileSize(upload.file.size) }}
-                          </small>
-                        </div>
-                      </div>
-
-                      <!-- Barra de progreso -->
-                      <div
-                        *ngIf="upload.uploading || upload.progress > 0"
-                        class="progress mt-2"
-                        style="height: 5px;"
-                      >
-                        <div
-                          class="progress-bar"
-                          [style.width.%]="upload.progress"
-                          [class.bg-success]="upload.progress === 100"
-                          [class.bg-danger]="upload.error"
-                        ></div>
-                      </div>
-
-                      <!-- Error -->
-                      <div *ngIf="upload.error" class="text-danger small mt-1">
-                        <i class="bi bi-exclamation-triangle me-1"></i>
-                        {{ upload.error }}
-                      </div>
-                    </div>
-
-                    <div class="ms-3">
-                      <button
-                        *ngIf="!upload.uploading && !upload.result"
-                        class="btn btn-sm btn-outline-danger"
-                        (click)="removerArchivo(i)"
-                      >
-                        <i class="bi bi-x"></i>
-                      </button>
-                      <i
-                        *ngIf="upload.uploading"
-                        class="bi bi-hourglass-split text-primary"
-                      ></i>
-                      <i
-                        *ngIf="upload.result"
-                        class="bi bi-check-circle text-success"
-                      ></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              (click)="closeUploadModal()"
-            >
-              Cancelar
-            </button>
-            <button
-              type="button"
-              class="btn btn-primary"
-              [disabled]="archivosSubida.length === 0 || subiendoArchivos"
-              (click)="subirArchivos()"
-            >
-              <span
-                *ngIf="subiendoArchivos"
-                class="spinner-border spinner-border-sm me-2"
-              ></span>
-              <i *ngIf="!subiendoArchivos" class="bi bi-cloud-upload me-2"></i>
-              Subir Archivos
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
   `,
   styles: [
     `
@@ -518,14 +373,12 @@ export class FilesListComponent implements OnInit {
   }
 
   onFileSelected(event: any): void {
-    
     const files = Array.from(event.target.files) as File[];
     this.procesarArchivos(files);
   }
 
   procesarArchivos(files: File[]): void {
     files.forEach((file) => {
-     
       const validation = this.fileService.validateFile(file);
       if (validation.valid) {
         this.archivosSubida.push({
@@ -533,7 +386,6 @@ export class FilesListComponent implements OnInit {
           progress: 0,
           uploading: false,
         });
-        
       } else {
         console.error(
           '❌ FilesListComponent - Error de validación:',

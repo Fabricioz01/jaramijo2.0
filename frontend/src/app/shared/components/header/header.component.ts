@@ -155,7 +155,7 @@ import { AuthService } from '../../../core/services/auth.service';
             </li>
 
             <!-- Reportes -->
-            <li class="nav-item" *ngIf="canAccessModule('reportes')">
+            <!-- <li class="nav-item" *ngIf="canAccessModule('reportes')">
               <a
                 class="nav-link"
                 (click)="navigateTo('/reportes')"
@@ -163,84 +163,10 @@ import { AuthService } from '../../../core/services/auth.service';
               >
                 <i class="bi bi-graph-up me-1"></i>Reportes
               </a>
-            </li>
+            </li> -->
           </ul>
 
           <div class="navbar-nav">
-            <!-- Notificaciones -->
-            <div class="nav-item dropdown position-relative">
-              <a
-                class="nav-link position-relative"
-                href="#"
-                role="button"
-                (click)="toggleDropdown('notificaciones', $event)"
-                style="cursor: pointer;"
-              >
-                <i class="bi bi-bell"></i>
-                <span
-                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                >
-                  3
-                  <span class="visually-hidden">notificaciones no leídas</span>
-                </span>
-              </a>
-              <ul
-                class="dropdown-menu dropdown-menu-end"
-                [class.show]="activeDropdown === 'notificaciones'"
-                style="width: 300px;"
-              >
-                <li>
-                  <h6 class="dropdown-header">Notificaciones</h6>
-                </li>
-                <li><hr class="dropdown-divider" /></li>
-                <li>
-                  <a class="dropdown-item" href="#" style="cursor: pointer;">
-                    <div class="d-flex align-items-start">
-                      <i class="bi bi-info-circle text-primary me-2 mt-1"></i>
-                      <div>
-                        <strong>Nueva tarea asignada</strong>
-                        <small class="text-muted d-block">Hace 2 horas</small>
-                      </div>
-                    </div>
-                  </a>
-                </li>
-                <li>
-                  <a class="dropdown-item" href="#" style="cursor: pointer;">
-                    <div class="d-flex align-items-start">
-                      <i class="bi bi-check-circle text-success me-2 mt-1"></i>
-                      <div>
-                        <strong>Documento aprobado</strong>
-                        <small class="text-muted d-block">Hace 4 horas</small>
-                      </div>
-                    </div>
-                  </a>
-                </li>
-                <li>
-                  <a class="dropdown-item" href="#" style="cursor: pointer;">
-                    <div class="d-flex align-items-start">
-                      <i
-                        class="bi bi-exclamation-triangle text-warning me-2 mt-1"
-                      ></i>
-                      <div>
-                        <strong>Recordatorio de reunión</strong>
-                        <small class="text-muted d-block">Hace 1 día</small>
-                      </div>
-                    </div>
-                  </a>
-                </li>
-                <li><hr class="dropdown-divider" /></li>
-                <li>
-                  <a
-                    class="dropdown-item text-center"
-                    href="#"
-                    style="cursor: pointer;"
-                  >
-                    Ver todas las notificaciones
-                  </a>
-                </li>
-              </ul>
-            </div>
-
             <!-- Usuario -->
             <div class="nav-item dropdown position-relative">
               <a
@@ -335,7 +261,6 @@ export class HeaderComponent implements OnInit {
   // ---
   toggleMobileMenu(): void {
     this.showMobileMenu = !this.showMobileMenu;
-
   }
 
   toggleDropdown(dropdownName: string, event: Event): void {

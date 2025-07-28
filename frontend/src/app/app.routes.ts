@@ -66,12 +66,12 @@ export const routes: Routes = [
       import('./features/files/files.routes').then((m) => m.filesRoutes),
     canActivate: [AuthGuard],
   },
-  {
-    path: 'reportes',
-    loadChildren: () =>
-      import('./features/reports/reports.routes').then((m) => m.reportsRoutes),
-    canActivate: [AuthGuard],
-  },
+  // {
+  //   path: 'reportes',
+  //   loadChildren: () =>
+  //     import('./features/reports/reports.routes').then((m) => m.reportsRoutes),
+  //   canActivate: [AuthGuard],
+  // },
   {
     path: 'usuarios/perfil',
     loadComponent: () =>
