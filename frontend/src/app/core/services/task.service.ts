@@ -12,13 +12,17 @@ import {
   providedIn: 'root',
 })
 export class TaskService {
-  private readonly API_URL = '/api/v1/tasks';
+private readonly API_URL = 'http://localhost:3000/api/v1/tasks';
 
   constructor(private http: HttpClient) {}
 
   getAll(): Observable<ApiResponse<Task[]>> {
-    return this.http.get<ApiResponse<Task[]>>(this.API_URL);
-  }
+  return this.http.get<ApiResponse<Task[]>>(this.API_URL, {
+    params: { _: Date.now().toString() },
+    headers: { 'cache-control': 'no-cache', pragma: 'no-cache' },
+  });
+}
+
 
   getById(id: string): Observable<ApiResponse<Task>> {
     return this.http.get<ApiResponse<Task>>(`${this.API_URL}/${id}`);

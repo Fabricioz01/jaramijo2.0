@@ -89,7 +89,7 @@ interface Estadisticas {
               <label class="form-label">Departamento</label>
               <select class="form-select" formControlName="departamento">
                 <option value="">Todos</option>
-                <option *ngFor="let d of getDepartamentosUnicos()" [value]="d">
+                <option *ngFor="let d of departamentosUnicos" [value]="d">
                   {{ d }}
                 </option>
               </select>
@@ -321,6 +321,7 @@ export class TareasListComponent implements OnInit {
   filterForm: FormGroup;
   tareas: any[] = [];
   tareasFiltradas: any[] = [];
+  departamentosUnicos: string[] = [];
   cargando = false;
 
   estadisticas: Estadisticas = {
@@ -386,7 +387,17 @@ export class TareasListComponent implements OnInit {
     this.cargando = true;
     this.taskService.getAll().subscribe({
       next: (r: any) => {
-        this.tareas = r.data || [];
+        this.tareas = (r.data ?? []).map((t: any) => ({
+          ...t,
+          departamentoId:
+            typeof t.departamentoId === 'string'
+              ? { _id: t.departamentoId, name: t.departamentoId }
+              : t.departamentoId ?? { _id: '', name: '' },
+          assignedToIds: (t.assignedToIds ?? []).map((u: any) =>
+            typeof u === 'string' ? { _id: u, name: u } : u
+          ),
+        }));
+        this.actualizarDepartamentosUnicos();
         this.apply();
         this.countStats();
         this.cargando = false;
@@ -398,15 +409,28 @@ export class TareasListComponent implements OnInit {
     });
   }
 
+  actualizarDepartamentosUnicos() {
+    const nombres: string[] = this.tareas
+      .map((t) =>
+        typeof t.departamentoId === 'string'
+          ? t.departamentoId
+          : t.departamentoId?.name
+      )
+      .filter((n): n is string => !!n);
+    this.departamentosUnicos = [...new Set(nombres)];
+  }
+
   apply() {
     const f = this.filterForm.value;
     this.tareasFiltradas = this.tareas.filter((t) => {
       if (!t) return false;
       const okEstado = !f.estado || t.status === f.estado;
-      const okDep =
-        !f.departamento ||
-        (t.departamentoId && t.departamentoId.name === f.departamento);
-      const q = f.buscar?.toLowerCase() || '';
+      const depName =
+        typeof t.departamentoId === 'string'
+          ? t.departamentoId
+          : t.departamentoId?.name;
+      const okDep = !f.departamento || depName === f.departamento;
+      const q = (f.buscar ?? '').toLowerCase();
       const okBuscar =
         !q ||
         (typeof t.title === 'string' && t.title.toLowerCase().includes(q)) ||
@@ -537,15 +561,5 @@ export class TareasListComponent implements OnInit {
   }
   canDeleteTarea() {
     return this.authService.canAccessAction('tareas', 'delete');
-  }
-
-  getDepartamentosUnicos() {
-    return [
-      ...new Set(
-        this.tareas
-          .filter((t) => t.departamentoId && t.departamentoId.name)
-          .map((t) => t.departamentoId.name)
-      ),
-    ];
   }
 }
