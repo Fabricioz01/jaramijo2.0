@@ -1,0 +1,123 @@
+<div
+  class="container-fluid py-4 tarea-detail-container"
+  *ngIf="!cargando && tarea"
+>
+  <div
+    class="mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2"
+  >
+    <button class="btn btn-outline-secondary" (click)="volver()">
+      <i class="bi bi-arrow-left me-2"></i>Volver a la lista
+    </button>
+    <span class="badge bg-secondary">ID: {{ tarea._id }}</span>
+  </div>
+  <div class="card shadow-lg w-100 tarea-detail-card">
+    <div class="card-body">
+      <div
+        class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-3 gap-3"
+      >
+        <div>
+          <h2 class="card-title mb-1">{{ tarea.title }}</h2>
+          <p class="text-muted mb-0">{{ tarea.description }}</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+          <span
+            class="badge fs-6 px-3 py-2"
+            [ngClass]="{
+              'bg-warning text-dark': tarea.status === 'pending',
+              'bg-info text-dark': tarea.status === 'in_progress',
+              'bg-success': tarea.status === 'completed'
+            }"
+            >{{ tarea.status | titlecase }}</span
+          >
+          <span
+            class="badge bg-light text-dark border border-1 border-primary px-3 py-2"
+          >
+            <i class="bi bi-diagram-3 me-1"></i
+            >{{ tarea.departamentoId?.name || "-" }}
+          </span>
+          <span
+            class="badge bg-light text-dark border border-1 border-secondary px-3 py-2"
+          >
+            <i class="bi bi-calendar-event me-1"></i
+            >{{ tarea.dueDate | date : "dd/MM/yyyy" }}
+          </span>
+        </div>
+      </div>
+      <hr />
+      <div class="row mb-3">
+        <div class="col-md-6 col-lg-4 mb-3">
+          <strong>Asignados:</strong>
+          <span *ngIf="tarea.assignedToIds?.length; else noAsignados">
+            <span *ngFor="let u of tarea.assignedToIds; let last = last">
+              <i class="bi bi-person-circle me-1"></i>{{ u.name
+              }}<span *ngIf="!last">, </span>
+            </span>
+          </span>
+          <ng-template #noAsignados>Sin asignar</ng-template>
+        </div>
+        <div class="col-md-6 col-lg-4 mb-3">
+          <strong>Creada:</strong>
+          <span
+            ><i class="bi bi-clock-history me-1"></i
+            >{{ tarea.createdAt | date : "dd/MM/yyyy HH:mm" }}</span
+          >
+        </div>
+        <div class="col-md-6 col-lg-4 mb-3">
+          <strong>Actualizada:</strong>
+          <span
+            ><i class="bi bi-arrow-repeat me-1"></i
+            >{{ tarea.updatedAt | date : "dd/MM/yyyy HH:mm" }}</span
+          >
+        </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-12 col-lg-8 mb-3">
+          <strong>Descripción:</strong>
+          <div class="bg-light rounded p-3 mt-1" style="min-height: 80px">
+            <span *ngIf="tarea.description; else sinDesc">{{
+              tarea.description
+            }}</span>
+            <ng-template #sinDesc
+              ><span class="text-muted">Sin descripción</span></ng-template
+            >
+          </div>
+        </div>
+        <div class="col-12 col-lg-4 mb-3">
+          <strong>Archivos adjuntos:</strong>
+          <div *ngIf="tarea.attachmentIds?.length; else noArchivos">
+            <ul class="list-group list-group-flush mt-2">
+              <li
+                *ngFor="let f of tarea.attachmentIds"
+                class="list-group-item d-flex align-items-center justify-content-between gap-2 px-0"
+              >
+                <div class="d-flex align-items-center gap-2">
+                  <i [ngClass]="getFileIcon(f.mimeType)" class="fs-4"></i>
+                  <span>{{ f.originalName || f.filename }}</span>
+                </div>
+                <button
+                  class="btn btn-sm btn-outline-primary"
+                  (click)="descargarArchivo(f)"
+                >
+                  <i class="bi bi-download"></i>
+                </button>
+              </li>
+            </ul>
+          </div>
+          <ng-template #noArchivos
+            ><span class="text-muted">Ninguno</span></ng-template
+          >
+        </div>
+      </div>
+      <div class="row mt-2">
+        <div class="col-md-4">
+          <strong>Versión:</strong>
+          <span>{{ tarea.__v || "-" }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div *ngIf="cargando" class="text-center py-5">
+  <div class="spinner-border text-primary"></div>
+  <p class="mt-2 text-muted">Cargando tarea...</p>
+</div>
