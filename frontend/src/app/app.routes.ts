@@ -80,14 +80,14 @@ export const routes: Routes = [
       ),
     canActivate: [AuthGuard],
   },
-  {
-    path: 'configuracion',
-    loadComponent: () =>
-      import('./features/configuracion/configuracion.component').then(
-        (m) => m.ConfiguracionComponent
-      ),
-    canActivate: [AuthGuard],
-  },
+  // {
+  //   path: 'configuracion',
+  //   loadComponent: () =>
+  //     import('./features/configuracion/configuracion.component').then(
+  //       (m) => m.ConfiguracionComponent
+  //     ),
+  //   canActivate: [AuthGuard],
+  // },
   {
     path: '**',
     redirectTo: '/dashboard',
