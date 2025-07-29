@@ -1,8 +1,9 @@
 import {
   Component,
   ChangeDetectionStrategy,
-  OnDestroy,
+  ChangeDetectorRef,
   OnInit,
+  OnDestroy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -29,13 +30,11 @@ interface Direccion {
   _id: Id;
   name: string;
 }
-
 interface Departamento {
   _id: Id;
   name: string;
   direccionId: Id | Direccion;
 }
-
 interface Usuario {
   _id: Id;
   name: string;
@@ -64,6 +63,13 @@ export class TareasFormComponent implements OnInit, OnDestroy {
   departamentosFiltrados: Departamento[] = [];
   usuariosFiltrados: Usuario[] = [];
   archivos: File[] = [];
+  originalAttachments: {
+    _id: string;
+    filename: string;
+    originalName: string;
+    mimeType: string;
+    size: number;
+  }[] = [];
 
   private destroy$ = new Subject<void>();
 
@@ -75,13 +81,13 @@ export class TareasFormComponent implements OnInit, OnDestroy {
     private userService: UserService,
     private direccionService: DireccionService,
     private departamentoService: DepartamentoService,
-    private fileService: FileService,
-    private alert: AlertService
+    public fileService: FileService,
+    private alert: AlertService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   /* ──────────────── Lifecycle ──────────────── */
   ngOnInit(): void {
-    console.log('[Init] TareasForm');
     this.buildForm();
     this.tareaId = this.route.snapshot.paramMap.get('id');
     this.isEditing = !!this.tareaId;
@@ -93,17 +99,17 @@ export class TareasFormComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    console.log('[Destroy] TareasForm');
   }
 
+  /* ──────────────── Form setup ──────────────── */
   private buildForm(): void {
     this.tareaForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(5)]],
       description: [''],
       status: ['pending', Validators.required],
       direccionId: ['', Validators.required],
-      departamentoId: ['', Validators.required],
-      assignedToIds: [''],
+      departamentoId: [{ value: '', disabled: true }, Validators.required],
+      assignedToIds: [{ value: '', disabled: true }],
       dueDate: [''],
     });
 
@@ -119,128 +125,125 @@ export class TareasFormComponent implements OnInit, OnDestroy {
   }
 
   private prefillDates(): void {
-    const today = new Date();
-    const due = new Date(today);
-    due.setDate(today.getDate() + 7);
-    this.tareaForm.patchValue({
-      dueDate: due.toISOString().split('T')[0],
-    });
-    console.log('[Prefill] dueDate →', due.toISOString().split('T')[0]);
+    const d = new Date();
+    d.setDate(d.getDate() + 7);
+    this.tareaForm.patchValue({ dueDate: d.toISOString().split('T')[0] });
   }
 
+  /* ──────────────── Load catalogs ──────────────── */
   private loadCatalogs(): void {
-    console.time('[Catalogs]');
     this.loading = true;
     forkJoin({
       direcciones: this.direccionService.getAll(),
       departamentos: this.departamentoService.getAll(),
       usuarios: this.userService.getAll(),
     })
-      .pipe(
-        finalize(() => {
-          this.loading = false;
-          console.timeEnd('[Catalogs]');
-        })
-      )
+      .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: ({ direcciones, departamentos, usuarios }) => {
-          this.direcciones = (direcciones.data ?? []) as unknown as Direccion[];
+          this.direcciones = direcciones.data ?? [];
           this.departamentos =
-            (departamentos.data ?? []) as unknown as Departamento[];
-          this.usuarios = (usuarios.data ?? []) as unknown as Usuario[];
-          console.log(
-            `[Catalogs] ${this.direcciones.length} direcciones, ` +
-              `${this.departamentos.length} departamentos, ` +
-              `${this.usuarios.length} usuarios`
-          );
+            departamentos.data?.map((d: any) => ({
+              ...d,
+              direccionId: d.direccionId ?? '',
+            })) ?? [];
+          this.usuarios =
+            usuarios.data?.map((u: any) => ({
+              ...u,
+              departamentoId:
+                typeof u.departamentoId === 'object'
+                  ? u.departamentoId._id
+                  : u.departamentoId,
+            })) ?? [];
+          this.cdr.markForCheck();
         },
         error: () => this.alert.error('Error cargando catálogos'),
       });
   }
 
+  /* ──────────────── Load task ──────────────── */
   private loadTarea(): void {
     if (!this.tareaId) return;
-    console.time('[loadTarea]');
     this.taskService.getById(this.tareaId).subscribe({
       next: ({ data: t }) => {
-        console.timeEnd('[loadTarea]');
         if (!t) return this.alert.error('Tarea no encontrada');
 
-        console.log('[loadTarea] data →', t);
+        this.originalAttachments = t.attachmentIds ?? [];
 
-        const departamentoId =
-          typeof t.departamentoId === 'object' && t.departamentoId
-            ? (t.departamentoId as Departamento)._id
-            : (t.departamentoId as Id);
+        const depObj =
+          typeof t.departamentoId === 'object'
+            ? (t.departamentoId as Departamento)
+            : null;
+        const dirObj =
+          depObj && typeof depObj.direccionId === 'object'
+            ? (depObj.direccionId as Direccion)
+            : null;
 
+        const direccionId = dirObj ? dirObj._id : '';
+        const departamentoId = depObj ? depObj._id : t.departamentoId;
         const assignedToId =
           Array.isArray(t.assignedToIds) && t.assignedToIds.length
-            ? t.assignedToIds[0]
+            ? t.assignedToIds[0]._id
             : '';
 
         this.tareaForm.patchValue({
           title: t.title,
           description: t.description ?? '',
           status: t.status,
-          departamentoId,
-          assignedToIds: assignedToId,
           dueDate: t.dueDate
             ? new Date(t.dueDate).toISOString().split('T')[0]
             : '',
+          direccionId,
+          departamentoId,
+          assignedToIds: assignedToId,
         });
-
-        const dep = this.departamentos.find((d) => d._id === departamentoId);
-        if (dep) {
-          const direccionId =
-            typeof dep.direccionId === 'object'
-              ? dep.direccionId._id
-              : dep.direccionId;
-          this.tareaForm.patchValue({ direccionId });
-        }
 
         this.onDireccionChange();
         this.onDepartamentoChange();
+        this.cdr.markForCheck();
       },
       error: () => this.alert.error('Error al cargar la tarea'),
     });
   }
 
+  /* ──────────────── Select changes ──────────────── */
   onDireccionChange(): void {
-    console.time('[onDireccionChange]');
     const id = this.tareaForm.get('direccionId')?.value as Id;
     this.departamentosFiltrados = this.departamentos.filter((d) =>
       typeof d.direccionId === 'object'
         ? d.direccionId._id === id
         : d.direccionId === id
     );
-    console.log(
-      `[onDireccionChange] id=${id} → ${this.departamentosFiltrados.length} resultados`
-    );
-    if (!this.isEditing) {
-      this.tareaForm.patchValue(
-        { departamentoId: '', assignedToIds: '' },
-        { emitEvent: false }
-      );
+
+    const depCtrl = this.tareaForm.get('departamentoId');
+    const assCtrl = this.tareaForm.get('assignedToIds');
+
+    if (this.departamentosFiltrados.length) {
+      depCtrl?.enable({ emitEvent: false });
+    } else {
+      depCtrl?.disable({ emitEvent: false });
+      depCtrl?.reset();
+      assCtrl?.disable({ emitEvent: false });
+      assCtrl?.reset();
       this.usuariosFiltrados = [];
     }
-    console.timeEnd('[onDireccionChange]');
+    this.cdr.markForCheck();
   }
 
   onDepartamentoChange(): void {
-    console.time('[onDepartamentoChange]');
     const id = this.tareaForm.get('departamentoId')?.value as Id;
     this.usuariosFiltrados = this.usuarios.filter((u) =>
       typeof u.departamentoId === 'object'
         ? u.departamentoId._id === id
         : u.departamentoId === id
     );
-    console.log(
-      `[onDepartamentoChange] id=${id} → ${this.usuariosFiltrados.length} usuarios`
-    );
-    if (!this.isEditing) {
-      this.tareaForm.patchValue({ assignedToIds: '' }, { emitEvent: false });
-    }
-    console.timeEnd('[onDepartamentoChange]');
+
+    const assCtrl = this.tareaForm.get('assignedToIds');
+    this.usuariosFiltrados.length
+      ? assCtrl?.enable({ emitEvent: false })
+      : assCtrl?.disable({ emitEvent: false });
+
+    this.cdr.markForCheck();
   }
 
   /* ──────────────── Files ──────────────── */
@@ -248,29 +251,46 @@ export class TareasFormComponent implements OnInit, OnDestroy {
     const files = Array.from((e.target as HTMLInputElement).files ?? []);
     files.forEach((f) => {
       const v = this.fileService.validateFile(f);
-      if (v.valid) {
-        this.archivos.push(f);
-        console.log('[Files] +', f.name);
-      } else {
-        this.alert.error(v.error ?? 'Archivo inválido');
-      }
+      v.valid ? this.archivos.push(f) : this.alert.error(v.error ?? '');
+    });
+    this.cdr.markForCheck();
+  }
+
+  removeAttachment(fileId: string): void {
+    if (!this.tareaId) return;
+    if (!confirm('¿Eliminar archivo?')) return;
+
+    // 1. Quita el vínculo en la tarea
+    this.taskService.removeAttachment(this.tareaId, fileId).subscribe({
+      next: () => {
+        // 2. Borra el archivo real
+        this.fileService.delete(fileId).subscribe({
+          next: () => {
+            this.originalAttachments = this.originalAttachments.filter(
+              (a) => a._id !== fileId
+            );
+            this.alert.success('Archivo eliminado');
+            this.cdr.markForCheck();
+          },
+          error: () => this.alert.error('Error eliminando archivo'),
+        });
+      },
+      error: () => this.alert.error('Error eliminando adjunto'),
     });
   }
 
-  /* ──────────────── Helpers ──────────────── */
+  /* ──────────────── Submit ──────────────── */
   invalid(c: string): boolean {
-    const control = this.tareaForm.get(c);
-    return !!control && control.invalid && (control.dirty || control.touched);
+    const ctrl = this.tareaForm.get(c);
+    return !!ctrl && ctrl.invalid && (ctrl.dirty || ctrl.touched);
   }
 
-  /* ──────────────── Submit ──────────────── */
   onSubmit(): void {
     if (this.tareaForm.invalid) {
       Object.values(this.tareaForm.controls).forEach((c) => c.markAsTouched());
       return;
     }
     this.loading = true;
-    console.log('[Submit] payload →', this.tareaForm.value);
 
     const v = this.tareaForm.value;
     const payload = {
@@ -289,12 +309,8 @@ export class TareasFormComponent implements OnInit, OnDestroy {
 
     const uploadFiles = (taskId: Id): void => {
       if (!this.archivos.length) return finish();
-      console.time('[uploadFiles]');
       this.fileService.uploadMultipleFiles(this.archivos, taskId).subscribe({
-        complete: () => {
-          console.timeEnd('[uploadFiles]');
-          finish();
-        },
+        complete: () => finish(),
         error: () => {
           this.loading = false;
           this.alert.error('Error subiendo archivos');
@@ -303,10 +319,7 @@ export class TareasFormComponent implements OnInit, OnDestroy {
     };
 
     const success = (id?: Id): void => {
-      id
-        ? uploadFiles(id)
-        : (this.loading = false) ||
-          this.alert.error('Respuesta inválida del servidor');
+      id ? uploadFiles(id) : (this.loading = false);
     };
 
     if (this.isEditing) {
@@ -328,7 +341,6 @@ export class TareasFormComponent implements OnInit, OnDestroy {
     }
   }
 
-  /* ──────────────── Navigation ──────────────── */
   goBack(): void {
     this.router.navigate(['/tareas']);
   }

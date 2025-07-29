@@ -2,7 +2,9 @@
 
 <app-confirm-modal
   [visible]="showConfirmModal"
-  [message]="'¿Está seguro de eliminar esta tarea? Esta acción no se puede deshacer.'"
+  [message]="
+    '¿Está seguro de eliminar esta tarea? Esta acción no se puede deshacer.'
+  "
   (confirm)="confirmarEliminarTarea()"
   (cancel)="cancelarEliminarTarea()"
 ></app-confirm-modal>
@@ -35,32 +37,54 @@
   </div>
 
   <div class="row" *ngIf="!loading">
-    <div class="col-md-6 col-lg-4 mb-4" *ngFor="let task of filteredTasks; let i = index">
-      <div class="card h-100 border-0 shadow-sm">
-        <div class="card-body">
+    <div
+      class="col-md-6 col-lg-4 mb-4"
+      *ngFor="let task of filteredTasks; let i = index"
+    >
+      <div class="card h-100 border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="card-body p-4 d-flex flex-column justify-content-between">
           <div class="d-flex justify-content-between align-items-start mb-3">
-            <h6 class="card-title fw-bold text-primary">{{ task.title }}</h6>
-            <div class="action-menu-wrapper" [class.open]="openedMenuIndex === i">
+            <div>
+              <h5 class="card-title fw-bold text-primary mb-1">
+                {{ task.title }}
+              </h5>
+              <p class="card-subtitle text-muted small mb-0">
+                {{ task.description || "Sin descripción" }}
+              </p>
+            </div>
+            <div
+              class="action-menu-wrapper ms-2"
+              [class.open]="openedMenuIndex === i"
+            >
               <button
-                class="btn btn-sm btn-outline-secondary action-menu-btn"
+                class="btn btn-light btn-sm rounded-circle shadow-sm border-0 action-menu-btn"
                 (click)="toggleMenu(i, $event)"
                 aria-label="Abrir menú de acciones"
               >
-                <i class="bi bi-three-dots"></i>
+                <i class="bi bi-three-dots-vertical"></i>
               </button>
               <ul class="action-menu" *ngIf="openedMenuIndex === i">
                 <li>
-                  <button class="action-item" (click)="verTarea(task._id); closeMenu()">
+                  <button
+                    class="action-item"
+                    (click)="verTarea(task._id); closeMenu()"
+                  >
                     <i class="bi bi-eye me-2"></i>Ver
                   </button>
                 </li>
                 <li>
-                  <button class="action-item" (click)="editarTarea(task._id); closeMenu()">
+                  <button
+                    class="action-item"
+                    (click)="editarTarea(task._id); closeMenu()"
+                  >
                     <i class="bi bi-pencil me-2"></i>Editar
                   </button>
                 </li>
                 <li>
-                  <button class="action-item text-danger" (click)="eliminarTarea(task._id); closeMenu()">
+                  <button
+                    class="action-item text-danger"
+                    (click)="eliminarTarea(task._id); closeMenu()"
+                  >
                     <i class="bi bi-trash me-2"></i>Eliminar
                   </button>
                 </li>
@@ -68,36 +92,47 @@
             </div>
           </div>
 
-          <p class="mb-2 text-muted">{{ task.description || 'Sin descripción' }}</p>
-
-          <div class="mb-2">
-            <small class="text-muted fw-semibold">DEPARTAMENTO</small>
-            <span class="badge bg-light text-dark ms-2">{{ task.departamentoId['name'] }}</span>
+          <div class="mb-3">
+            <span
+              class="badge bg-light text-dark border border-primary fw-semibold me-2 px-3 py-2 rounded-pill"
+            >
+              <i class="bi bi-building me-1"></i
+              >{{ task.departamentoId["name"] }}
+            </span>
+            <span
+              class="badge bg-gradient bg-info text-white fw-semibold px-3 py-2 rounded-pill text-uppercase"
+            >
+              <i class="bi bi-flag me-1"></i>{{ task.status }}
+            </span>
           </div>
 
-          <div class="mb-2">
-            <small class="text-muted fw-semibold">ESTADO</small>
-            <span class="badge bg-info ms-2 text-uppercase">{{ task.status }}</span>
-          </div>
-
-          <div class="mb-2">
-            <small class="text-muted fw-semibold">ASIGNADOS</small>
+          <div class="mb-3">
+            <small class="text-muted fw-semibold">Asignados:</small>
             <div class="d-flex flex-wrap gap-1 mt-1">
               <span
-                class="badge bg-secondary"
+                class="badge bg-secondary bg-gradient text-white rounded-pill px-3"
                 *ngFor="let user of task.assignedToIds.slice(0, 3)"
               >
-                {{ user['name'] }}
+                <i class="bi bi-person-circle me-1"></i>{{ user["name"] }}
               </span>
-              <span class="badge bg-dark" *ngIf="task.assignedToIds.length > 3">
+              <span
+                class="badge bg-dark bg-gradient rounded-pill px-3"
+                *ngIf="task.assignedToIds.length > 3"
+              >
                 +{{ task.assignedToIds.length - 3 }} más
               </span>
             </div>
           </div>
 
-          <small class="text-muted">
-            <i class="bi bi-calendar-event me-1"></i>Vence: {{ formatDate(task.dueDate) }}
-          </small>
+          <div class="d-flex align-items-center mt-auto pt-2">
+            <i class="bi bi-calendar-event text-primary me-2"></i>
+            <small class="text-muted"
+              >Vence:
+              <span class="fw-semibold">{{
+                formatDate(task.dueDate)
+              }}</span></small
+            >
+          </div>
         </div>
       </div>
     </div>

@@ -8,7 +8,14 @@ class TaskService {
 
   async getAll() {
     return await Task.find()
-      .populate('departamentoId', 'name')
+      .populate({
+        path: 'departamentoId',
+        select: 'name direccionId',
+        populate: {
+          path: 'direccionId',
+          select: 'name descripcion ubicacion activo',
+        },
+      })
       .populate('assignedToIds', 'name email')
       .populate('attachmentIds', 'filename originalName mimeType size')
       .sort({ createdAt: -1 });
@@ -16,13 +23,19 @@ class TaskService {
 
   async getById(id) {
     const task = await Task.findById(id)
-      .populate('departamentoId', 'name')
+      .populate({
+        path: 'departamentoId',
+        select: 'name direccionId',
+        populate: {
+          path: 'direccionId',
+          select: 'name descripcion ubicacion activo',
+        },
+      })
       .populate('assignedToIds', 'name email')
       .populate('attachmentIds', 'filename originalName mimeType size');
     if (!task) throw new Error('Tarea no encontrada');
     return task;
   }
-
 
   async update(id, data) {
     const task = await Task.findByIdAndUpdate(
@@ -30,7 +43,14 @@ class TaskService {
       { ...data, updatedAt: Date.now() },
       { new: true, runValidators: true }
     )
-      .populate('departamentoId', 'name')
+      .populate({
+        path: 'departamentoId',
+        select: 'name direccionId',
+        populate: {
+          path: 'direccionId',
+          select: 'name descripcion ubicacion activo',
+        },
+      })
       .populate('assignedToIds', 'name email')
       .populate('attachmentIds', 'filename originalName mimeType size');
     if (!task) throw new Error('Tarea no encontrada');
@@ -43,9 +63,16 @@ class TaskService {
     return task;
   }
 
-
   async getByDepartamento(departamentoId) {
     return await Task.find({ departamentoId })
+      .populate({
+        path: 'departamentoId',
+        select: 'name direccionId',
+        populate: {
+          path: 'direccionId',
+          select: 'name descripcion ubicacion activo',
+        },
+      })
       .populate('assignedToIds', 'name email')
       .populate('attachmentIds', 'filename originalName mimeType size')
       .sort({ createdAt: -1 });
@@ -53,7 +80,14 @@ class TaskService {
 
   async getByStatus(status) {
     return await Task.find({ status })
-      .populate('departamentoId', 'name')
+      .populate({
+        path: 'departamentoId',
+        select: 'name direccionId',
+        populate: {
+          path: 'direccionId',
+          select: 'name descripcion ubicacion activo',
+        },
+      })
       .populate('assignedToIds', 'name email')
       .populate('attachmentIds', 'filename originalName mimeType size')
       .sort({ createdAt: -1 });
@@ -61,7 +95,14 @@ class TaskService {
 
   async getByAssignedUser(userId) {
     return await Task.find({ assignedToIds: userId })
-      .populate('departamentoId', 'name')
+      .populate({
+        path: 'departamentoId',
+        select: 'name direccionId',
+        populate: {
+          path: 'direccionId',
+          select: 'name descripcion ubicacion activo',
+        },
+      })
       .populate('assignedToIds', 'name email')
       .populate('attachmentIds', 'filename originalName mimeType size')
       .sort({ createdAt: -1 });
@@ -77,7 +118,6 @@ class TaskService {
     }
     return await this.getById(taskId);
   }
-
 
   async unassignUser(taskId, userId) {
     const task = await Task.findById(taskId);
@@ -108,6 +148,5 @@ class TaskService {
     return await this.getById(taskId);
   }
 }
-
 
 module.exports = new TaskService();

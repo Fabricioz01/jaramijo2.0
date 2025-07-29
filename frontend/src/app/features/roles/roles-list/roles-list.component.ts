@@ -14,7 +14,9 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
 import { ConfirmModalComponent } from '../../../shared/components/alerts/confirm-modal.component';
 import { Role, Permission } from '../../../core/models';
 
-type RoleWithPermissions = Role & { permissionIds: (string | Permission)[] };
+type RoleWithPermissions = Role & {
+  permissionIds: (string | Permission)[];
+};
 
 @Component({
   selector: 'app-roles-list',
@@ -78,24 +80,29 @@ type RoleWithPermissions = Role & { permissionIds: (string | Permission)[] };
           class="col-md-6 col-lg-4 mb-4"
           *ngFor="let rol of rolesFiltrados; let i = index"
         >
-          <div class="card h-100 border-0 shadow-sm">
-            <div class="card-body">
-              <!-- Nombre y menú -->
-              <div class="d-flex justify-content-between align-items-start mb-3">
-                <h6 class="card-title fw-bold text-primary">{{ rol.name }}</h6>
-
+          <div class="card h-100 border-0 shadow-lg rounded-4 overflow-hidden">
+            <div
+              class="card-body p-4 d-flex flex-column justify-content-between"
+            >
+              <div
+                class="d-flex justify-content-between align-items-start mb-3"
+              >
+                <div>
+                  <h5 class="card-title fw-bold text-primary mb-1">
+                    {{ rol.name }}
+                  </h5>
+                </div>
                 <div
-                  class="action-menu-wrapper"
+                  class="action-menu-wrapper ms-2"
                   [class.open]="openedMenuIndex === i"
                 >
                   <button
-                    class="btn btn-sm btn-outline-secondary action-menu-btn"
+                    class="btn btn-light btn-sm rounded-circle shadow-sm border-0 action-menu-btn"
                     (click)="toggleMenu(i, $event)"
                     aria-label="Abrir menú de acciones"
                   >
-                    <i class="bi bi-three-dots"></i>
+                    <i class="bi bi-three-dots-vertical"></i>
                   </button>
-
                   <ul class="action-menu" *ngIf="openedMenuIndex === i">
                     <li *ngIf="canViewRole()">
                       <button
@@ -134,33 +141,48 @@ type RoleWithPermissions = Role & { permissionIds: (string | Permission)[] };
                 </div>
               </div>
 
-              <!-- Permisos -->
-              <div class="mb-2">
-                <small class="text-muted fw-semibold">PERMISOS</small>
-                <span class="badge bg-light text-dark ms-2">{{
-                  rol.permissionIds.length
-                }}</span>
-              </div>
-
-              <div class="d-flex flex-wrap gap-1 mb-3">
+              <div class="mb-3">
                 <span
-                  class="badge bg-primary"
-                  *ngFor="let p of rol.permissionIds.slice(0, 3)"
+                  class="badge bg-light text-dark border border-primary fw-semibold me-2 px-3 py-2 rounded-pill"
                 >
-                  {{ getPermissionDisplay(p) }}
+                  <i class="bi bi-shield-lock me-1"></i>Permisos
                 </span>
                 <span
-                  class="badge bg-secondary"
-                  *ngIf="rol.permissionIds.length > 3"
+                  class="badge bg-gradient bg-info text-white fw-semibold px-3 py-2 rounded-pill text-uppercase"
                 >
-                  +{{ rol.permissionIds.length - 3 }} más
+                  {{ rol.permissionIds.length }}
                 </span>
               </div>
 
-              <!-- Fecha -->
-              <small class="text-muted">
-                <i class="bi bi-calendar me-1"></i>{{ formatDate(rol.createdAt) }}
-              </small>
+              <div class="mb-3">
+                <small class="text-muted fw-semibold"
+                  >Permisos asignados:</small
+                >
+                <div class="d-flex flex-wrap gap-1 mt-1">
+                  <span
+                    class="badge bg-primary bg-gradient text-white rounded-pill px-3"
+                    *ngFor="let p of rol.permissionIds.slice(0, 3)"
+                  >
+                    {{ getPermissionDisplay(p) }}
+                  </span>
+                  <span
+                    class="badge bg-dark bg-gradient rounded-pill px-3"
+                    *ngIf="rol.permissionIds.length > 3"
+                  >
+                    +{{ rol.permissionIds.length - 3 }} más
+                  </span>
+                </div>
+              </div>
+
+              <div class="d-flex align-items-center mt-auto pt-2">
+                <i class="bi bi-calendar-event text-primary me-2"></i>
+                <small class="text-muted">
+                  Creado:
+                  <span class="fw-semibold">{{
+                    formatDate(rol.createdAt)
+                  }}</span>
+                </small>
+              </div>
             </div>
           </div>
         </div>
@@ -279,13 +301,11 @@ export class RolesListComponent implements OnInit {
     });
   }
 
-  /* ------------------- ciclo de vida ------------------- */
   ngOnInit(): void {
     this.cargarRoles();
     this.filterForm.valueChanges.subscribe(() => this.aplicarFiltros());
   }
 
-  /* ------------------- CRUD ------------------- */
   cargarRoles(): void {
     this.loading = true;
     this.roleService.getAll().subscribe({
@@ -347,11 +367,10 @@ export class RolesListComponent implements OnInit {
     return new Date(date).toLocaleDateString('es-ES');
   }
 
- getPermissionDisplay(p: Permission | string): string {
-  if (typeof p === 'string') return p;
-  return `${p.action} ${p.resource}`.replace(/^\w/, (c) => c.toUpperCase());
-}
-
+  getPermissionDisplay(p: Permission | string): string {
+    if (typeof p === 'string') return p;
+    return `${p.action} ${p.resource}`.replace(/^\w/, (c) => c.toUpperCase());
+  }
 
   canAccessModule(): boolean {
     return this.authService.canAccessModule('roles');
