@@ -1,0 +1,118 @@
+<app-header></app-header>
+
+<app-confirm-modal
+  [visible]="showConfirmModal"
+  [message]="'¿Está seguro de eliminar esta tarea? Esta acción no se puede deshacer.'"
+  (confirm)="confirmarEliminarTarea()"
+  (cancel)="cancelarEliminarTarea()"
+></app-confirm-modal>
+
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-0">Listado de Tareas</h1>
+      <p class="text-muted">Gestión de tareas del sistema</p>
+    </div>
+    <button class="btn btn-primary" (click)="crearTarea()">
+      <i class="bi bi-plus-circle me-2"></i>Nueva Tarea
+    </button>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <form [formGroup]="filterForm" class="row g-3">
+        <div class="col-md-12">
+          <label class="form-label">Buscar</label>
+          <input
+            type="text"
+            class="form-control"
+            formControlName="buscar"
+            placeholder="Buscar por título..."
+          />
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="row" *ngIf="!loading">
+    <div class="col-md-6 col-lg-4 mb-4" *ngFor="let task of filteredTasks; let i = index">
+      <div class="card h-100 border-0 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <h6 class="card-title fw-bold text-primary">{{ task.title }}</h6>
+            <div class="action-menu-wrapper" [class.open]="openedMenuIndex === i">
+              <button
+                class="btn btn-sm btn-outline-secondary action-menu-btn"
+                (click)="toggleMenu(i, $event)"
+                aria-label="Abrir menú de acciones"
+              >
+                <i class="bi bi-three-dots"></i>
+              </button>
+              <ul class="action-menu" *ngIf="openedMenuIndex === i">
+                <li>
+                  <button class="action-item" (click)="verTarea(task._id); closeMenu()">
+                    <i class="bi bi-eye me-2"></i>Ver
+                  </button>
+                </li>
+                <li>
+                  <button class="action-item" (click)="editarTarea(task._id); closeMenu()">
+                    <i class="bi bi-pencil me-2"></i>Editar
+                  </button>
+                </li>
+                <li>
+                  <button class="action-item text-danger" (click)="eliminarTarea(task._id); closeMenu()">
+                    <i class="bi bi-trash me-2"></i>Eliminar
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <p class="mb-2 text-muted">{{ task.description || 'Sin descripción' }}</p>
+
+          <div class="mb-2">
+            <small class="text-muted fw-semibold">DEPARTAMENTO</small>
+            <span class="badge bg-light text-dark ms-2">{{ task.departamentoId['name'] }}</span>
+          </div>
+
+          <div class="mb-2">
+            <small class="text-muted fw-semibold">ESTADO</small>
+            <span class="badge bg-info ms-2 text-uppercase">{{ task.status }}</span>
+          </div>
+
+          <div class="mb-2">
+            <small class="text-muted fw-semibold">ASIGNADOS</small>
+            <div class="d-flex flex-wrap gap-1 mt-1">
+              <span
+                class="badge bg-secondary"
+                *ngFor="let user of task.assignedToIds.slice(0, 3)"
+              >
+                {{ user['name'] }}
+              </span>
+              <span class="badge bg-dark" *ngIf="task.assignedToIds.length > 3">
+                +{{ task.assignedToIds.length - 3 }} más
+              </span>
+            </div>
+          </div>
+
+          <small class="text-muted">
+            <i class="bi bi-calendar-event me-1"></i>Vence: {{ formatDate(task.dueDate) }}
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-center py-5" *ngIf="!loading && filteredTasks.length === 0">
+    <i class="bi bi-list-task display-1 text-muted"></i>
+    <h4 class="mt-3">No hay tareas</h4>
+    <p class="text-muted">Comienza creando tareas para el sistema</p>
+    <button class="btn btn-primary" (click)="crearTarea()">
+      <i class="bi bi-plus-circle me-2"></i>Crear Tarea
+    </button>
+  </div>
+
+  <div class="text-center py-5" *ngIf="loading">
+    <span class="spinner-border" role="status"></span>
+  </div>
+</div>

@@ -4,8 +4,8 @@ export const tareasRoutes: Routes = [
   {
     path: '',
     loadComponent: () =>
-      import('./tareas-list/tareas-list.component').then(
-        (m) => m.TareasListComponent
+      import('./tareas-list/task-list.component').then(
+        (m) => m.TaskListComponent
       ),
   },
   {

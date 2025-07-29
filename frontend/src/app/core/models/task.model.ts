@@ -6,12 +6,26 @@ export interface Task {
   description?: string;
   dueDate?: Date;
   status: TaskStatus;
-  departamentoId: string;
-  assignedToIds: string[];
-  attachmentIds: string[];
+  departamentoId: {
+    _id: string;
+    name: string;
+  };
+  assignedToIds: {
+    _id: string;
+    name: string;
+    email: string;
+  }[];
+  attachmentIds: {
+    _id: string;
+    filename: string;
+    originalName: string;
+    mimeType: string;
+    size: number;
+  }[];
   createdAt: Date;
   updatedAt: Date;
 }
+
 
 export interface CreateTaskRequest {
   title: string;

@@ -7,13 +7,13 @@ import {
   UpdateTaskRequest,
   ApiResponse,
 } from '../models';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class TaskService {
-private readonly API_URL = 'http://localhost:3000/api/v1/tasks';
-
+private readonly API_URL = `${environment.apiUrl}/tasks`;
   constructor(private http: HttpClient) {}
 
   getAll(): Observable<ApiResponse<Task[]>> {
@@ -22,7 +22,6 @@ private readonly API_URL = 'http://localhost:3000/api/v1/tasks';
     headers: { 'cache-control': 'no-cache', pragma: 'no-cache' },
   });
 }
-
 
   getById(id: string): Observable<ApiResponse<Task>> {
     return this.http.get<ApiResponse<Task>>(`${this.API_URL}/${id}`);
