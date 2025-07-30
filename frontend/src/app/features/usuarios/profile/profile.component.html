@@ -1,24 +1,106 @@
-<div class="profile-container"></div>
-  <h2>Mi Perfil</h2>
-  <div *ngIf="user">
-    <div class="profile-item">
-      <strong>Nombre:</strong> {{ user.name }}
+<app-header></app-header>
+<div class="container-fluid p-4">
+  <div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+      <div class="card">
+        <div
+          class="card-header d-flex flex-row align-items-center justify-content-between gap-3"
+        >
+          <div class="d-flex align-items-center gap-3">
+            <h4 class="mb-0 ms-2">
+              <i class="bi bi-person me-2"></i>Mi Perfil
+            </h4>
+          </div>
+          <!-- Eliminado span duplicado de iniciales -->
+          <button class="btn btn-outline-secondary btn-sm" (click)="goBack()">
+            <i class="bi bi-arrow-left me-1"></i>Volver al Dashboard
+          </button>
+        </div>
+        <div class="card-body">
+          <div class="text-center mb-4">
+            <span
+              *ngIf="user?.roles?.length"
+              class="badge bg-gradient-primary text-uppercase px-3 py-2 fs-6"
+            >
+              <i class="bi bi-award me-1"></i>
+              {{ user.roles[0]?.name || user.roles[0] }}
+            </span>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="info-block p-3 h-100">
+                <div class="mb-2">
+                  <i class="bi bi-person-badge me-2 text-primary"></i
+                  ><strong>Nombre:</strong>
+                  <span class="ms-2"
+                    >{{ user?.name }} {{ user?.lastName }}</span
+                  >
+                </div>
+                <div class="mb-2">
+                  <i class="bi bi-envelope me-2 text-primary"></i
+                  ><strong>Email:</strong>
+                  <span class="ms-2">{{ user?.email }}</span>
+                </div>
+                <div class="mb-2" *ngIf="user?.phone">
+                  <i class="bi bi-telephone me-2 text-primary"></i
+                  ><strong>Teléfono:</strong>
+                  <span class="ms-2">{{ user?.phone }}</span>
+                </div>
+                <div class="mb-2" *ngIf="user?.cedula">
+                  <i class="bi bi-credit-card-2-front me-2 text-primary"></i
+                  ><strong>Cédula:</strong>
+                  <span class="ms-2">{{ user?.cedula }}</span>
+                </div>
+                <div class="mb-2" *ngIf="user?.position">
+                  <i class="bi bi-briefcase me-2 text-primary"></i
+                  ><strong>Cargo:</strong>
+                  <span class="ms-2">{{ user?.position }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="info-block p-3 h-100">
+                <div class="mb-2">
+                  <i class="bi bi-geo-alt me-2 text-primary"></i
+                  ><strong>Dirección:</strong>
+                  <span class="ms-2">{{ getDireccionName() }}</span>
+                </div>
+                <div class="mb-2">
+                  <i class="bi bi-building me-2 text-primary"></i
+                  ><strong>Departamento:</strong>
+                  <span class="ms-2">{{ getDepartamentoName() }}</span>
+                </div>
+                <div class="mb-2">
+                  <i class="bi bi-calendar-plus me-2 text-primary"></i
+                  ><strong>Fecha de Registro:</strong>
+                  <span class="ms-2">{{
+                    user?.createdAt
+                      ? (user?.createdAt | date : "dd/MM/yyyy")
+                      : "No disponible"
+                  }}</span>
+                </div>
+                <div class="mb-2" *ngIf="user?.updatedAt">
+                  <i class="bi bi-calendar-check me-2 text-primary"></i
+                  ><strong>Última actualización:</strong>
+                  <span class="ms-2">{{
+                    user?.updatedAt | date : "dd/MM/yyyy"
+                  }}</span>
+                </div>
+                <div class="mb-2">
+                  <i class="bi bi-check-circle me-2 text-primary"></i
+                  ><strong>Estado:</strong>
+                  <span class="ms-2"
+                    ><span
+                      [ngClass]="user?.active ? 'text-success' : 'text-danger'"
+                      >{{ user?.active ? "Activo" : "Inactivo" }}</span
+                    ></span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="profile-item">
-      <strong>Email:</strong> {{ user.email }}
-    </div>
-    <div class="profile-item">
-      <strong>Departamento:</strong> {{ user.departamento?.name || user.departamentoId?.name || 'No asignado' }}
-    </div>
-    <div class="profile-item">
-      <strong>Rol:</strong>
-      <span *ngIf="user.roles?.length; else noRol">
-        {{ user.roles[0]?.name || user.roles[0] }}
-      </span>
-      <ng-template #noRol>Sin rol asignado</ng-template>
-    </div>
-  </div>
-  <div *ngIf="!user">
-    <em>No se encontró información del usuario.</em>
   </div>
 </div>
