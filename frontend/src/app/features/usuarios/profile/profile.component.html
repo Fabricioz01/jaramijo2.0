@@ -1,0 +1,24 @@
+<div class="profile-container"></div>
+  <h2>Mi Perfil</h2>
+  <div *ngIf="user">
+    <div class="profile-item">
+      <strong>Nombre:</strong> {{ user.name }}
+    </div>
+    <div class="profile-item">
+      <strong>Email:</strong> {{ user.email }}
+    </div>
+    <div class="profile-item">
+      <strong>Departamento:</strong> {{ user.departamento?.name || user.departamentoId?.name || 'No asignado' }}
+    </div>
+    <div class="profile-item">
+      <strong>Rol:</strong>
+      <span *ngIf="user.roles?.length; else noRol">
+        {{ user.roles[0]?.name || user.roles[0] }}
+      </span>
+      <ng-template #noRol>Sin rol asignado</ng-template>
+    </div>
+  </div>
+  <div *ngIf="!user">
+    <em>No se encontró información del usuario.</em>
+  </div>
+</div>
