@@ -172,6 +172,13 @@ export class AuthService {
     this.currentUserSubject.next(user);
   }
 
+  /**
+   * Permite actualizar el usuario logueado desde fuera del AuthService (por ejemplo, tras refrescar desde el backend)
+   */
+  public setCurrentUserFromDashboard(user: any): void {
+    this.setCurrentUser(user);
+  }
+
   private setTokens(tokens: {
     accessToken: string;
     refreshToken: string;

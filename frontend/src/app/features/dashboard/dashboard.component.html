@@ -1,11 +1,8 @@
 <div class="dashboard-container">
-  <!-- Componente de alertas -->
   <app-alerts></app-alerts>
 
-  <!-- Header Navigation -->
   <app-header></app-header>
 
-  <!-- Main Content -->
   <div class="container-fluid py-4">
     <div class="row">
       <div class="col-12">
@@ -14,16 +11,10 @@
             <h1 class="h3 mb-0">Dashboard</h1>
             <p class="text-muted">Bienvenido al sistema de gestión de tareas</p>
           </div>
-          <div>
-            <small class="text-muted">{{
-              user?.departamentoId?.name || "Departamento no asignado"
-            }}</small>
-          </div>
         </div>
       </div>
     </div>
 
-    <!-- Stats Cards -->
     <div class="row g-3 mb-4">
       <div class="col-md-3">
         <div class="card border-0 shadow-sm h-100">
@@ -168,14 +159,18 @@
               <div class="mb-2">
                 <strong>Departamento:</strong><br />
                 <span class="text-muted">{{
-                  user?.departamentoId?.name || "No asignado"
+                  user?.departamento?.name || "No asignado"
                 }}</span>
               </div>
               <div class="mb-2">
-                <strong>Estado:</strong><br />
-                <span class="badge bg-success">{{
-                  user?.active ? "Activo" : "Inactivo"
-                }}</span>
+                <strong>Rol:</strong><br />
+                <span class="text-muted">
+                  {{
+                    user?.roles?.length
+                      ? user.roles[0]?.name || user.roles[0]
+                      : "Sin rol asignado"
+                  }}
+                </span>
               </div>
             </div>
           </div>

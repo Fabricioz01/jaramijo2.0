@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { UserService } from '../../core/services/user.service';
 import { AlertsComponent } from '../../shared/components/alerts/alerts.component';
 import { HeaderComponent } from '../../shared/components/header/header.component';
 
@@ -38,12 +39,29 @@ export class DashboardComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private router: Router,
-    private reportsService: ReportsService
+    private reportsService: ReportsService,
+    private userService: UserService
   ) {}
 
   ngOnInit(): void {
+    // Al iniciar, refresca el usuario logueado desde el backend
+    const currentUser = this.authService.getCurrentUser();
+    console.log('[Dashboard] Usuario actual en AuthService:', currentUser);
+    if (currentUser?._id) {
+      this.userService.getById(currentUser._id).subscribe((resp) => {
+        console.log('[Dashboard] Respuesta de getById:', resp);
+        if (resp.data) {
+          this.authService.setCurrentUserFromDashboard(resp.data); // método nuevo
+          console.log(
+            '[Dashboard] Usuario actualizado en AuthService:',
+            resp.data
+          );
+        }
+      });
+    }
     this.authService.currentUser$.subscribe((user) => {
       this.user = user;
+      console.log('[Dashboard] Usuario en observable actualizado:', user);
     });
     this.cargarDatos();
   }
