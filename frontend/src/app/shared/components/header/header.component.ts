@@ -196,15 +196,6 @@ import { AuthService } from '../../../core/services/auth.service';
                     <i class="bi bi-person me-2"></i>Perfil
                   </a>
                 </li>
-                <li>
-                  <a
-                    class="dropdown-item"
-                    (click)="navigateToSettings()"
-                    style="cursor: pointer;"
-                  >
-                    <i class="bi bi-gear me-2"></i>Configuración
-                  </a>
-                </li>
                 <li><hr class="dropdown-divider" /></li>
                 <li>
                   <a

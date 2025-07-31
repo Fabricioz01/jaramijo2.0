@@ -15,7 +15,7 @@ class DireccionService {
   }
 
   async getAll() {
-    return await Direccion.find().sort({ name: 1 });
+    return await Direccion.find().sort({ createdAt: -1 });
   }
 
   async getById(id) {

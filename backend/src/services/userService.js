@@ -28,7 +28,7 @@ class UserService {
       .populate('departamentoId', 'name')
       .populate('roleIds', 'name')
       .select('-passwordHash')
-      .sort({ name: 1 });
+      .sort({ createdAt: -1 });
   }
 
   async getById(id) {

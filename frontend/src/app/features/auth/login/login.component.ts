@@ -44,7 +44,7 @@ export class LoginComponent {
         },
         error: (error) => {
           this.loading = false;
-          this.error = error.error?.error || 'Error al iniciar sesión';
+          this.error = error.error?.message || 'Error al iniciar sesión';
         },
       });
     }

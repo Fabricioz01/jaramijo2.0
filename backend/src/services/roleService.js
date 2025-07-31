@@ -9,7 +9,7 @@ class RoleService {
   async getAll() {
     return await Role.find()
       .populate('permissionIds', 'action resource')
-      .sort({ name: 1 });
+      .sort({ createdAt: -1 });
   }
 
   async getById(id) {

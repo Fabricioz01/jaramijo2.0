@@ -10,7 +10,7 @@ class DepartamentoService {
   async getAll() {
     return await Departamento.find()
       .populate('direccionId', 'name')
-      .sort({ name: 1 });
+      .sort({ createdAt: -1 });
   }
 
   async getById(id) {

@@ -25,7 +25,6 @@ class FileService {
     return await File.findByIdAndDelete(id);
   }
 
-
   async getByTask(taskId) {
     return await File.find({ taskId })
       .populate('uploaderId', 'name email')

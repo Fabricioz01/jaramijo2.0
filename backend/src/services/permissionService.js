@@ -10,7 +10,7 @@ class PermissionService {
     return await Permission.find()
       .populate('direccionId', 'name')
       .populate('departamentoId', 'name')
-      .sort({ resource: 1, action: 1 });
+      .sort({ createdAt: -1 });
   }
 
   async getById(id) {
