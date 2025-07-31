@@ -9,7 +9,7 @@ export const departamentosRoutes: Routes = [
       ),
   },
   {
-    path: 'form',
+    path: 'nuevo',
     loadComponent: () =>
       import('./departamentos-form/departamentos-form.component').then(
         (m) => m.DepartamentosFormComponent

@@ -26,7 +26,43 @@ class TaskController {
 
   async getAll(req, res, next) {
     try {
-      const tasks = await taskService.getAll();
+      const user = req.user;
+
+      let isAdmin = false;
+      let departamentoId = null;
+      let roles = user.roleIds;
+      if (roles.length > 0 && typeof roles[0] === 'object' && roles[0].name) {
+        isAdmin = roles.some((r) => r.name === 'Administrador');
+      } else {
+        // Poblar roles desde base de datos
+        const User = require('../models/User');
+        const populatedUser = await User.findById(user._id).populate('roleIds');
+        isAdmin = populatedUser.roleIds.some((r) => r.name === 'Administrador');
+        roles = populatedUser.roleIds;
+        user.departamentoId = populatedUser.departamentoId;
+      }
+
+      // departamentoId puede venir como objeto o string
+      if (
+        user.departamentoId &&
+        typeof user.departamentoId === 'object' &&
+        user.departamentoId._id
+      ) {
+        departamentoId = user.departamentoId._id;
+      } else {
+        departamentoId = user.departamentoId;
+      }
+
+      let tasks;
+      if (isAdmin) {
+        tasks = await taskService.getAll();
+      } else {
+        if (!departamentoId) {
+          tasks = [];
+        } else {
+          tasks = await taskService.getByDepartamento(departamentoId);
+        }
+      }
 
       res.json({
         message: 'Tareas obtenidas exitosamente',
