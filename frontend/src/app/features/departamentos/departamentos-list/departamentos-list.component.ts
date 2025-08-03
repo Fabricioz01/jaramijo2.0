@@ -373,13 +373,17 @@ export class DepartamentosListComponent implements OnInit {
   confirmarEliminar(): void {
     if (!this.departamentoAEliminar) return;
     this.departamentoService.delete(this.departamentoAEliminar._id).subscribe({
-      next: () => {
-        this.alertService.success('Departamento eliminado exitosamente');
+      next: (response) => {
+        this.alertService.success(
+          response.message || 'Departamento eliminado exitosamente'
+        );
         this.cargarDepartamentos();
         this.cancelarEliminar();
       },
-      error: () => {
-        this.alertService.error('Error al eliminar departamento');
+      error: (error) => {
+        const errorMessage =
+          error.error?.message || 'Error al eliminar departamento';
+        this.alertService.error(errorMessage);
         this.cancelarEliminar();
       },
     });

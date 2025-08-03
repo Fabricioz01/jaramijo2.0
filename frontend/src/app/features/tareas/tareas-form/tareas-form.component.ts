@@ -324,18 +324,28 @@ export class TareasFormComponent implements OnInit, OnDestroy {
 
     if (this.isEditing) {
       this.taskService.update(this.tareaId!, payload).subscribe({
-        next: (r) => success(r.data?._id),
-        error: () => {
+        next: (r) => {
+          this.alert.success(r.message || 'Tarea actualizada exitosamente');
+          success(r.data?._id);
+        },
+        error: (error) => {
           this.loading = false;
-          this.alert.error('Error al actualizar la tarea');
+          const errorMessage =
+            error.error?.message || 'Error al actualizar la tarea';
+          this.alert.error(errorMessage);
         },
       });
     } else {
       this.taskService.create(payload).subscribe({
-        next: (r) => success(r.data?._id),
-        error: () => {
+        next: (r) => {
+          this.alert.success(r.message || 'Tarea creada exitosamente');
+          success(r.data?._id);
+        },
+        error: (error) => {
           this.loading = false;
-          this.alert.error('Error al crear la tarea');
+          const errorMessage =
+            error.error?.message || 'Error al crear la tarea';
+          this.alert.error(errorMessage);
         },
       });
     }

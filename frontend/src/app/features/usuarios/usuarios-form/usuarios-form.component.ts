@@ -12,6 +12,7 @@ import { UserService } from '../../../core/services/user.service';
 import { DepartamentoService } from '../../../core/services/departamento.service';
 import { RoleService } from '../../../core/services/role.service';
 import { DireccionService } from '../../../core/services/direccion.service';
+import { AlertService } from '../../../core/services/alert.service';
 import { Departamento, Role, Direccion } from '../../../core/models';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 
@@ -381,6 +382,7 @@ export class UsuariosFormComponent implements OnInit {
     private departamentoService: DepartamentoService,
     private roleService: RoleService,
     private direccionService: DireccionService,
+    private alertService: AlertService,
     public authService: AuthService
   ) {
     this.usuarioForm = this.fb.group({
@@ -581,11 +583,17 @@ export class UsuariosFormComponent implements OnInit {
         this.userService.update(this.usuarioId!, userData).subscribe({
           next: (response) => {
             console.log('Usuario actualizado:', response);
+            this.alertService.success(
+              response.message || 'Usuario actualizado exitosamente'
+            );
             this.loading = false;
             this.goBack();
           },
           error: (error) => {
             console.error('Error al actualizar usuario:', error);
+            const errorMessage =
+              error.error?.message || 'Error al actualizar el usuario';
+            this.alertService.error(errorMessage);
             this.loading = false;
           },
         });
@@ -593,11 +601,17 @@ export class UsuariosFormComponent implements OnInit {
         this.userService.create(userData).subscribe({
           next: (response) => {
             console.log('Usuario creado:', response);
+            this.alertService.success(
+              response.message || 'Usuario creado exitosamente'
+            );
             this.loading = false;
             this.goBack();
           },
           error: (error) => {
             console.error('Error al crear usuario:', error);
+            const errorMessage =
+              error.error?.message || 'Error al crear el usuario';
+            this.alertService.error(errorMessage);
             this.loading = false;
           },
         });

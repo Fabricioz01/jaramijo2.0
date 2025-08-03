@@ -84,13 +84,16 @@ export class TaskListComponent implements OnInit {
   confirmarEliminarTarea(): void {
     if (!this.selectedTaskId) return;
     this.taskService.delete(this.selectedTaskId).subscribe({
-      next: () => {
-        this.alertService.success('Tarea eliminada exitosamente');
+      next: (response) => {
+        this.alertService.success(
+          response.message || 'Tarea eliminada exitosamente'
+        );
         this.loadTasks();
         this.cancelarEliminarTarea();
       },
-      error: () => {
-        this.alertService.error('Error al eliminar tarea');
+      error: (error) => {
+        const errorMessage = error.error?.message || 'Error al eliminar tarea';
+        this.alertService.error(errorMessage);
         this.cancelarEliminarTarea();
       },
     });
@@ -131,5 +134,3 @@ export class TaskListComponent implements OnInit {
     this.closeMenu();
   }
 }
-
-//hola jijijija

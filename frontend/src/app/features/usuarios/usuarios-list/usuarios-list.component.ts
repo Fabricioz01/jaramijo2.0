@@ -342,12 +342,16 @@ export class UsuariosListComponent implements OnInit {
   eliminarUsuario(usuario: User): void {
     if (confirm(`¿Estás seguro de que deseas eliminar a ${usuario.name}?`)) {
       this.userService.delete(usuario._id).subscribe({
-        next: () => {
-          this.alertService.success('Usuario eliminado exitosamente');
+        next: (response) => {
+          this.alertService.success(
+            response.message || 'Usuario eliminado exitosamente'
+          );
           this.cargarUsuarios();
         },
         error: (error) => {
-          this.alertService.error('Error al eliminar usuario');
+          const errorMessage =
+            error.error?.message || 'Error al eliminar usuario';
+          this.alertService.error(errorMessage);
           console.error('Error:', error);
         },
       });

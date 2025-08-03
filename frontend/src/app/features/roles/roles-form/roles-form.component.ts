@@ -234,26 +234,25 @@ export class RolesFormComponent implements OnInit {
   }
 
   loadRol(): void {
-  if (!this.rolId) return;
+    if (!this.rolId) return;
 
-  this.roleService.getById(this.rolId).subscribe({
-    next: (response) => {
-      const role = response.data;
-      if (role) {
-        this.rolForm.patchValue({ name: role.name });
+    this.roleService.getById(this.rolId).subscribe({
+      next: (response) => {
+        const role = response.data;
+        if (role) {
+          this.rolForm.patchValue({ name: role.name });
 
-        this.permisosSeleccionados = (role.permissionIds || []).map(
-          (p: any) => (typeof p === 'string' ? p : p._id)
-        );
-      }
-    },
-    error: () => {
-      console.error('Error al cargar rol');
-      this.alertService.error('Error al cargar el rol');
-    },
-  });
-}
-
+          this.permisosSeleccionados = (role.permissionIds || []).map(
+            (p: any) => (typeof p === 'string' ? p : p._id)
+          );
+        }
+      },
+      error: () => {
+        console.error('Error al cargar rol');
+        this.alertService.error('Error al cargar el rol');
+      },
+    });
+  }
 
   isPermisoSelected(permisoId: string): boolean {
     return this.permisosSeleccionados.includes(permisoId);
@@ -293,13 +292,17 @@ export class RolesFormComponent implements OnInit {
         this.roleService.update(this.rolId!, roleData).subscribe({
           next: (response) => {
             console.log('Rol actualizado:', response);
-            this.alertService.success('Rol actualizado exitosamente');
+            this.alertService.success(
+              response.message || 'Rol actualizado exitosamente'
+            );
             this.loading = false;
             this.goBack();
           },
           error: (error) => {
             console.error('Error al actualizar rol:', error);
-            this.alertService.error('Error al actualizar el rol');
+            const errorMessage =
+              error.error?.message || 'Error al actualizar el rol';
+            this.alertService.error(errorMessage);
             this.loading = false;
           },
         });
@@ -307,13 +310,17 @@ export class RolesFormComponent implements OnInit {
         this.roleService.create(roleData).subscribe({
           next: (response) => {
             console.log('Rol creado:', response);
-            this.alertService.success('Rol creado exitosamente');
+            this.alertService.success(
+              response.message || 'Rol creado exitosamente'
+            );
             this.loading = false;
             this.goBack();
           },
           error: (error) => {
             console.error('Error al crear rol:', error);
-            this.alertService.error('Error al crear el rol');
+            const errorMessage =
+              error.error?.message || 'Error al crear el rol';
+            this.alertService.error(errorMessage);
             this.loading = false;
           },
         });

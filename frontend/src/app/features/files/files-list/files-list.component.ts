@@ -416,7 +416,8 @@ export class FilesListComponent implements OnInit {
       },
       error: (err) => {
         this.subiendoArchivos = false;
-        this.alertService.error('Error al subir archivos');
+        const errorMessage = err.error?.message || 'Error al subir archivos';
+        this.alertService.error(errorMessage);
       },
     });
   }
@@ -430,13 +431,17 @@ export class FilesListComponent implements OnInit {
   eliminarArchivo(archivo: FileModel): void {
     if (confirm('¿Estás seguro de que deseas eliminar este archivo?')) {
       this.fileService.delete(archivo._id).subscribe({
-        next: () => {
-          this.alertService.success('Archivo eliminado exitosamente');
+        next: (response) => {
+          this.alertService.success(
+            response.message || 'Archivo eliminado exitosamente'
+          );
           this.cargarArchivos();
         },
         error: (error) => {
           console.error('Error al eliminar archivo:', error);
-          this.alertService.error('Error al eliminar archivo');
+          const errorMessage =
+            error.error?.message || 'Error al eliminar archivo';
+          this.alertService.error(errorMessage);
         },
       });
     }

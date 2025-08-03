@@ -166,7 +166,6 @@ export class DepartamentosFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
-
     this.departamentoId = this.route.snapshot.paramMap.get('id');
     this.isEditing = !!this.departamentoId;
     this.loadDirecciones();
@@ -232,14 +231,16 @@ export class DepartamentosFormComponent implements OnInit {
             next: (response) => {
               console.log('Departamento actualizado:', response);
               this.alertService.success(
-                'Departamento actualizado exitosamente'
+                response.message || 'Departamento actualizado exitosamente'
               );
               this.loading = false;
               this.goBack();
             },
             error: (error) => {
               console.error('Error al actualizar departamento:', error);
-              this.alertService.error('Error al actualizar el departamento');
+              const errorMessage =
+                error.error?.message || 'Error al actualizar el departamento';
+              this.alertService.error(errorMessage);
               this.loading = false;
             },
           });
@@ -247,13 +248,17 @@ export class DepartamentosFormComponent implements OnInit {
         this.departamentoService.create(departamentoData).subscribe({
           next: (response) => {
             console.log('Departamento creado:', response);
-            this.alertService.success('Departamento creado exitosamente');
+            this.alertService.success(
+              response.message || 'Departamento creado exitosamente'
+            );
             this.loading = false;
             this.goBack();
           },
           error: (error) => {
             console.error('Error al crear departamento:', error);
-            this.alertService.error('Error al crear el departamento');
+            const errorMessage =
+              error.error?.message || 'Error al crear el departamento';
+            this.alertService.error(errorMessage);
             this.loading = false;
           },
         });

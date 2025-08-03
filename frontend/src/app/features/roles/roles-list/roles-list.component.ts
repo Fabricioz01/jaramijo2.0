@@ -329,13 +329,16 @@ export class RolesListComponent implements OnInit {
   confirmarEliminarRol(): void {
     if (!this.selectedRoleId) return;
     this.roleService.delete(this.selectedRoleId).subscribe({
-      next: () => {
-        this.alertService.success('Rol eliminado exitosamente');
+      next: (response) => {
+        this.alertService.success(
+          response.message || 'Rol eliminado exitosamente'
+        );
         this.cargarRoles();
         this.cancelarEliminarRol();
       },
-      error: () => {
-        this.alertService.error('Error al eliminar rol');
+      error: (error) => {
+        const errorMessage = error.error?.message || 'Error al eliminar rol';
+        this.alertService.error(errorMessage);
         this.cancelarEliminarRol();
       },
     });
