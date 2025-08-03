@@ -29,15 +29,21 @@ class TaskController {
       const user = req.user;
 
       let isAdmin = false;
+      let isSupervisor = false;
       let departamentoId = null;
       let roles = user.roleIds;
+
       if (roles.length > 0 && typeof roles[0] === 'object' && roles[0].name) {
         isAdmin = roles.some((r) => r.name === 'Administrador');
+        isSupervisor = roles.some((r) => r.name === 'Supervisor');
       } else {
         // Poblar roles desde base de datos
         const User = require('../models/User');
         const populatedUser = await User.findById(user._id).populate('roleIds');
         isAdmin = populatedUser.roleIds.some((r) => r.name === 'Administrador');
+        isSupervisor = populatedUser.roleIds.some(
+          (r) => r.name === 'Supervisor'
+        );
         roles = populatedUser.roleIds;
         user.departamentoId = populatedUser.departamentoId;
       }
@@ -55,13 +61,18 @@ class TaskController {
 
       let tasks;
       if (isAdmin) {
+        // Administrador ve todas las tareas del sistema
         tasks = await taskService.getAll();
-      } else {
+      } else if (isSupervisor) {
+        // Supervisor ve todas las tareas de su departamento
         if (!departamentoId) {
           tasks = [];
         } else {
           tasks = await taskService.getByDepartamento(departamentoId);
         }
+      } else {
+        // Otros roles solo ven las tareas asignadas a ellos
+        tasks = await taskService.getByAssignedUser(user._id);
       }
 
       res.json({
