@@ -154,7 +154,11 @@ function getDeleteMessage(this: any): string {
                     </div>
                   </div>
                   <p class="card-text text-muted mb-3">
-                    {{ direccion.descripcion ? direccion.descripcion : 'Sin descripción' }}
+                    {{
+                      direccion.descripcion
+                        ? direccion.descripcion
+                        : 'Sin descripción'
+                    }}
                   </p>
                   <div
                     class="d-flex justify-content-between align-items-center"
@@ -350,7 +354,9 @@ export class DireccionesListComponent implements OnInit {
         this.cargando = false;
       },
       error: (error: any) => {
-        this.alertService.error('Error al cargar direcciones');
+        const errorMessage =
+          error.error?.message || 'Error al cargar direcciones';
+        this.alertService.error(errorMessage);
         this.direcciones = [];
         this.direccionesFiltradas = [];
         this.cargando = false;
@@ -405,13 +411,17 @@ export class DireccionesListComponent implements OnInit {
   confirmarEliminar(): void {
     if (!this.direccionAEliminar) return;
     this.direccionService.delete(this.direccionAEliminar._id).subscribe({
-      next: () => {
-        this.alertService.success('Dirección eliminada exitosamente');
+      next: (response) => {
+        this.alertService.success(
+          response.message || 'Dirección eliminada exitosamente'
+        );
         this.cargarDirecciones();
         this.cancelarEliminar();
       },
       error: (error: any) => {
-        this.alertService.error('Error al eliminar dirección');
+        const errorMessage =
+          error.error?.message || 'Error al eliminar dirección';
+        this.alertService.error(errorMessage);
         this.cancelarEliminar();
       },
     });

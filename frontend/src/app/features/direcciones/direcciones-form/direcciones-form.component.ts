@@ -187,7 +187,9 @@ export class DireccionesFormComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error al cargar dirección:', error);
-        this.alertService.error('Error al cargar la dirección');
+        const errorMessage =
+          error.error?.message || 'Error al cargar la dirección';
+        this.alertService.error(errorMessage);
       },
     });
   }
@@ -207,24 +209,32 @@ export class DireccionesFormComponent implements OnInit {
           .update(this.direccionId!, direccionData)
           .subscribe({
             next: (response) => {
-              this.alertService.success('Dirección actualizada exitosamente');
+              this.alertService.success(
+                response.message || 'Dirección actualizada exitosamente'
+              );
               this.loading = false;
               this.goBack();
             },
             error: (error) => {
-              this.alertService.error('Error al actualizar la dirección');
+              const errorMessage =
+                error.error?.message || 'Error al actualizar la dirección';
+              this.alertService.error(errorMessage);
               this.loading = false;
             },
           });
       } else {
         this.direccionService.create(direccionData).subscribe({
           next: (response) => {
-            this.alertService.success('Dirección creada exitosamente');
+            this.alertService.success(
+              response.message || 'Dirección creada exitosamente'
+            );
             this.loading = false;
             this.goBack();
           },
           error: (error) => {
-            this.alertService.error('Error al crear la dirección');
+            const errorMessage =
+              error.error?.message || 'Error al crear la dirección';
+            this.alertService.error(errorMessage);
             this.loading = false;
           },
         });
