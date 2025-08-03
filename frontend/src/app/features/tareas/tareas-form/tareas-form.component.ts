@@ -23,6 +23,7 @@ import { DepartamentoService } from '../../../core/services/departamento.service
 import { FileService } from '../../../core/services/file.service';
 import { AlertService } from '../../../core/services/alert.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
+import { ConfirmModalComponent } from '../../../shared/components/alerts/confirm-modal.component';
 
 type Id = string;
 
@@ -46,7 +47,7 @@ interface Usuario {
 @Component({
   selector: 'app-tareas-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, HeaderComponent],
+  imports: [CommonModule, ReactiveFormsModule, HeaderComponent, ConfirmModalComponent],
   templateUrl: './tareas-form.component.html',
   styleUrls: ['./tareas-form.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -70,6 +71,10 @@ export class TareasFormComponent implements OnInit, OnDestroy {
     mimeType: string;
     size: number;
   }[] = [];
+
+  // Modal de confirmación
+  showDeleteModal = false;
+  fileToDelete: string | null = null;
 
   private destroy$ = new Subject<void>();
 
@@ -258,25 +263,44 @@ export class TareasFormComponent implements OnInit, OnDestroy {
 
   removeAttachment(fileId: string): void {
     if (!this.tareaId) return;
-    if (!confirm('¿Eliminar archivo?')) return;
+    this.fileToDelete = fileId;
+    this.showDeleteModal = true;
+  }
+
+  confirmarEliminarArchivo(): void {
+    if (!this.tareaId || !this.fileToDelete) return;
 
     // 1. Quita el vínculo en la tarea
-    this.taskService.removeAttachment(this.tareaId, fileId).subscribe({
+    this.taskService.removeAttachment(this.tareaId, this.fileToDelete).subscribe({
       next: () => {
         // 2. Borra el archivo real
-        this.fileService.delete(fileId).subscribe({
-          next: () => {
+        this.fileService.delete(this.fileToDelete!).subscribe({
+          next: (response) => {
             this.originalAttachments = this.originalAttachments.filter(
-              (a) => a._id !== fileId
+              (a) => a._id !== this.fileToDelete
             );
-            this.alert.success('Archivo eliminado');
+            this.alert.success(response.message || 'Archivo eliminado');
+            this.cancelarEliminarArchivo();
             this.cdr.markForCheck();
           },
-          error: () => this.alert.error('Error eliminando archivo'),
+          error: (error) => {
+            const errorMessage = error.error?.message || 'Error eliminando archivo';
+            this.alert.error(errorMessage);
+            this.cancelarEliminarArchivo();
+          },
         });
       },
-      error: () => this.alert.error('Error eliminando adjunto'),
+      error: (error) => {
+        const errorMessage = error.error?.message || 'Error eliminando adjunto';
+        this.alert.error(errorMessage);
+        this.cancelarEliminarArchivo();
+      },
     });
+  }
+
+  cancelarEliminarArchivo(): void {
+    this.showDeleteModal = false;
+    this.fileToDelete = null;
   }
 
   /* ──────────────── Submit ──────────────── */

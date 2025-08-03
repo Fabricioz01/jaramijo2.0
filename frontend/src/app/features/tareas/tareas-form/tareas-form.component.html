@@ -182,3 +182,11 @@
     </div>
   </div>
 </div>
+
+<!-- Modal de confirmación -->
+<app-confirm-modal
+  [visible]="showDeleteModal"
+  [message]="'¿Está seguro de eliminar este archivo? Esta acción no se puede deshacer.'"
+  (confirm)="confirmarEliminarArchivo()"
+  (cancel)="cancelarEliminarArchivo()"
+></app-confirm-modal>

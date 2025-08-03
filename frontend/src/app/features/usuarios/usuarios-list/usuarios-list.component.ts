@@ -8,11 +8,12 @@ import { AlertService } from '../../../core/services/alert.service';
 import { User } from '../../../core/models';
 import { DepartamentoService } from '../../../core/services/departamento.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
+import { ConfirmModalComponent } from '../../../shared/components/alerts/confirm-modal.component';
 
 @Component({
   selector: 'app-usuarios-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, HeaderComponent],
+  imports: [CommonModule, ReactiveFormsModule, HeaderComponent, ConfirmModalComponent],
   template: `
     <app-header></app-header>
     <div class="container-fluid py-4">
@@ -194,6 +195,14 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
         </div>
       </div>
     </div>
+
+    <!-- Modal de confirmación -->
+    <app-confirm-modal
+      [visible]="showDeleteModal"
+      [message]="getDeleteMessage()"
+      (confirm)="confirmarEliminarUsuario()"
+      (cancel)="cancelarEliminarUsuario()"
+    ></app-confirm-modal>
   `,
   styles: [
     `
@@ -245,6 +254,10 @@ export class UsuariosListComponent implements OnInit {
   cargando = false;
 
   departamentos: any[] = [];
+
+  // Modal de confirmación
+  showDeleteModal = false;
+  usuarioAEliminar: User | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -340,22 +353,40 @@ export class UsuariosListComponent implements OnInit {
   }
 
   eliminarUsuario(usuario: User): void {
-    if (confirm(`¿Estás seguro de que deseas eliminar a ${usuario.name}?`)) {
-      this.userService.delete(usuario._id).subscribe({
-        next: (response) => {
-          this.alertService.success(
-            response.message || 'Usuario eliminado exitosamente'
-          );
-          this.cargarUsuarios();
-        },
-        error: (error) => {
-          const errorMessage =
-            error.error?.message || 'Error al eliminar usuario';
-          this.alertService.error(errorMessage);
-          console.error('Error:', error);
-        },
-      });
-    }
+    this.usuarioAEliminar = usuario;
+    this.showDeleteModal = true;
+  }
+
+  confirmarEliminarUsuario(): void {
+    if (!this.usuarioAEliminar) return;
+
+    this.userService.delete(this.usuarioAEliminar._id).subscribe({
+      next: (response) => {
+        this.alertService.success(
+          response.message || 'Usuario eliminado exitosamente'
+        );
+        this.cargarUsuarios();
+        this.cancelarEliminarUsuario();
+      },
+      error: (error) => {
+        const errorMessage =
+          error.error?.message || 'Error al eliminar usuario';
+        this.alertService.error(errorMessage);
+        console.error('Error:', error);
+        this.cancelarEliminarUsuario();
+      },
+    });
+  }
+
+  cancelarEliminarUsuario(): void {
+    this.showDeleteModal = false;
+    this.usuarioAEliminar = null;
+  }
+
+  getDeleteMessage(): string {
+    return this.usuarioAEliminar
+      ? `¿Está seguro de eliminar al usuario '${this.usuarioAEliminar.name} ${this.usuarioAEliminar.lastName}'? Esta acción no se puede deshacer.`
+      : '';
   }
 
   toggleActivo(usuario: User): void {

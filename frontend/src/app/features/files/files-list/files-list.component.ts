@@ -6,11 +6,12 @@ import { AlertService } from '../../../core/services/alert.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 import { FileModel } from '../../../core/models/file.model';
 import { AuthService } from '../../../core/services/auth.service';
+import { ConfirmModalComponent } from '../../../shared/components/alerts/confirm-modal.component';
 
 @Component({
   selector: 'app-files-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent],
+  imports: [CommonModule, FormsModule, HeaderComponent, ConfirmModalComponent],
   template: `
     <app-header></app-header>
     <div class="container-fluid py-4" *ngIf="canAccessModule()">
@@ -239,6 +240,13 @@ import { AuthService } from '../../../core/services/auth.service';
         </div>
       </div>
     </div>
+
+    <app-confirm-modal
+      [visible]="showDeleteModal"
+      [message]="'¿Está seguro de eliminar este archivo? Esta acción no se puede deshacer.'"
+      (confirm)="confirmarEliminarArchivo()"
+      (cancel)="cancelarEliminarArchivo()"
+    ></app-confirm-modal>
   `,
   styles: [
     `
@@ -279,6 +287,10 @@ export class FilesListComponent implements OnInit {
     tipo: '',
     periodo: '',
   };
+
+  // Modal de confirmación
+  showDeleteModal = false;
+  archivoAEliminar: FileModel | null = null;
 
   constructor(
     private fileService: FileService,
@@ -429,22 +441,34 @@ export class FilesListComponent implements OnInit {
   }
 
   eliminarArchivo(archivo: FileModel): void {
-    if (confirm('¿Estás seguro de que deseas eliminar este archivo?')) {
-      this.fileService.delete(archivo._id).subscribe({
-        next: (response) => {
-          this.alertService.success(
-            response.message || 'Archivo eliminado exitosamente'
-          );
-          this.cargarArchivos();
-        },
-        error: (error) => {
-          console.error('Error al eliminar archivo:', error);
-          const errorMessage =
-            error.error?.message || 'Error al eliminar archivo';
-          this.alertService.error(errorMessage);
-        },
-      });
-    }
+    this.archivoAEliminar = archivo;
+    this.showDeleteModal = true;
+  }
+
+  confirmarEliminarArchivo(): void {
+    if (!this.archivoAEliminar) return;
+    
+    this.fileService.delete(this.archivoAEliminar._id).subscribe({
+      next: (response) => {
+        this.alertService.success(
+          response.message || 'Archivo eliminado exitosamente'
+        );
+        this.cargarArchivos();
+        this.cancelarEliminarArchivo();
+      },
+      error: (error) => {
+        console.error('Error al eliminar archivo:', error);
+        const errorMessage =
+          error.error?.message || 'Error al eliminar archivo';
+        this.alertService.error(errorMessage);
+        this.cancelarEliminarArchivo();
+      },
+    });
+  }
+
+  cancelarEliminarArchivo(): void {
+    this.showDeleteModal = false;
+    this.archivoAEliminar = null;
   }
 
   openUploadModal(): void {
