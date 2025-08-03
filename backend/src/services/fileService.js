@@ -21,10 +21,6 @@ class FileService {
       .populate('uploaderId', 'name email');
   }
 
-  async delete(id) {
-    return await File.findByIdAndDelete(id);
-  }
-
   async getByTask(taskId) {
     return await File.find({ taskId })
       .populate('uploaderId', 'name email')
@@ -84,6 +80,22 @@ class FileService {
     }
 
     return file;
+  }
+
+  async deleteByTaskId(taskId) {
+    const files = await File.find({ taskId });
+    const deletedFiles = [];
+
+    for (const file of files) {
+      try {
+        await this.delete(file._id);
+        deletedFiles.push(file);
+      } catch (error) {
+        console.error(`Error al eliminar archivo ${file._id}:`, error);
+      }
+    }
+
+    return deletedFiles;
   }
 }
 

@@ -58,8 +58,22 @@ class TaskService {
   }
 
   async delete(id) {
-    const task = await Task.findByIdAndDelete(id);
+    const task = await Task.findById(id).populate('attachmentIds');
     if (!task) throw new Error('Tarea no encontrada');
+
+    if (task.attachmentIds && task.attachmentIds.length > 0) {
+      const fileService = require('./fileService');
+      for (const attachment of task.attachmentIds) {
+        try {
+          await fileService.delete(attachment._id);
+        } catch (error) {
+          console.error(`Error al eliminar archivo ${attachment._id}:`, error);
+        }
+      }
+    }
+
+    // Finalmente eliminar la tarea
+    await Task.findByIdAndDelete(id);
     return task;
   }
 
