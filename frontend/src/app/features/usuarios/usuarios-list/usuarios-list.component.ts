@@ -286,11 +286,12 @@ export class UsuariosListComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.cargarDepartamentos();
-    this.cargarUsuarios();
     this.filterForm.valueChanges.subscribe(() => {
       this.filtrarUsuarios();
     });
+
+    this.cargarUsuarios();
+    this.cargarDepartamentos();
   }
 
   cargarDepartamentos(): void {
@@ -305,18 +306,13 @@ export class UsuariosListComponent implements OnInit {
   }
 
   cargarUsuarios(): void {
-    this.cargando = true;
     this.userService.getAll().subscribe({
       next: (response) => {
-        console.log('✅ Usuarios cargados:', response);
         this.usuarios = response.data || [];
-        this.usuariosFiltrados = [...this.usuarios];
-        this.cargando = false;
+        this.filtrarUsuarios();
       },
       error: (error) => {
-        console.error('❌ Error cargando usuarios:', error);
-        this.alertService.error('Error al cargar usuarios');
-        this.cargando = false;
+        console.error('Error al cargar usuarios:', error);
       },
     });
   }
@@ -325,20 +321,22 @@ export class UsuariosListComponent implements OnInit {
     const { busqueda, departamento, estado } = this.filterForm.value;
 
     this.usuariosFiltrados = this.usuarios.filter((usuario) => {
-      const cumpleBusqueda =
-        !busqueda ||
-        usuario.name?.toLowerCase().includes(busqueda.toLowerCase()) ||
-        usuario.email?.toLowerCase().includes(busqueda.toLowerCase());
+      const coincideBusqueda = busqueda
+        ? usuario.name.toLowerCase().includes(busqueda.toLowerCase()) ||
+          usuario.email.toLowerCase().includes(busqueda.toLowerCase())
+        : true;
 
-      const cumpleDepartamento =
-        !departamento || usuario.departamentoId?.toString() === departamento;
+      const coincideDepartamento = departamento
+        ? typeof usuario.departamentoId === 'object' && usuario.departamentoId._id === departamento
+        : true;
 
-      const cumpleEstado =
-        !estado ||
-        (estado === 'activo' && usuario.active) ||
-        (estado === 'inactivo' && !usuario.active);
+      const coincideEstado = estado
+        ? estado === 'activo'
+          ? usuario.active
+          : !usuario.active
+        : true;
 
-      return cumpleBusqueda && cumpleDepartamento && cumpleEstado;
+      return coincideBusqueda && coincideDepartamento && coincideEstado;
     });
   }
 
@@ -431,17 +429,12 @@ export class UsuariosListComponent implements OnInit {
   }
 
   navigateToForm(): void {
-    console.log(
-      '🔍 UsuariosListComponent - Navegando a formulario de nuevo usuario'
-    );
+
     this.router.navigate(['/usuarios/nuevo']);
   }
 
   navigateToEdit(usuario: User): void {
-    console.log(
-      '🔍 UsuariosListComponent - Navegando a editar usuario:',
-      usuario._id
-    );
+
     this.router.navigate(['/usuarios', usuario._id, 'editar']);
   }
 

@@ -179,7 +179,10 @@ export class TaskListComponent implements OnInit {
   }
 
   canResolveTask(task: Task): boolean {
-    return task.status !== 'resolved' && this.authService.canAccessAction('tareas', 'resolve');
+    return (
+      task.status !== 'resolved' &&
+      this.authService.canAccessAction('tareas', 'resolve')
+    );
   }
 
   formatDate(date?: Date): string {
