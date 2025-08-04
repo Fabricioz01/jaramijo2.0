@@ -404,7 +404,7 @@ export class DepartamentosListComponent implements OnInit {
     return this.authService.canAccessAction('departamentos', 'create');
   }
   canEditDepartamento(): boolean {
-    return this.authService.canAccessAction('departamentos', 'edit');
+    return this.authService.canAccessAction('departamentos', 'update');
   }
   canDeleteDepartamento(): boolean {
     return this.authService.canAccessAction('departamentos', 'delete');
