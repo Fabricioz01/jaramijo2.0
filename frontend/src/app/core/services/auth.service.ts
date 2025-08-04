@@ -39,6 +39,7 @@ export class AuthService {
         read: '688280813f95573aed48fef4',
         update: '688280813f95573aed48fef5',
         delete: '688280813f95573aed48fef6',
+        resolve: '6890f58cc8d9b62df20beb23',
       },
       departamentos: {
         create: '688280813f95573aed48fef7',
@@ -47,13 +48,8 @@ export class AuthService {
         delete: '688280813f95573aed48fefa',
       },
       archivos: {
-        create: '688280813f95573aed48fefb',
         read: '688280813f95573aed48fefc',
         delete: '688280813f95573aed48fefd',
-      },
-      reportes: {
-        create: '688280813f95573aed48feff',
-        read: '688280813f95573aed48fefe',
       },
     };
 

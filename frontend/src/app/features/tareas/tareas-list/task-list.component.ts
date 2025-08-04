@@ -123,6 +123,18 @@ export class TaskListComponent implements OnInit {
     this.router.navigate(['/tareas/nueva']);
   }
 
+  canCreateTask(): boolean {
+    return this.authService.canAccessAction('tareas', 'create');
+  }
+
+  canEditTask(): boolean {
+    return this.authService.canAccessAction('tareas', 'update');
+  }
+
+  canDeleteTask(): boolean {
+    return this.authService.canAccessAction('tareas', 'delete');
+  }
+
   resolverTarea(id: string): void {
     this.selectedTaskForResolve = id;
     this.showResolveModal = true;
@@ -167,7 +179,7 @@ export class TaskListComponent implements OnInit {
   }
 
   canResolveTask(task: Task): boolean {
-    return task.status !== 'resolved';
+    return task.status !== 'resolved' && this.authService.canAccessAction('tareas', 'resolve');
   }
 
   formatDate(date?: Date): string {
