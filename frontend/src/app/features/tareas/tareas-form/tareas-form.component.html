@@ -55,12 +55,13 @@
               </div>
 
               <div class="col-md-6 mb-3">
-                <label class="form-label">Estado *</label>
+                <label class="form-label">Estado</label>
                 <select
                   class="form-select"
                   formControlName="status"
                   [class.is-invalid]="invalid('status')"
                 >
+                  <option value="">Seleccionar estado</option>
                   <option value="pending">Pendiente</option>
                   <option value="in_progress">En Progreso</option>
                   <option value="completed">Completada</option>

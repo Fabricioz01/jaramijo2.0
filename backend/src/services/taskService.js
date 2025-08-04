@@ -169,15 +169,13 @@ class TaskService {
     const task = await Task.findById(taskId);
     if (!task) throw new Error('Tarea no encontrada');
 
-    // Obtener el ID del archivo de resolución antes de eliminarlo
     const resolutionFileId = task.resolutionFileId;
 
-    // Remover la referencia del archivo de resolución
     task.resolutionFileId = null;
+    task.status = 'pending';
     task.updatedAt = Date.now();
     await task.save();
 
-    // Si había un archivo de resolución, eliminarlo físicamente
     if (resolutionFileId) {
       try {
         const fileService = require('./fileService');

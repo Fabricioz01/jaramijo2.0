@@ -120,12 +120,11 @@ export class TareasFormComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  /* ──────────────── Form setup ──────────────── */
   private buildForm(): void {
     this.tareaForm = this.fb.group({
-      title: ['', [Validators.required, Validators.minLength(5)]],
+      title: ['', [Validators.required, Validators.minLength(3)]],
       description: [''],
-      status: ['pending', Validators.required],
+      status: [''],
       direccionId: ['', Validators.required],
       departamentoId: [{ value: '', disabled: true }, Validators.required],
       assignedToIds: [{ value: '', disabled: true }],
@@ -277,11 +276,19 @@ export class TareasFormComponent implements OnInit, OnDestroy {
     if (this.isResolutionFileDelete) {
       // Eliminar archivo de resolución
       this.taskService.removeResolutionFile(this.tareaId).subscribe({
-        next: () => {
+        next: (response) => {
           this.resolutionFile = null;
           this.showDeleteModal = false;
           this.isResolutionFileDelete = false;
           this.alert.success('Archivo de resolución eliminado');
+          
+          // Actualizar el estado de la tarea en el formulario
+          if (response.data) {
+            this.tareaForm.patchValue({
+              status: 'pending'
+            });
+          }
+          
           this.cdr.markForCheck();
         },
         error: () => {
@@ -333,14 +340,18 @@ export class TareasFormComponent implements OnInit, OnDestroy {
     this.loading = true;
 
     const v = this.tareaForm.value;
-    const payload = {
+    const payload: any = {
       title: v.title,
       description: v.description || undefined,
-      status: v.status,
       departamentoId: v.departamentoId,
       assignedToIds: v.assignedToIds ? [v.assignedToIds] : [],
       dueDate: v.dueDate ? new Date(v.dueDate) : undefined,
     };
+
+    // Solo incluir status si tiene un valor válido
+    if (v.status && v.status.trim() !== '') {
+      payload.status = v.status;
+    }
 
     const finish = (): void => {
       this.loading = false;

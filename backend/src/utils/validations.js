@@ -214,8 +214,8 @@ const taskValidation = {
       .withMessage('Fecha de vencimiento inválida'),
     body('status')
       .optional()
-      .isIn(['pending', 'in_progress', 'completed'])
-      .withMessage('Estado debe ser: pending, in_progress, completed'),
+      .isIn(['pending', 'in_progress', 'completed', 'resolved'])
+      .withMessage('Estado debe ser: pending, in_progress, completed, resolved'),
     body('departamentoId')
       .notEmpty()
       .withMessage('El departamento es requerido')
@@ -246,8 +246,8 @@ const taskValidation = {
       .withMessage('Fecha de vencimiento inválida'),
     body('status')
       .optional()
-      .isIn(['pending', 'in_progress', 'completed'])
-      .withMessage('Estado debe ser: pending, in_progress, completed'),
+      .isIn(['pending', 'in_progress', 'completed', 'resolved'])
+      .withMessage('Estado debe ser: pending, in_progress, completed, resolved'),
     body('departamentoId')
       .optional()
       .isMongoId()
