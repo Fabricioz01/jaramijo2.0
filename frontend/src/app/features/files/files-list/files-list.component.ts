@@ -630,9 +630,6 @@ export class FilesListComponent implements OnInit {
   canAccessModule(): boolean {
     return this.authService.canAccessModule('archivos');
   }
-  canCreateFile(): boolean {
-    return this.authService.canAccessAction('archivos', 'create');
-  }
   canDeleteFile(): boolean {
     return this.authService.canAccessAction('archivos', 'delete');
   }

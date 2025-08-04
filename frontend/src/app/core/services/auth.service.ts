@@ -51,6 +51,12 @@ export class AuthService {
         read: '688280813f95573aed48fefc',
         delete: '688280813f95573aed48fefd',
       },
+      direcciones: {
+        create: '68911e142ea99c5dc5e45fc3',
+        read: '68911dff2ea99c5dc5e45fbf',
+        update: '68911e212ea99c5dc5e45fc7',
+        delete: '68911e362ea99c5dc5e45fcb',
+      },
     };
 
   /**

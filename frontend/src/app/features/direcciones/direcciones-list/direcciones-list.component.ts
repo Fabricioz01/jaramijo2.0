@@ -442,7 +442,7 @@ export class DireccionesListComponent implements OnInit {
     return this.authService.canAccessAction('direcciones', 'create');
   }
   canEditDireccion(): boolean {
-    return this.authService.canAccessAction('direcciones', 'edit');
+    return this.authService.canAccessAction('direcciones', 'update');
   }
   canDeleteDireccion(): boolean {
     return this.authService.canAccessAction('direcciones', 'delete');
