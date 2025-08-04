@@ -19,5 +19,6 @@ export interface FileModel {
     _id: string;
     title: string;
   };
+  fileType: 'attachment' | 'resolution';
   createdAt: Date | string;
 }

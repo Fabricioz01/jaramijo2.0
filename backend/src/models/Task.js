@@ -17,8 +17,13 @@ const taskSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'in_progress', 'completed'],
+    enum: ['pending', 'in_progress', 'completed', 'resolved'],
     default: 'pending',
+  },
+  resolutionFileId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'File',
+    required: false,
   },
   departamentoId: {
     type: mongoose.Schema.Types.ObjectId,

@@ -32,6 +32,11 @@ const fileSchema = new mongoose.Schema({
     ref: 'Task',
     required: false,
   },
+  fileType: {
+    type: String,
+    enum: ['attachment', 'resolution'],
+    default: 'attachment',
+  },
   createdAt: {
     type: Date,
     default: Date.now,

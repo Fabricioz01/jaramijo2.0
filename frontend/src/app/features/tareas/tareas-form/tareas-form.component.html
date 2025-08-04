@@ -9,9 +9,13 @@
           <i class="bi bi-arrow-left"></i>
         </button>
         <div>
-          <h1 class="h3 mb-0">{{ isEditing ? 'Editar' : 'Nueva' }} Tarea</h1>
+          <h1 class="h3 mb-0">{{ isEditing ? "Editar" : "Nueva" }} Tarea</h1>
           <p class="text-muted mb-0">
-            {{ isEditing ? 'Modificar información de la tarea' : 'Crear una nueva tarea' }}
+            {{
+              isEditing
+                ? "Modificar información de la tarea"
+                : "Crear una nueva tarea"
+            }}
           </p>
         </div>
       </div>
@@ -60,13 +64,18 @@
                   <option value="pending">Pendiente</option>
                   <option value="in_progress">En Progreso</option>
                   <option value="completed">Completada</option>
+                  <option value="resolved">Resuelta</option>
                 </select>
                 <div class="invalid-feedback">Debe seleccionar estado</div>
               </div>
 
               <div class="col-md-6 mb-3">
                 <label class="form-label">Fecha de vencimiento</label>
-                <input type="date" class="form-control" formControlName="dueDate" />
+                <input
+                  type="date"
+                  class="form-control"
+                  formControlName="dueDate"
+                />
               </div>
 
               <!-- Asignación -->
@@ -87,7 +96,7 @@
                 >
                   <option value="">Seleccionar dirección</option>
                   @for (d of direcciones; track d._id) {
-                    <option [value]="d._id">{{ d.name }}</option>
+                  <option [value]="d._id">{{ d.name }}</option>
                   }
                 </select>
                 <div class="invalid-feedback">Debe seleccionar dirección</div>
@@ -104,10 +113,12 @@
                 >
                   <option value="">Seleccionar departamento</option>
                   @for (d of departamentosFiltrados; track d._id) {
-                    <option [value]="d._id">{{ d.name }}</option>
+                  <option [value]="d._id">{{ d.name }}</option>
                   }
                 </select>
-                <div class="invalid-feedback">Debe seleccionar departamento</div>
+                <div class="invalid-feedback">
+                  Debe seleccionar departamento
+                </div>
               </div>
 
               <!-- Asignado a -->
@@ -116,9 +127,9 @@
                 <select class="form-select" formControlName="assignedToIds">
                   <option value="">Sin asignar</option>
                   @for (u of usuariosFiltrados; track u._id) {
-                    <option [value]="u._id">
-                      {{ u.name }} {{ u.lastName }} - {{ u.position }}
-                    </option>
+                  <option [value]="u._id">
+                    {{ u.name }} {{ u.lastName }} - {{ u.position }}
+                  </option>
                   }
                 </select>
               </div>
@@ -134,46 +145,86 @@
                   (change)="onFilesSelected($event)"
                 />
                 @if (archivos.length) {
-                  <ul class="mt-2">
-                    @for (f of archivos; track f.name) {
-                      <li>{{ f.name }}</li>
-                    }
-                  </ul>
+                <ul class="mt-2">
+                  @for (f of archivos; track f.name) {
+                  <li>{{ f.name }}</li>
+                  }
+                </ul>
                 }
               </div>
 
               <!-- Archivos originales -->
               @for (f of originalAttachments; track f._id) {
-                <div class="d-flex align-items-center gap-3 mt-2 border p-2 rounded bg-light">
-                  <i [class]="fileService.getFileIcon(f.mimeType)" style="font-size: 1.5rem"></i>
+              <div
+                class="d-flex align-items-center gap-3 mt-2 border p-2 rounded bg-light"
+              >
+                <i
+                  [class]="fileService.getFileIcon(f.mimeType)"
+                  style="font-size: 1.5rem"
+                ></i>
+                <div class="flex-fill">
+                  <strong>{{ f.originalName }}</strong>
+                  <div class="text-muted small">
+                    {{ fileService.formatFileSize(f.size) }} · {{ f.mimeType }}
+                  </div>
+                </div>
+                <button
+                  class="btn btn-sm btn-outline-danger"
+                  type="button"
+                  (click)="removeAttachment(f._id)"
+                >
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+              }
+
+              <!-- Archivo de Resolución -->
+              <div class="col-12 mb-3" *ngIf="isEditing && resolutionFile">
+                <label class="form-label">Archivo de Resolución</label>
+                <div
+                  class="d-flex align-items-center gap-3 mt-2 border p-2 rounded bg-info bg-opacity-10"
+                >
+                  <i
+                    [ngClass]="getFileIcon(resolutionFile.mimeType)"
+                    class="fs-4"
+                  ></i>
                   <div class="flex-fill">
-                    <strong>{{ f.originalName }}</strong>
+                    <strong>{{ resolutionFile.originalName }}</strong>
                     <div class="text-muted small">
-                      {{ fileService.formatFileSize(f.size) }} · {{ f.mimeType }}
+                      {{ fileService.formatFileSize(resolutionFile.size) }} ·
+                      {{ resolutionFile.mimeType }}
                     </div>
                   </div>
                   <button
                     class="btn btn-sm btn-outline-danger"
                     type="button"
-                    (click)="removeAttachment(f._id)"
+                    (click)="removeResolutionFile()"
                   >
                     <i class="bi bi-trash"></i>
                   </button>
                 </div>
-              }
+              </div>
             </div>
 
             <!-- Botones -->
             <div class="d-flex justify-content-end gap-2 pt-3 border-top">
-              <button type="button" class="btn btn-outline-secondary" (click)="goBack()">
+              <button
+                type="button"
+                class="btn btn-outline-secondary"
+                (click)="goBack()"
+              >
                 Cancelar
               </button>
-              <button type="submit" class="btn btn-primary" [disabled]="tareaForm.invalid || loading">
+              <button
+                type="submit"
+                class="btn btn-primary"
+                [disabled]="tareaForm.invalid || loading"
+              >
                 <span
                   *ngIf="loading"
                   class="spinner-border spinner-border-sm me-2"
                 ></span>
-                {{ isEditing ? 'Actualizar' : 'Crear' }} Tarea
+                {{ isEditing ? "Actualizar" : "Crear" }} Tarea
               </button>
             </div>
           </form>
@@ -186,7 +237,11 @@
 <!-- Modal de confirmación -->
 <app-confirm-modal
   [visible]="showDeleteModal"
-  [message]="'¿Está seguro de eliminar este archivo? Esta acción no se puede deshacer.'"
+  [message]="
+    isResolutionFileDelete
+      ? '¿Está seguro de eliminar el archivo de resolución? Esta acción no se puede deshacer.'
+      : '¿Está seguro de eliminar este archivo adjunto? Esta acción no se puede deshacer.'
+  "
   (confirm)="confirmarEliminarArchivo()"
   (cancel)="cancelarEliminarArchivo()"
 ></app-confirm-modal>

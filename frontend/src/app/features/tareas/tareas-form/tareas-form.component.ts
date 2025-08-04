@@ -47,7 +47,12 @@ interface Usuario {
 @Component({
   selector: 'app-tareas-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, HeaderComponent, ConfirmModalComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    HeaderComponent,
+    ConfirmModalComponent,
+  ],
   templateUrl: './tareas-form.component.html',
   styleUrls: ['./tareas-form.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -72,9 +77,17 @@ export class TareasFormComponent implements OnInit, OnDestroy {
     size: number;
   }[] = [];
 
-  // Modal de confirmación
+  resolutionFile: {
+    _id: string;
+    filename: string;
+    originalName: string;
+    mimeType: string;
+    size: number;
+  } | null = null;
+
   showDeleteModal = false;
   fileToDelete: string | null = null;
+  isResolutionFileDelete = false;
 
   private destroy$ = new Subject<void>();
 
@@ -91,14 +104,15 @@ export class TareasFormComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef
   ) {}
 
-  /* ──────────────── Lifecycle ──────────────── */
   ngOnInit(): void {
     this.buildForm();
     this.tareaId = this.route.snapshot.paramMap.get('id');
     this.isEditing = !!this.tareaId;
     this.prefillDates();
     this.loadCatalogs();
-    if (this.isEditing) this.loadTarea();
+    if (this.isEditing) {
+      this.loadTarea();
+    }
   }
 
   ngOnDestroy(): void {
@@ -170,41 +184,25 @@ export class TareasFormComponent implements OnInit, OnDestroy {
   private loadTarea(): void {
     if (!this.tareaId) return;
     this.taskService.getById(this.tareaId).subscribe({
-      next: ({ data: t }) => {
-        if (!t) return this.alert.error('Tarea no encontrada');
-
-        this.originalAttachments = t.attachmentIds ?? [];
-
-        const depObj =
-          typeof t.departamentoId === 'object'
-            ? (t.departamentoId as Departamento)
-            : null;
-        const dirObj =
-          depObj && typeof depObj.direccionId === 'object'
-            ? (depObj.direccionId as Direccion)
-            : null;
-
-        const direccionId = dirObj ? dirObj._id : '';
-        const departamentoId = depObj ? depObj._id : t.departamentoId;
-        const assignedToId =
-          Array.isArray(t.assignedToIds) && t.assignedToIds.length
-            ? t.assignedToIds[0]._id
-            : '';
-
+      next: (response) => {
+        const t = response?.data;
+        if (!t) {
+          this.alert.error('Error al cargar la tarea');
+          return;
+        }
         this.tareaForm.patchValue({
           title: t.title,
-          description: t.description ?? '',
+          description: t.description,
           status: t.status,
+          direccionId: t.departamentoId?.direccionId?._id || '',
+          departamentoId: t.departamentoId?._id || '',
+          assignedToIds: t.assignedToIds?.map((u: any) => u._id) || [],
           dueDate: t.dueDate
             ? new Date(t.dueDate).toISOString().split('T')[0]
             : '',
-          direccionId,
-          departamentoId,
-          assignedToIds: assignedToId,
         });
-
-        this.onDireccionChange();
-        this.onDepartamentoChange();
+        this.originalAttachments = t.attachmentIds || [];
+        this.resolutionFile = t.resolutionFileId || null;
         this.cdr.markForCheck();
       },
       error: () => this.alert.error('Error al cargar la tarea'),
@@ -255,8 +253,7 @@ export class TareasFormComponent implements OnInit, OnDestroy {
   onFilesSelected(e: Event): void {
     const files = Array.from((e.target as HTMLInputElement).files ?? []);
     files.forEach((f) => {
-      const v = this.fileService.validateFile(f);
-      v.valid ? this.archivos.push(f) : this.alert.error(v.error ?? '');
+      this.archivos.push(f);
     });
     this.cdr.markForCheck();
   }
@@ -264,43 +261,62 @@ export class TareasFormComponent implements OnInit, OnDestroy {
   removeAttachment(fileId: string): void {
     if (!this.tareaId) return;
     this.fileToDelete = fileId;
+    this.isResolutionFileDelete = false;
+    this.showDeleteModal = true;
+  }
+
+  removeResolutionFile(): void {
+    if (!this.tareaId) return;
+    this.isResolutionFileDelete = true;
     this.showDeleteModal = true;
   }
 
   confirmarEliminarArchivo(): void {
-    if (!this.tareaId || !this.fileToDelete) return;
+    if (!this.tareaId) return;
 
-    // 1. Quita el vínculo en la tarea
-    this.taskService.removeAttachment(this.tareaId, this.fileToDelete).subscribe({
-      next: () => {
-        // 2. Borra el archivo real
-        this.fileService.delete(this.fileToDelete!).subscribe({
-          next: (response) => {
+    if (this.isResolutionFileDelete) {
+      // Eliminar archivo de resolución
+      this.taskService.removeResolutionFile(this.tareaId).subscribe({
+        next: () => {
+          this.resolutionFile = null;
+          this.showDeleteModal = false;
+          this.isResolutionFileDelete = false;
+          this.alert.success('Archivo de resolución eliminado');
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.alert.error('No se pudo eliminar el archivo de resolución');
+          this.showDeleteModal = false;
+          this.isResolutionFileDelete = false;
+        },
+      });
+    } else if (this.fileToDelete) {
+      // Eliminar archivo adjunto
+      this.taskService
+        .removeAttachment(this.tareaId, this.fileToDelete)
+        .subscribe({
+          next: () => {
             this.originalAttachments = this.originalAttachments.filter(
-              (a) => a._id !== this.fileToDelete
+              (file) => file._id !== this.fileToDelete
             );
-            this.alert.success(response.message || 'Archivo eliminado');
-            this.cancelarEliminarArchivo();
+            this.fileToDelete = null;
+            this.showDeleteModal = false;
+            this.alert.success('Archivo eliminado');
             this.cdr.markForCheck();
           },
-          error: (error) => {
-            const errorMessage = error.error?.message || 'Error eliminando archivo';
-            this.alert.error(errorMessage);
-            this.cancelarEliminarArchivo();
+          error: () => {
+            this.alert.error('No se pudo eliminar el archivo');
+            this.fileToDelete = null;
+            this.showDeleteModal = false;
           },
         });
-      },
-      error: (error) => {
-        const errorMessage = error.error?.message || 'Error eliminando adjunto';
-        this.alert.error(errorMessage);
-        this.cancelarEliminarArchivo();
-      },
-    });
+    }
   }
 
   cancelarEliminarArchivo(): void {
     this.showDeleteModal = false;
     this.fileToDelete = null;
+    this.isResolutionFileDelete = false;
   }
 
   /* ──────────────── Submit ──────────────── */
@@ -377,5 +393,16 @@ export class TareasFormComponent implements OnInit, OnDestroy {
 
   goBack(): void {
     this.router.navigate(['/tareas']);
+  }
+
+  getFileIcon(type: string): string {
+    if (!type) return 'bi bi-file-earmark text-secondary';
+    if (type.includes('pdf')) return 'bi bi-file-earmark-pdf text-danger';
+    if (type.includes('excel') || type.includes('spreadsheet'))
+      return 'bi bi-file-earmark-excel text-success';
+    if (type.includes('word') || type.includes('document'))
+      return 'bi bi-file-earmark-word text-primary';
+    if (type.includes('image')) return 'bi bi-file-earmark-image text-info';
+    return 'bi bi-file-earmark text-secondary';
   }
 }

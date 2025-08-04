@@ -1,0 +1,96 @@
+<div
+  class="modal fade show d-block"
+  *ngIf="visible"
+  tabindex="-1"
+  style="background-color: rgba(0, 0, 0, 0.5)"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-check-circle me-2 text-success"></i>
+          Resolver Tarea
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          (click)="onCancel()"
+          aria-label="Close"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <p class="text-muted mb-4">
+          Para resolver esta tarea, debe subir un archivo PDF o Excel que
+          contenga la evidencia o documentación de la resolución.
+        </p>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Archivo de resolución *</label>
+          <input
+            type="file"
+            class="form-control"
+            (change)="onFileSelected($event)"
+            accept=".pdf,.xlsx,.xls"
+            [class.is-invalid]="!selectedFile && showErrors"
+          />
+          <div class="form-text">
+            Formatos permitidos: PDF, Excel (.xlsx, .xls). Tamaño máximo: 10MB
+          </div>
+          <div class="invalid-feedback" *ngIf="!selectedFile && showErrors">
+            Debe seleccionar un archivo para resolver la tarea
+          </div>
+        </div>
+
+        <div
+          class="alert alert-info d-flex align-items-center"
+          *ngIf="selectedFile"
+        >
+          <i class="bi bi-info-circle me-2"></i>
+          <div>
+            <strong>Archivo seleccionado:</strong><br />
+            <span class="text-muted"
+              >{{ selectedFile.name }} ({{
+                formatFileSize(selectedFile.size)
+              }})</span
+            >
+          </div>
+        </div>
+
+        <div class="alert alert-warning d-flex align-items-start">
+          <i class="bi bi-exclamation-triangle me-2 mt-1"></i>
+          <div>
+            <strong>Importante:</strong> Una vez que resuelva la tarea, el
+            estado cambiará a "Resuelta" y no se podrá modificar. Asegúrese de
+            que el archivo contenga toda la información necesaria.
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="onCancel()"
+          [disabled]="uploading"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="btn btn-success"
+          (click)="onConfirm()"
+          [disabled]="!selectedFile || uploading"
+        >
+          <span
+            *ngIf="uploading"
+            class="spinner-border spinner-border-sm me-2"
+            role="status"
+          ></span>
+          <i *ngIf="!uploading" class="bi bi-check-circle me-2"></i>
+          {{ uploading ? "Resolviendo..." : "Resolver Tarea" }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

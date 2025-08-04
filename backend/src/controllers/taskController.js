@@ -149,6 +149,7 @@ class TaskController {
         size: req.file.size,
         uploaderId: req.user._id,
         taskId: req.params.id,
+        fileType: 'attachment',
       };
 
       const file = await fileService.create(fileData);
@@ -182,6 +183,62 @@ class TaskController {
       });
     } catch (error) {
       error.status = 404;
+      next(error);
+    }
+  }
+
+  async removeResolutionFile(req, res, next) {
+    try {
+      const task = await taskService.removeResolutionFile(req.params.id);
+
+      res.json({
+        message: 'Archivo de resolución removido exitosamente',
+        data: task,
+      });
+    } catch (error) {
+      error.status = 404;
+      next(error);
+    }
+  }
+
+  async resolveTask(req, res, next) {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          error: 'Archivo de resolución no proporcionado',
+        });
+      }
+
+      // Crear registro del archivo en la base de datos
+      const fileData = {
+        filename: req.file.filename,
+        originalName: req.file.originalname,
+        mimeType: req.file.mimetype,
+        size: req.file.size,
+        uploaderId: req.user._id,
+        taskId: req.params.id,
+        fileType: 'resolution',
+      };
+
+      const file = await fileService.create(fileData);
+
+      // Actualizar la tarea con el archivo de resolución y cambiar estado
+      const taskData = {
+        status: 'resolved',
+        resolutionFileId: file._id,
+      };
+
+      const task = await taskService.update(req.params.id, taskData);
+
+      res.json({
+        message: 'Tarea resuelta exitosamente',
+        data: {
+          task,
+          file,
+        },
+      });
+    } catch (error) {
+      error.status = error.message.includes('no encontrada') ? 404 : 400;
       next(error);
     }
   }

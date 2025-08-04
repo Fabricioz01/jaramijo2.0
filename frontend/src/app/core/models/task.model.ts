@@ -1,4 +1,4 @@
-export type TaskStatus = 'pending' | 'in_progress' | 'completed';
+export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'resolved';
 
 export interface Task {
   _id: string;
@@ -9,6 +9,10 @@ export interface Task {
   departamentoId: {
     _id: string;
     name: string;
+    direccionId?: {
+      _id: string;
+      name: string;
+    };
   };
   assignedToIds: {
     _id: string;
@@ -22,10 +26,16 @@ export interface Task {
     mimeType: string;
     size: number;
   }[];
+  resolutionFileId?: {
+    _id: string;
+    filename: string;
+    originalName: string;
+    mimeType: string;
+    size: number;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
-
 
 export interface CreateTaskRequest {
   title: string;

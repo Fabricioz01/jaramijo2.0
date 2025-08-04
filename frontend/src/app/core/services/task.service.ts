@@ -13,15 +13,15 @@ import { environment } from '../../../environments/environment';
   providedIn: 'root',
 })
 export class TaskService {
-private readonly API_URL = `${environment.apiUrl}/tasks`;
+  private readonly API_URL = `${environment.apiUrl}/tasks`;
   constructor(private http: HttpClient) {}
 
   getAll(): Observable<ApiResponse<Task[]>> {
-  return this.http.get<ApiResponse<Task[]>>(this.API_URL, {
-    params: { _: Date.now().toString() },
-    headers: { 'cache-control': 'no-cache', pragma: 'no-cache' },
-  });
-}
+    return this.http.get<ApiResponse<Task[]>>(this.API_URL, {
+      params: { _: Date.now().toString() },
+      headers: { 'cache-control': 'no-cache', pragma: 'no-cache' },
+    });
+  }
 
   getById(id: string): Observable<ApiResponse<Task>> {
     return this.http.get<ApiResponse<Task>>(`${this.API_URL}/${id}`);
@@ -55,6 +55,22 @@ private readonly API_URL = `${environment.apiUrl}/tasks`;
   ): Observable<ApiResponse<Task>> {
     return this.http.delete<ApiResponse<Task>>(
       `${this.API_URL}/${taskId}/attachments/${fileId}`
+    );
+  }
+
+  removeResolutionFile(taskId: string): Observable<ApiResponse<Task>> {
+    return this.http.delete<ApiResponse<Task>>(
+      `${this.API_URL}/${taskId}/resolution`
+    );
+  }
+
+  resolveTask(taskId: string, file: File): Observable<ApiResponse<any>> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.http.post<ApiResponse<any>>(
+      `${this.API_URL}/${taskId}/resolve`,
+      formData
     );
   }
 }

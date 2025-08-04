@@ -51,10 +51,10 @@ import { ConfirmModalComponent } from '../../../shared/components/alerts/confirm
                     (change)="filtrarArchivos()"
                   >
                     <option value="">Todos los tipos</option>
+                    <option value="attachment">Archivo adjunto</option>
+                    <option value="resolution">Archivo de resolución</option>
                     <option value="pdf">PDF</option>
                     <option value="excel">Excel</option>
-                    <option value="word">Word</option>
-                    <option value="imagen">Imagen</option>
                   </select>
                 </div>
                 <div class="col-md-3">
@@ -124,7 +124,8 @@ import { ConfirmModalComponent } from '../../../shared/components/alerts/confirm
                   <thead>
                     <tr>
                       <th>Archivo</th>
-                      <th>Tipo</th>
+                      <th>Tipo de archivo</th>
+                      <th>Categoría</th>
                       <th>Tamaño</th>
                       <th>Tarea asociada</th>
                       <th>Subido por</th>
@@ -150,6 +151,14 @@ import { ConfirmModalComponent } from '../../../shared/components/alerts/confirm
                       <td>
                         <span class="badge bg-light text-dark">
                           {{ getFileType(archivo.mimeType) }}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          class="badge"
+                          [ngClass]="getFileTypeBadgeClass(archivo.fileType)"
+                        >
+                          {{ getFileTypeLabel(archivo.fileType) }}
                         </span>
                       </td>
                       <td>{{ formatFileSize(archivo.size) }}</td>
@@ -215,6 +224,13 @@ import { ConfirmModalComponent } from '../../../shared/components/alerts/confirm
                         <small class="text-muted">
                           {{ formatFileSize(archivo.size) }}
                         </small>
+                        <br />
+                        <span
+                          class="badge mt-1"
+                          [ngClass]="getFileTypeBadgeClass(archivo.fileType)"
+                        >
+                          {{ getFileTypeLabel(archivo.fileType) }}
+                        </span>
                       </p>
                       <div class="btn-group btn-group-sm">
                         <button
@@ -243,7 +259,9 @@ import { ConfirmModalComponent } from '../../../shared/components/alerts/confirm
 
     <app-confirm-modal
       [visible]="showDeleteModal"
-      [message]="'¿Está seguro de eliminar este archivo? Esta acción no se puede deshacer.'"
+      [message]="
+        '¿Está seguro de eliminar este archivo? Esta acción no se puede deshacer.'
+      "
       (confirm)="confirmarEliminarArchivo()"
       (cancel)="cancelarEliminarArchivo()"
     ></app-confirm-modal>
@@ -329,11 +347,19 @@ export class FilesListComponent implements OnInit {
           .toLowerCase()
           .includes(this.filtros.termino.toLowerCase());
 
-      const cumpleTipo =
-        !this.filtros.tipo ||
-        this.getFileType(archivo.mimeType)
-          .toLowerCase()
-          .includes(this.filtros.tipo);
+      let cumpleTipo = true;
+      if (this.filtros.tipo) {
+        if (
+          this.filtros.tipo === 'attachment' ||
+          this.filtros.tipo === 'resolution'
+        ) {
+          cumpleTipo = archivo.fileType === this.filtros.tipo;
+        } else {
+          cumpleTipo = this.getFileType(archivo.mimeType)
+            .toLowerCase()
+            .includes(this.filtros.tipo);
+        }
+      }
 
       // Convertir createdAt a Date si es string
       let fechaArchivo: Date;
@@ -447,7 +473,7 @@ export class FilesListComponent implements OnInit {
 
   confirmarEliminarArchivo(): void {
     if (!this.archivoAEliminar) return;
-    
+
     this.fileService.delete(this.archivoAEliminar._id).subscribe({
       next: (response) => {
         this.alertService.success(
@@ -530,6 +556,28 @@ export class FilesListComponent implements OnInit {
     return 'Archivo';
   }
 
+  getFileTypeLabel(fileType: 'attachment' | 'resolution'): string {
+    switch (fileType) {
+      case 'attachment':
+        return 'Archivo adjunto';
+      case 'resolution':
+        return 'Archivo de resolución';
+      default:
+        return 'Archivo';
+    }
+  }
+
+  getFileTypeBadgeClass(fileType: 'attachment' | 'resolution'): string {
+    switch (fileType) {
+      case 'attachment':
+        return 'bg-primary text-white';
+      case 'resolution':
+        return 'bg-success text-white';
+      default:
+        return 'bg-secondary text-white';
+    }
+  }
+
   formatFileSize(bytes: number): string {
     return this.fileService.formatFileSize(bytes);
   }
@@ -562,6 +610,7 @@ export class FilesListComponent implements OnInit {
         mimeType: 'application/pdf',
         size: 2548736,
         uploaderId: 'user1',
+        fileType: 'attachment',
         createdAt: new Date('2024-01-15'),
       },
       {
@@ -572,6 +621,7 @@ export class FilesListComponent implements OnInit {
           'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         size: 1024000,
         uploaderId: 'user2',
+        fileType: 'resolution',
         createdAt: new Date('2024-01-10'),
       },
     ];

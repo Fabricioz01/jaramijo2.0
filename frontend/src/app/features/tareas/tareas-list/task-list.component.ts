@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   ReactiveFormsModule,
@@ -12,6 +12,7 @@ import { AlertService } from '../../../core/services/alert.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Task } from '../../../core/models';
 import { ConfirmModalComponent } from '../../../shared/components/alerts/confirm-modal.component';
+import { ResolveTaskModalComponent } from '../tareas-resueltas/resolve-task-modal.component';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 
 @Component({
@@ -25,9 +26,13 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
     FormsModule,
     HeaderComponent,
     ConfirmModalComponent,
+    ResolveTaskModalComponent,
   ],
 })
 export class TaskListComponent implements OnInit {
+  @ViewChild(ResolveTaskModalComponent)
+  resolveModal!: ResolveTaskModalComponent;
+
   tasks: Task[] = [];
   filteredTasks: Task[] = [];
   filterForm: FormGroup;
@@ -36,6 +41,8 @@ export class TaskListComponent implements OnInit {
   openedMenuIndex: number | null = null;
   showConfirmModal = false;
   selectedTaskId: string | null = null;
+  showResolveModal = false;
+  selectedTaskForResolve: string | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -114,6 +121,53 @@ export class TaskListComponent implements OnInit {
 
   crearTarea(): void {
     this.router.navigate(['/tareas/nueva']);
+  }
+
+  resolverTarea(id: string): void {
+    this.selectedTaskForResolve = id;
+    this.showResolveModal = true;
+  }
+
+  onResolveTaskConfirm(file: File): void {
+    if (!this.selectedTaskForResolve) return;
+
+    this.taskService.resolveTask(this.selectedTaskForResolve, file).subscribe({
+      next: (response) => {
+        this.alertService.success(
+          response.message || 'Tarea resuelta exitosamente'
+        );
+        this.loadTasks();
+        this.onResolveTaskCancel();
+      },
+      error: (error) => {
+        const errorMessage = error.error?.message || 'Error al resolver tarea';
+        this.alertService.error(errorMessage);
+        this.onResolveTaskCancel();
+      },
+    });
+  }
+
+  onResolveTaskCancel(): void {
+    this.showResolveModal = false;
+    this.selectedTaskForResolve = null;
+    // Resetear el modal
+    if (this.resolveModal) {
+      this.resolveModal.resetModal();
+    }
+  }
+
+  getStatusLabel(status: string): string {
+    const statusMap: { [key: string]: string } = {
+      pending: 'Pendiente',
+      in_progress: 'En Progreso',
+      completed: 'Completada',
+      resolved: 'Resuelta',
+    };
+    return statusMap[status] || status;
+  }
+
+  canResolveTask(task: Task): boolean {
+    return task.status !== 'resolved';
   }
 
   formatDate(date?: Date): string {

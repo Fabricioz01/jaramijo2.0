@@ -18,6 +18,7 @@ class TaskService {
       })
       .populate('assignedToIds', 'name email')
       .populate('attachmentIds', 'filename originalName mimeType size')
+      .populate('resolutionFileId', 'filename originalName mimeType size')
       .sort({ createdAt: -1 });
   }
 
@@ -32,7 +33,8 @@ class TaskService {
         },
       })
       .populate('assignedToIds', 'name email')
-      .populate('attachmentIds', 'filename originalName mimeType size');
+      .populate('attachmentIds', 'filename originalName mimeType size')
+      .populate('resolutionFileId', 'filename originalName mimeType size');
     if (!task) throw new Error('Tarea no encontrada');
     return task;
   }
@@ -52,7 +54,8 @@ class TaskService {
         },
       })
       .populate('assignedToIds', 'name email')
-      .populate('attachmentIds', 'filename originalName mimeType size');
+      .populate('attachmentIds', 'filename originalName mimeType size')
+      .populate('resolutionFileId', 'filename originalName mimeType size');
     if (!task) throw new Error('Tarea no encontrada');
     return task;
   }
@@ -159,6 +162,31 @@ class TaskService {
     task.attachmentIds = task.attachmentIds.filter((id) => !id.equals(fileId));
     task.updatedAt = Date.now();
     await task.save();
+    return await this.getById(taskId);
+  }
+
+  async removeResolutionFile(taskId) {
+    const task = await Task.findById(taskId);
+    if (!task) throw new Error('Tarea no encontrada');
+
+    // Obtener el ID del archivo de resolución antes de eliminarlo
+    const resolutionFileId = task.resolutionFileId;
+
+    // Remover la referencia del archivo de resolución
+    task.resolutionFileId = null;
+    task.updatedAt = Date.now();
+    await task.save();
+
+    // Si había un archivo de resolución, eliminarlo físicamente
+    if (resolutionFileId) {
+      try {
+        const fileService = require('./fileService');
+        await fileService.delete(resolutionFileId);
+      } catch (error) {
+        console.error('Error eliminando archivo de resolución:', error);
+      }
+    }
+
     return await this.getById(taskId);
   }
 }

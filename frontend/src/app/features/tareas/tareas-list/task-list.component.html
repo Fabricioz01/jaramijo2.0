@@ -9,6 +9,19 @@
   (cancel)="cancelarEliminarTarea()"
 ></app-confirm-modal>
 
+<app-resolve-task-modal
+  #resolveModal
+  [visible]="showResolveModal"
+  (confirm)="onResolveTaskConfirm($event)"
+  (cancel)="onResolveTaskCancel()"
+></app-resolve-task-modal>
+
+<app-resolve-task-modal
+  [visible]="showResolveModal"
+  (confirm)="onResolveTaskConfirm($event)"
+  (cancel)="onResolveTaskCancel()"
+></app-resolve-task-modal>
+
 <div class="container-fluid py-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
@@ -80,6 +93,14 @@
                     <i class="bi bi-pencil me-2"></i>Editar
                   </button>
                 </li>
+                <li *ngIf="canResolveTask(task)">
+                  <button
+                    class="action-item"
+                    (click)="resolverTarea(task._id); closeMenu()"
+                  >
+                    <i class="bi bi-check-circle me-2"></i>Resolver Tarea
+                  </button>
+                </li>
                 <li>
                   <button
                     class="action-item text-danger"
@@ -102,7 +123,7 @@
             <span
               class="badge bg-gradient bg-info text-white fw-semibold px-3 py-2 rounded-pill text-uppercase"
             >
-              <i class="bi bi-flag me-1"></i>{{ task.status }}
+              <i class="bi bi-flag me-1"></i>{{ getStatusLabel(task.status) }}
             </span>
           </div>
 
