@@ -13,7 +13,12 @@ import { ConfirmModalComponent } from '../../../shared/components/alerts/confirm
 @Component({
   selector: 'app-usuarios-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, HeaderComponent, ConfirmModalComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    HeaderComponent,
+    ConfirmModalComponent,
+  ],
   template: `
     <app-header></app-header>
     <div class="container-fluid py-4">
@@ -327,7 +332,8 @@ export class UsuariosListComponent implements OnInit {
         : true;
 
       const coincideDepartamento = departamento
-        ? typeof usuario.departamentoId === 'object' && usuario.departamentoId._id === departamento
+        ? typeof usuario.departamentoId === 'object' &&
+          usuario.departamentoId._id === departamento
         : true;
 
       const coincideEstado = estado
@@ -429,12 +435,10 @@ export class UsuariosListComponent implements OnInit {
   }
 
   navigateToForm(): void {
-
     this.router.navigate(['/usuarios/nuevo']);
   }
 
   navigateToEdit(usuario: User): void {
-
     this.router.navigate(['/usuarios', usuario._id, 'editar']);
   }
 

@@ -42,28 +42,32 @@ export class ReportsService {
 
   getGeneralReport(startDate?: Date, endDate?: Date): Observable<ReportData> {
     return forkJoin({
-      tasks: this.http.get<ApiResponse<any[]>>(`${this.API_URL}/tasks`).pipe(
-        catchError(() => of({ success: true, data: [] }))
-      ),
-      users: this.http.get<ApiResponse<any[]>>(`${this.API_URL}/users`).pipe(
-        catchError(() => of({ success: true, data: [] }))
-      ),
-      files: this.http.get<ApiResponse<any[]>>(`${this.API_URL}/files`).pipe(
-        catchError(() => of({ success: true, data: [] }))
-      ),
-      roles: this.http.get<ApiResponse<any[]>>(`${this.API_URL}/roles`).pipe(
-        catchError(() => of({ success: true, data: [] }))
-      ),
-      departamentos: this.http.get<ApiResponse<any[]>>(`${this.API_URL}/departamentos`).pipe(
-        catchError(() => of({ success: true, data: [] }))
-      )
+      tasks: this.http
+        .get<ApiResponse<any[]>>(`${this.API_URL}/tasks`)
+        .pipe(catchError(() => of({ success: true, data: [] }))),
+      users: this.http
+        .get<ApiResponse<any[]>>(`${this.API_URL}/users`)
+        .pipe(catchError(() => of({ success: true, data: [] }))),
+      files: this.http
+        .get<ApiResponse<any[]>>(`${this.API_URL}/files`)
+        .pipe(catchError(() => of({ success: true, data: [] }))),
+      roles: this.http
+        .get<ApiResponse<any[]>>(`${this.API_URL}/roles`)
+        .pipe(catchError(() => of({ success: true, data: [] }))),
+      departamentos: this.http
+        .get<ApiResponse<any[]>>(`${this.API_URL}/departamentos`)
+        .pipe(catchError(() => of({ success: true, data: [] }))),
     }).pipe(
-      map(responses => this.processReportData(responses, startDate, endDate)),
+      map((responses) => this.processReportData(responses, startDate, endDate)),
       catchError(() => of(this.generateDemoData()))
     );
   }
 
-  private processReportData(responses: any, startDate?: Date, endDate?: Date): ReportData {
+  private processReportData(
+    responses: any,
+    startDate?: Date,
+    endDate?: Date
+  ): ReportData {
     const tasks = responses.tasks.data || [];
     const users = responses.users.data || [];
     const files = responses.files.data || [];
@@ -80,56 +84,74 @@ export class ReportsService {
       });
     }
 
-    const tareasCompletadas = filteredTasks.filter((t: any) => t.status === 'completed').length;
-    const tareasPendientes = filteredTasks.filter((t: any) => t.status === 'pending').length;
-    const tareasEnProgreso = filteredTasks.filter((t: any) => t.status === 'in_progress').length;
+    const tareasResueltas = filteredTasks.filter(
+      (t: any) => t.status === 'resolved'
+    ).length;
+    const tareasPendientes = filteredTasks.filter(
+      (t: any) => t.status === 'pending'
+    ).length;
+    const tareasEnProgreso = filteredTasks.filter(
+      (t: any) => t.status === 'in_progress'
+    ).length;
     const tareasVencidas = filteredTasks.filter((t: any) => {
       const dueDate = new Date(t.dueDate);
-      return dueDate < new Date() && t.status !== 'completed';
+      return dueDate < new Date() && t.status !== 'resolved';
     }).length;
 
-    const usuariosActivos = users.filter((u: any) => u.isActive !== false).length;
+    const usuariosActivos = users.filter(
+      (u: any) => u.isActive !== false
+    ).length;
     const totalFiles = files.length;
-    const totalFileSize = files.reduce((total: number, file: any) => total + (file.size || 0), 0);
+    const totalFileSize = files.reduce(
+      (total: number, file: any) => total + (file.size || 0),
+      0
+    );
 
     return {
       tareas: {
         total: filteredTasks.length,
-        completadas: tareasCompletadas,
+        completadas: tareasResueltas,
         pendientes: tareasPendientes,
         vencidas: tareasVencidas,
         porEstado: [
-          { estado: 'Completada', cantidad: tareasCompletadas },
+          { estado: 'Resuelta', cantidad: tareasResueltas },
           { estado: 'En Progreso', cantidad: tareasEnProgreso },
           { estado: 'Pendiente', cantidad: tareasPendientes },
-          { estado: 'Vencida', cantidad: tareasVencidas }
+          { estado: 'Vencida', cantidad: tareasVencidas },
         ],
         porPrioridad: this.groupTasksByPriority(filteredTasks),
-        porDepartamento: this.groupTasksByDepartment(filteredTasks, departamentos)
+        porDepartamento: this.groupTasksByDepartment(
+          filteredTasks,
+          departamentos
+        ),
       },
       usuarios: {
         total: users.length,
         activos: usuariosActivos,
         inactivos: users.length - usuariosActivos,
-        porRol: this.groupUsersByRole(users, roles)
+        porRol: this.groupUsersByRole(users, roles),
       },
       archivos: {
         total: totalFiles,
         tamanioTotal: totalFileSize,
-        porTipo: this.groupFilesByType(files)
+        porTipo: this.groupFilesByType(files),
       },
       rendimiento: {
         tareasCompletadasPorMes: this.getTasksCompletedByMonth(filteredTasks),
-        tiempoPromedioComplecion: this.calculateAverageCompletionTime(filteredTasks),
-        usuariosMasActivos: this.getMostActiveUsers(filteredTasks, users)
-      }
+        tiempoPromedioComplecion:
+          this.calculateAverageCompletionTime(filteredTasks),
+        usuariosMasActivos: this.getMostActiveUsers(filteredTasks, users),
+      },
     };
   }
 
-  private groupTasksByDepartment(tasks: any[], departamentos: any[]): { departamento: string; cantidad: number }[] {
+  private groupTasksByDepartment(
+    tasks: any[],
+    departamentos: any[]
+  ): { departamento: string; cantidad: number }[] {
     const grouped = tasks.reduce((acc: any, task: any) => {
       const deptId = task.departamentoId;
-      const dept = departamentos.find(d => d.id === deptId);
+      const dept = departamentos.find((d) => d.id === deptId);
       const deptName = dept?.name || 'Sin Departamento';
       acc[deptName] = (acc[deptName] || 0) + 1;
       return acc;
@@ -137,15 +159,18 @@ export class ReportsService {
 
     return Object.entries(grouped).map(([departamento, cantidad]) => ({
       departamento,
-      cantidad: cantidad as number
+      cantidad: cantidad as number,
     }));
   }
 
-  private groupUsersByRole(users: any[], roles: any[]): { rol: string; cantidad: number }[] {
+  private groupUsersByRole(
+    users: any[],
+    roles: any[]
+  ): { rol: string; cantidad: number }[] {
     const grouped = users.reduce((acc: any, user: any) => {
       const userRoles = user.roles || [];
       userRoles.forEach((role: any) => {
-        const roleName = roles.find(r => r.id === role.id)?.name || 'Sin Rol';
+        const roleName = roles.find((r) => r.id === role.id)?.name || 'Sin Rol';
         acc[roleName] = (acc[roleName] || 0) + 1;
       });
       return acc;
@@ -153,11 +178,13 @@ export class ReportsService {
 
     return Object.entries(grouped).map(([rol, cantidad]) => ({
       rol,
-      cantidad: cantidad as number
+      cantidad: cantidad as number,
     }));
   }
 
-  private groupTasksByPriority(tasks: any[]): { prioridad: string; cantidad: number }[] {
+  private groupTasksByPriority(
+    tasks: any[]
+  ): { prioridad: string; cantidad: number }[] {
     const grouped = tasks.reduce((acc: any, task: any) => {
       const priority = task.priority || 'Media';
       acc[priority] = (acc[priority] || 0) + 1;
@@ -166,13 +193,16 @@ export class ReportsService {
 
     return Object.entries(grouped).map(([prioridad, cantidad]) => ({
       prioridad,
-      cantidad: cantidad as number
+      cantidad: cantidad as number,
     }));
   }
 
-  private groupFilesByType(files: any[]): { tipo: string; cantidad: number; tamanio: number }[] {
+  private groupFilesByType(
+    files: any[]
+  ): { tipo: string; cantidad: number; tamanio: number }[] {
     const grouped = files.reduce((acc: any, file: any) => {
-      const extension = file.filename?.split('.').pop()?.toUpperCase() || 'UNKNOWN';
+      const extension =
+        file.filename?.split('.').pop()?.toUpperCase() || 'UNKNOWN';
       if (!acc[extension]) {
         acc[extension] = { cantidad: 0, tamanio: 0 };
       }
@@ -184,11 +214,14 @@ export class ReportsService {
     return Object.entries(grouped).map(([tipo, data]: [string, any]) => ({
       tipo,
       cantidad: data.cantidad,
-      tamanio: data.tamanio
+      tamanio: data.tamanio,
     }));
   }
 
-  private getMostActiveUsers(tasks: any[], users: any[]): { usuario: string; tareas: number }[] {
+  private getMostActiveUsers(
+    tasks: any[],
+    users: any[]
+  ): { usuario: string; tareas: number }[] {
     const taskCounts = tasks.reduce((acc: any, task: any) => {
       const assignedUsers = task.assignedToIds || [];
       assignedUsers.forEach((userId: string) => {
@@ -199,31 +232,47 @@ export class ReportsService {
 
     return Object.entries(taskCounts)
       .map(([userId, count]: [string, any]) => {
-        const user = users.find(u => u.id === userId);
+        const user = users.find((u) => u.id === userId);
         return {
           usuario: user?.name || 'Usuario Desconocido',
-          tareas: count
+          tareas: count,
         };
       })
       .sort((a, b) => b.tareas - a.tareas)
       .slice(0, 5);
   }
 
-  private getTasksCompletedByMonth(tasks: any[]): { mes: string; cantidad: number }[] {
-    const completedTasks = tasks.filter(t => t.status === 'completed');
-    const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                       'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-    
+  private getTasksCompletedByMonth(
+    tasks: any[]
+  ): { mes: string; cantidad: number }[] {
+    const completedTasks = tasks.filter((t) => t.status === 'resolved');
+    const monthNames = [
+      'Enero',
+      'Febrero',
+      'Marzo',
+      'Abril',
+      'Mayo',
+      'Junio',
+      'Julio',
+      'Agosto',
+      'Septiembre',
+      'Octubre',
+      'Noviembre',
+      'Diciembre',
+    ];
+
     const last6Months = [];
     const now = new Date();
-    
+
     for (let i = 5; i >= 0; i--) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const monthYear = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
       const tasksInMonth = completedTasks.filter((task: any) => {
         const completedDate = new Date(task.completedAt || task.updatedAt);
-        return completedDate.getMonth() === date.getMonth() && 
-               completedDate.getFullYear() === date.getFullYear();
+        return (
+          completedDate.getMonth() === date.getMonth() &&
+          completedDate.getFullYear() === date.getFullYear()
+        );
       }).length;
 
       last6Months.push({ mes: monthYear, cantidad: tasksInMonth });
@@ -233,8 +282,9 @@ export class ReportsService {
   }
 
   private calculateAverageCompletionTime(tasks: any[]): number {
-    const completedTasks = tasks.filter(t => 
-      t.status === 'completed' && t.createdAt && (t.completedAt || t.updatedAt)
+    const completedTasks = tasks.filter(
+      (t) =>
+        t.status === 'resolved' && t.createdAt && (t.completedAt || t.updatedAt)
     );
 
     if (completedTasks.length === 0) return 0;
@@ -259,22 +309,22 @@ export class ReportsService {
         pendientes: 32,
         vencidas: 10,
         porEstado: [
-          { estado: 'Completada', cantidad: 78 },
+          { estado: 'Resuelta', cantidad: 78 },
           { estado: 'En Progreso', cantidad: 12 },
           { estado: 'Pendiente', cantidad: 20 },
-          { estado: 'Vencida', cantidad: 10 }
+          { estado: 'Vencida', cantidad: 10 },
         ],
         porPrioridad: [
           { prioridad: 'Alta', cantidad: 35 },
           { prioridad: 'Media', cantidad: 55 },
-          { prioridad: 'Baja', cantidad: 30 }
+          { prioridad: 'Baja', cantidad: 30 },
         ],
         porDepartamento: [
           { departamento: 'Sistemas', cantidad: 45 },
           { departamento: 'Administrativo', cantidad: 32 },
           { departamento: 'RR.HH.', cantidad: 23 },
-          { departamento: 'Contabilidad', cantidad: 20 }
-        ]
+          { departamento: 'Contabilidad', cantidad: 20 },
+        ],
       },
       usuarios: {
         total: 48,
@@ -283,8 +333,8 @@ export class ReportsService {
         porRol: [
           { rol: 'Administrador', cantidad: 5 },
           { rol: 'Usuario', cantidad: 30 },
-          { rol: 'Supervisor', cantidad: 13 }
-        ]
+          { rol: 'Supervisor', cantidad: 13 },
+        ],
       },
       archivos: {
         total: 320,
@@ -293,8 +343,8 @@ export class ReportsService {
           { tipo: 'PDF', cantidad: 120, tamanio: 536870912 },
           { tipo: 'DOCX', cantidad: 85, tamanio: 268435456 },
           { tipo: 'XLSX', cantidad: 65, tamanio: 134217728 },
-          { tipo: 'JPG', cantidad: 50, tamanio: 134217728 }
-        ]
+          { tipo: 'JPG', cantidad: 50, tamanio: 134217728 },
+        ],
       },
       rendimiento: {
         tareasCompletadasPorMes: [
@@ -303,7 +353,7 @@ export class ReportsService {
           { mes: 'Marzo 2025', cantidad: 10 },
           { mes: 'Abril 2025', cantidad: 18 },
           { mes: 'Mayo 2025', cantidad: 14 },
-          { mes: 'Junio 2025', cantidad: 9 }
+          { mes: 'Junio 2025', cantidad: 9 },
         ],
         tiempoPromedioComplecion: 3.5,
         usuariosMasActivos: [
@@ -311,9 +361,9 @@ export class ReportsService {
           { usuario: 'Juan Pérez', tareas: 18 },
           { usuario: 'Carlos Rodríguez', tareas: 16 },
           { usuario: 'Ana López', tareas: 14 },
-          { usuario: 'Luis Martínez', tareas: 12 }
-        ]
-      }
+          { usuario: 'Luis Martínez', tareas: 12 },
+        ],
+      },
     };
   }
 
@@ -329,41 +379,77 @@ export class ReportsService {
     return total > 0 ? Math.round((value / total) * 100) : 0;
   }
 
-  exportReport(type: 'pdf' | 'excel', reportData: ReportData): Observable<Blob> {
+  exportReport(
+    type: 'pdf' | 'excel',
+    reportData: ReportData
+  ): Observable<Blob> {
     // Intentamos primero usar la API real
-    return this.http.post(`${this.API_URL}/reports/export`, {
-      type,
-      data: reportData
-    }, { responseType: 'blob' }).pipe(
-      catchError(error => {
-        console.error('Error exportando reporte:', error);
-        // Si la API falla, generamos un blob localmente
-        const content = JSON.stringify(reportData, null, 2);
-        const mimeType = type === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-        return of(new Blob([content], { type: mimeType }));
-      })
-    );
+    return this.http
+      .post(
+        `${this.API_URL}/reports/export`,
+        {
+          type,
+          data: reportData,
+        },
+        { responseType: 'blob' }
+      )
+      .pipe(
+        catchError((error) => {
+          console.error('Error exportando reporte:', error);
+          // Si la API falla, generamos un blob localmente
+          const content = JSON.stringify(reportData, null, 2);
+          const mimeType =
+            type === 'pdf'
+              ? 'application/pdf'
+              : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+          return of(new Blob([content], { type: mimeType }));
+        })
+      );
   }
 
-  downloadReport(filename: string, blob: Blob | any, format: string = 'pdf'): void {
+  downloadReport(
+    filename: string,
+    blob: Blob | any,
+    format: string = 'pdf'
+  ): void {
     let downloadBlob: Blob;
-    
+
     if (blob instanceof Blob) {
       downloadBlob = blob;
     } else {
-      // Si no es un blob (por ejemplo, es un objeto JSON), convertirlo
       const content = JSON.stringify(blob, null, 2);
-      const mimeType = format === 'pdf' ? 'application/pdf' : 
-                      format === 'excel' ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 
-                      'application/json';
+      const mimeType =
+        format === 'pdf'
+          ? 'application/pdf'
+          : format === 'excel'
+          ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+          : 'application/json';
       downloadBlob = new Blob([content], { type: mimeType });
     }
-    
+
     const url = window.URL.createObjectURL(downloadBlob);
     const link = document.createElement('a');
     link.href = url;
     link.download = `${filename}.${format === 'excel' ? 'xlsx' : format}`;
     link.click();
     window.URL.revokeObjectURL(url);
+  }
+
+  getStatusLabel(status: string): string {
+    const statusMap: { [key: string]: string } = {
+      pending: 'Pendiente',
+      in_progress: 'En Progreso',
+      resolved: 'Resuelta',
+    };
+    return statusMap[status] || status;
+  }
+
+  getStatusColor(status: string): string {
+    const colorMap: { [key: string]: string } = {
+      pending: 'bg-warning',
+      in_progress: 'bg-info',
+      resolved: 'bg-success',
+    };
+    return colorMap[status] || 'bg-secondary';
   }
 }

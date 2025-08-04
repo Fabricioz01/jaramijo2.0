@@ -127,7 +127,8 @@
               >{{ task.departamentoId["name"] }}
             </span>
             <span
-              class="badge bg-gradient bg-info text-white fw-semibold px-3 py-2 rounded-pill text-uppercase"
+              class="badge bg-gradient text-white fw-semibold px-3 py-2 rounded-pill text-uppercase"
+              [ngClass]="getStatusColor(task.status)"
             >
               <i class="bi bi-flag me-1"></i>{{ getStatusLabel(task.status) }}
             </span>

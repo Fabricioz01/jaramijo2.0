@@ -25,13 +25,9 @@
         <div class="d-flex flex-wrap gap-2 align-items-center">
           <span
             class="badge fs-6 px-3 py-2 rounded-pill shadow-sm"
-            [ngClass]="{
-              'bg-warning text-dark': tarea.status === 'pending',
-              'bg-info text-dark': tarea.status === 'in_progress',
-              'bg-success': tarea.status === 'completed'
-            }"
+            [ngClass]="getStatusColor(tarea.status)"
           >
-            <i class="bi bi-flag me-1"></i>{{ tarea.status | titlecase }}
+            <i class="bi bi-flag me-1"></i>{{ getStatusLabel(tarea.status) }}
           </span>
           <span
             class="badge bg-light text-dark border border-primary px-3 py-2 rounded-pill shadow-sm"

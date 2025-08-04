@@ -182,7 +182,7 @@ La aplicación estará disponible en:
 {
   titulo: String,
   descripcion: String,
-  estado: ['pendiente', 'en_progreso', 'completada', 'cancelada'],
+  estado: ['pendiente', 'en_progreso', 'resuelta'],
   prioridad: ['baja', 'media', 'alta', 'urgente'],
   fechaInicio: Date,
   fechaVencimiento: Date,

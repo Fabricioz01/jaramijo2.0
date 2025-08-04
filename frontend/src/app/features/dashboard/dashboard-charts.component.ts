@@ -75,7 +75,6 @@ export class DashboardChartsComponent
       });
     }
 
-    // 2. Tareas completadas por mes (Línea)
     const ctx2 = document.getElementById('chart2') as HTMLCanvasElement;
     if (ctx2) {
       this.chart2 = new Chart(ctx2, {

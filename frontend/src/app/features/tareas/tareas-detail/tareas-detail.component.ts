@@ -64,4 +64,22 @@ export class TareasDetailComponent implements OnInit {
     if (type.includes('image')) return 'bi bi-file-earmark-image text-info';
     return 'bi bi-file-earmark text-secondary';
   }
+
+  getStatusLabel(status: string): string {
+    const statusMap: { [key: string]: string } = {
+      pending: 'Pendiente',
+      in_progress: 'En Progreso',
+      resolved: 'Resuelta',
+    };
+    return statusMap[status] || status;
+  }
+
+  getStatusColor(status: string): string {
+    const colorMap: { [key: string]: string } = {
+      pending: 'bg-warning text-dark',
+      in_progress: 'bg-info text-dark',
+      resolved: 'bg-success text-white',
+    };
+    return colorMap[status] || 'bg-secondary text-white';
+  }
 }

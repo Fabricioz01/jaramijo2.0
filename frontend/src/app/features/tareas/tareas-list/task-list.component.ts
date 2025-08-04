@@ -172,10 +172,18 @@ export class TaskListComponent implements OnInit {
     const statusMap: { [key: string]: string } = {
       pending: 'Pendiente',
       in_progress: 'En Progreso',
-      completed: 'Completada',
       resolved: 'Resuelta',
     };
     return statusMap[status] || status;
+  }
+
+  getStatusColor(status: string): string {
+    const colorMap: { [key: string]: string } = {
+      pending: 'bg-warning',
+      in_progress: 'bg-info',
+      resolved: 'bg-success',
+    };
+    return colorMap[status] || 'bg-secondary';
   }
 
   canResolveTask(task: Task): boolean {

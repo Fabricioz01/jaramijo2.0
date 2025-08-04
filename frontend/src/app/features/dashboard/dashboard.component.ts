@@ -83,7 +83,7 @@ export class DashboardComponent implements OnInit {
   }
   getTareasCompletadas(): number {
     return (
-      this.report?.tareas.porEstado.find((e) => e.estado === 'Completada')
+      this.report?.tareas.porEstado.find((e) => e.estado === 'Resuelta')
         ?.cantidad ?? 0
     );
   }
