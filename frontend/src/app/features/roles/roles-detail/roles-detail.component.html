@@ -24,15 +24,52 @@
         <div class="card-body p-4">
           <h5 class="fw-bold mb-3">{{ role.name }}</h5>
 
-          <div class="mb-3">
-            <strong>Permisos:</strong>
-            <div class="d-flex flex-wrap gap-1 mt-2">
-              <span
-                class="badge bg-primary"
-                *ngFor="let p of role.permissionIds"
+          <div class="mb-4">
+            <strong class="d-block mb-3">Permisos del Sistema:</strong>
+            <div class="permissions-container" *ngIf="getResourceNames().length > 0">
+              <div 
+                class="resource-group" 
+                *ngFor="let resource of getResourceNames()"
               >
-                {{ getPermissionDisplay(p) }}
-              </span>
+                <div class="resource-header">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <h6 class="mb-0 fw-bold text-capitalize">
+                      <i class="bi bi-folder me-2"></i>
+                      {{ getResourceDisplayName(resource) }}
+                    </h6>
+                    <span class="badge bg-light text-dark">
+                      {{ groupedPermissions[resource].length }} permisos
+                    </span>
+                  </div>
+                </div>
+                
+                <div class="permissions-grid">
+                  <div 
+                    class="permission-item"
+                    *ngFor="let permission of groupedPermissions[resource]"
+                  >
+                    <div class="d-flex align-items-center">
+                      <i 
+                        [class]="getActionIcon(permission.action) + ' me-2 ' + getActionColor(permission.action)"
+                      ></i>
+                      <span class="permission-text">
+                        {{ permission.action | titlecase }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div *ngIf="getResourceNames().length === 0 && role?.permissionIds">
+              <div class="d-flex flex-wrap gap-1">
+                <span
+                  class="badge bg-primary"
+                  *ngFor="let p of role.permissionIds"
+                >
+                  {{ getPermissionDisplay(p) }}
+                </span>
+              </div>
             </div>
           </div>
 

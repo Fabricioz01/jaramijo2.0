@@ -22,6 +22,7 @@ export class RolesDetailComponent implements OnInit {
   loading = false;
   roleId: string | null = null;
   showDeleteModal = false;
+  groupedPermissions: { [key: string]: Permission[] } = {};
 
   constructor(
     private route: ActivatedRoute,
@@ -42,6 +43,7 @@ export class RolesDetailComponent implements OnInit {
     this.roleService.getById(this.roleId).subscribe({
       next: (res) => {
         this.role = res.data as RoleWithPermissions;
+        this.groupPermissionsByResource();
         this.loading = false;
       },
       error: () => {
@@ -49,6 +51,57 @@ export class RolesDetailComponent implements OnInit {
         this.loading = false;
       },
     });
+  }
+
+  groupPermissionsByResource(): void {
+    if (!this.role?.permissionIds) return;
+    
+    this.groupedPermissions = {};
+    this.role.permissionIds.forEach(permission => {
+      if (typeof permission === 'object' && permission !== null) {
+        const perm = permission as Permission;
+        const resource = perm.resource;
+        if (!this.groupedPermissions[resource]) {
+          this.groupedPermissions[resource] = [];
+        }
+        this.groupedPermissions[resource].push(perm);
+      }
+    });
+
+    Object.keys(this.groupedPermissions).forEach(resource => {
+      this.groupedPermissions[resource].sort((a, b) => {
+        const actionOrder = ['create', 'read', 'update', 'delete'];
+        return actionOrder.indexOf(a.action) - actionOrder.indexOf(b.action);
+      });
+    });
+  }
+
+  getResourceNames(): string[] {
+    return Object.keys(this.groupedPermissions).sort();
+  }
+
+  getResourceDisplayName(resource: string): string {
+    return resource.charAt(0).toUpperCase() + resource.slice(1);
+  }
+
+  getActionIcon(action: string): string {
+    const icons: { [key: string]: string } = {
+      'create': 'bi-plus-circle',
+      'read': 'bi-eye',
+      'update': 'bi-pencil',
+      'delete': 'bi-trash'
+    };
+    return icons[action] || 'bi-gear';
+  }
+
+  getActionColor(action: string): string {
+    const colors: { [key: string]: string } = {
+      'create': 'text-success',
+      'read': 'text-info',
+      'update': 'text-warning',
+      'delete': 'text-danger'
+    };
+    return colors[action] || 'text-secondary';
   }
 
   getPermissionDisplay(p: Permission): string {

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewChecked, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   ReactiveFormsModule,
@@ -62,14 +62,41 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
                     </div>
                   </div>
 
-                  <div class="col-md-12 mb-3" *ngIf="permissions.length > 0">
-                    <label class="form-label">Permisos Disponibles</label>
-                    <div class="card">
-                      <div class="card-body">
-                        <div class="row">
-                          <div
-                            class="col-md-6 mb-2"
-                            *ngFor="let permission of permissions"
+                  <div class="col-md-12 mb-3" *ngIf="getResourceNames().length > 0">
+                    <label class="form-label">Permisos del Sistema</label>
+                    <div class="permissions-container">
+                      <div 
+                        class="resource-group" 
+                        *ngFor="let resource of getResourceNames()"
+                      >
+                        <div class="resource-header">
+                          <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                              <div class="form-check me-3">
+                                <input
+                                  class="form-check-input"
+                                  type="checkbox"
+                                  [id]="'resource-' + resource"
+                                  [checked]="isResourceFullySelected(resource)"
+                                  [class.indeterminate]="isResourcePartiallySelected(resource)"
+                                  (change)="toggleAllResourcePermissions(resource)"
+                                />
+                              </div>
+                              <h6 class="mb-0 fw-bold text-capitalize">
+                                <i class="bi bi-folder me-2"></i>
+                                {{ getResourceDisplayName(resource) }}
+                              </h6>
+                            </div>
+                            <span class="badge bg-light text-dark">
+                              {{ groupedPermissions[resource].length }} permisos
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div class="permissions-grid">
+                          <div 
+                            class="permission-item"
+                            *ngFor="let permission of groupedPermissions[resource]"
                           >
                             <div class="form-check">
                               <input
@@ -83,10 +110,14 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
                                 class="form-check-label"
                                 [for]="permission._id"
                               >
-                                <strong
-                                  >{{ permission.action | titlecase }}
-                                  {{ permission.resource | titlecase }}</strong
-                                >
+                                <div class="d-flex align-items-center">
+                                  <i 
+                                    [class]="getActionIcon(permission.action) + ' me-2 ' + getActionColor(permission.action)"
+                                  ></i>
+                                  <span class="permission-text">
+                                    {{ permission.action | titlecase }}
+                                  </span>
+                                </div>
                               </label>
                             </div>
                           </div>
@@ -186,16 +217,109 @@ import { HeaderComponent } from '../../../shared/components/header/header.compon
       .form-check-label {
         cursor: pointer;
       }
+
+      .permissions-container {
+        background: #f8f9fa;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        border: 1px solid #e9ecef;
+      }
+
+      .resource-group {
+        background: white;
+        border-radius: 0.75rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        overflow: hidden;
+        border: 1px solid #e9ecef;
+      }
+
+      .resource-group:last-child {
+        margin-bottom: 0;
+      }
+
+      .resource-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #e9ecef;
+      }
+
+      .resource-header h6 {
+        color: #495057;
+        font-weight: 600;
+      }
+
+      .permissions-grid {
+        padding: 1.25rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 0.75rem;
+      }
+
+      .permission-item {
+        background: #f8f9fa;
+        border-radius: 0.5rem;
+        padding: 0.75rem;
+        border: 1px solid #e9ecef;
+        transition: all 0.2s ease;
+      }
+
+      .permission-item:hover {
+        background: #e9ecef;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+
+      .permission-item .form-check {
+        margin: 0;
+      }
+
+      .permission-item .form-check-input {
+        margin-top: 0.125rem;
+      }
+
+      .permission-text {
+        font-weight: 500;
+        color: #495057;
+      }
+
+      .form-check-input.indeterminate {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        opacity: 0.8;
+      }
+
+      .form-check-input.indeterminate:after {
+        content: '—';
+        color: white;
+        font-weight: bold;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 0.8em;
+      }
+
+      @media (max-width: 768px) {
+        .permissions-grid {
+          grid-template-columns: 1fr;
+        }
+        
+        .permissions-container {
+          padding: 1rem;
+        }
+      }
     `,
   ],
 })
-export class RolesFormComponent implements OnInit {
+export class RolesFormComponent implements OnInit, AfterViewChecked {
   rolForm: FormGroup;
   loading = false;
   isEditing = false;
   rolId: string | null = null;
   permisosSeleccionados: string[] = [];
   permissions: any[] = [];
+  groupedPermissions: { [key: string]: any[] } = {};
 
   constructor(
     private fb: FormBuilder,
@@ -203,7 +327,8 @@ export class RolesFormComponent implements OnInit {
     private route: ActivatedRoute,
     private roleService: RoleService,
     private permissionService: PermissionService,
-    private alertService: AlertService
+    private alertService: AlertService,
+    private cdr: ChangeDetectorRef
   ) {
     this.rolForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
@@ -221,16 +346,107 @@ export class RolesFormComponent implements OnInit {
     }
   }
 
+  ngAfterViewChecked(): void {
+    this.updateIndeterminateStates();
+  }
+
+  updateIndeterminateStates(): void {
+    Object.keys(this.groupedPermissions).forEach(resource => {
+      const checkbox = document.getElementById(`resource-${resource}`) as HTMLInputElement;
+      if (checkbox) {
+        checkbox.indeterminate = this.isResourcePartiallySelected(resource);
+      }
+    });
+  }
+
   loadPermissions(): void {
     this.permissionService.getAll().subscribe({
       next: (response) => {
         this.permissions = response.data || [];
+        this.groupPermissionsByResource();
       },
       error: (error) => {
         console.error('Error al cargar permisos:', error);
         this.alertService.error('Error al cargar permisos');
       },
     });
+  }
+
+  groupPermissionsByResource(): void {
+    this.groupedPermissions = {};
+    this.permissions.forEach(permission => {
+      const resource = permission.resource;
+      if (!this.groupedPermissions[resource]) {
+        this.groupedPermissions[resource] = [];
+      }
+      this.groupedPermissions[resource].push(permission);
+    });
+
+    Object.keys(this.groupedPermissions).forEach(resource => {
+      this.groupedPermissions[resource].sort((a, b) => {
+        const actionOrder = ['create', 'read', 'update', 'delete'];
+        return actionOrder.indexOf(a.action) - actionOrder.indexOf(b.action);
+      });
+    });
+  }
+
+  getResourceNames(): string[] {
+    return Object.keys(this.groupedPermissions).sort();
+  }
+
+  getResourceDisplayName(resource: string): string {
+    return resource.charAt(0).toUpperCase() + resource.slice(1);
+  }
+
+  isResourceFullySelected(resource: string): boolean {
+    const permissions = this.groupedPermissions[resource] || [];
+    return permissions.length > 0 && permissions.every(p => this.isPermisoSelected(p._id));
+  }
+
+  isResourcePartiallySelected(resource: string): boolean {
+    const permissions = this.groupedPermissions[resource] || [];
+    return permissions.some(p => this.isPermisoSelected(p._id)) && 
+           !permissions.every(p => this.isPermisoSelected(p._id));
+  }
+
+  toggleAllResourcePermissions(resource: string): void {
+    const permissions = this.groupedPermissions[resource] || [];
+    const isFullySelected = this.isResourceFullySelected(resource);
+    
+    permissions.forEach(permission => {
+      if (isFullySelected) {
+        // Deseleccionar todos
+        const index = this.permisosSeleccionados.indexOf(permission._id);
+        if (index > -1) {
+          this.permisosSeleccionados.splice(index, 1);
+        }
+      } else {
+        // Seleccionar todos
+        if (!this.isPermisoSelected(permission._id)) {
+          this.permisosSeleccionados.push(permission._id);
+        }
+      }
+    });
+  }
+
+  getActionIcon(action: string): string {
+    const icons: { [key: string]: string } = {
+      'create': 'bi-plus-circle',
+      'read': 'bi-eye',
+      'update': 'bi-pencil',
+      'delete': 'bi-trash'
+    };
+    return icons[action] || 'bi-gear';
+  }
+
+  getActionColor(action: string): string {
+    const colors: { [key: string]: string } = {
+      'create': 'text-success',
+      'read': 'text-info',
+      'update': 'text-warning',
+      'delete': 'text-danger'
+    };
+    return colors[action] || 'text-secondary';
   }
 
   loadRol(): void {
@@ -245,6 +461,9 @@ export class RolesFormComponent implements OnInit {
           this.permisosSeleccionados = (role.permissionIds || []).map(
             (p: any) => (typeof p === 'string' ? p : p._id)
           );
+          
+          // Forzar actualización de la vista
+          this.cdr.detectChanges();
         }
       },
       error: () => {
