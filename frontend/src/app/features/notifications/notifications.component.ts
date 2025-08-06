@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -22,6 +22,13 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     private router: Router
   ) {}
 
+  @HostListener('keydown', ['$event'])
+  onKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      event.stopPropagation();
+    }
+  }
+
   ngOnInit(): void {
     this.subscription.add(
       this.notificationService.notifications$.subscribe(
@@ -43,34 +50,83 @@ export class NotificationsComponent implements OnInit, OnDestroy {
 
   markAsRead(notification: Notification): void {
     if (!notification.read && notification._id) {
-      this.notificationService.markAsRead(notification._id).subscribe();
+      this.notificationService.markAsRead(notification._id).subscribe({
+        next: () => {
+          notification.read = true;
+        },
+        error: (error) => {
+          console.error('Error al marcar notificación como leída:', error);
+        },
+      });
     }
   }
 
   markAllAsRead(): void {
-    this.notificationService.markAllAsRead().subscribe();
+    this.notificationService.markAllAsRead().subscribe({
+      next: () => {
+        this.notifications.forEach((n) => (n.read = true));
+      },
+      error: (error) => {
+        console.error(
+          'Error al marcar todas las notificaciones como leídas:',
+          error
+        );
+      },
+    });
   }
 
   deleteNotification(notification: Notification, event: Event): void {
     event.stopPropagation();
+    event.preventDefault();
+
     if (notification._id) {
-      this.notificationService.deleteNotification(notification._id).subscribe();
+      this.notificationService.deleteNotification(notification._id).subscribe({
+        next: () => {
+          // La actualización se manejará automáticamente por el observable
+        },
+        error: (error) => {
+          console.error('Error al eliminar notificación:', error);
+        },
+      });
     }
   }
 
   navigateToTask(notification: Notification): void {
     if (notification.taskId) {
+      // Marcar como leída al hacer clic
       this.markAsRead(notification);
-      this.router.navigate(['/tareas']);
+
+      // Navegar a las tareas
+      this.router.navigate(['/tareas'], {
+        queryParams: { taskId: notification.taskId },
+      });
     }
   }
 
   getNotificationIcon(type: string): string {
-    return this.notificationService.getNotificationIcon(type);
+    switch (type) {
+      case 'task_assigned':
+        return 'bi bi-inbox';
+      case 'task_due_today':
+        return 'bi bi-clock-history';
+      case 'task_overdue':
+        return 'bi bi-exclamation-triangle-fill';
+      default:
+        return 'bi bi-bell-fill';
+    }
   }
 
   getNotificationColor(type: string): string {
-    return this.notificationService.getNotificationColor(type);
+    switch (type) {
+      case 'task_assigned':
+        return 'text-primary';
+      case 'task_due_today':
+        return 'text-warning';
+      case 'task_overdue':
+        return 'text-danger';
+      default:
+        return 'text-primary';
+    }
   }
 
   getTimeAgo(date: Date): string {
@@ -92,5 +148,9 @@ export class NotificationsComponent implements OnInit, OnDestroy {
 
   hasUnreadNotifications(): boolean {
     return this.notifications.some((n) => !n.read);
+  }
+
+  getUnreadCount(): number {
+    return this.notifications.filter((n) => !n.read).length;
   }
 }
