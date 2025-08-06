@@ -96,10 +96,19 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       // Marcar como leída al hacer clic
       this.markAsRead(notification);
 
-      // Navegar a las tareas
-      this.router.navigate(['/tareas'], {
-        queryParams: { taskId: notification.taskId },
-      });
+      // Extraer el ID de la tarea
+      let taskId: string;
+
+      if (typeof notification.taskId === 'string') {
+        // Si taskId es un string (ID directo)
+        taskId = notification.taskId;
+      } else {
+        // Si taskId es un objeto populado (con _id, title, etc.)
+        taskId = (notification.taskId as any)._id;
+      }
+
+      // Navegar directamente a la vista de la tarea
+      this.router.navigate(['/tareas', taskId, 'ver']);
     }
   }
 
@@ -152,5 +161,20 @@ export class NotificationsComponent implements OnInit, OnDestroy {
 
   getUnreadCount(): number {
     return this.notifications.filter((n) => !n.read).length;
+  }
+
+  getTaskInfo(notification: Notification): any {
+    // Si notification.task existe, usarlo
+    if (notification.task) {
+      return notification.task;
+    }
+
+    // Si taskId es un objeto populado, usarlo
+    if (notification.taskId && typeof notification.taskId === 'object') {
+      return notification.taskId;
+    }
+
+    // Si no hay información de la tarea, retornar null
+    return null;
   }
 }

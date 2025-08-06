@@ -30,11 +30,7 @@
     </div>
 
     <!-- Lista de notificaciones -->
-    <div
-      class="notifications-list overflow-auto"
-      *ngIf="!loading"
-      style="max-height: 520px"
-    >
+    <div class="notifications-list" *ngIf="!loading">
       <div
         *ngFor="
           let notification of notifications;
@@ -89,17 +85,19 @@
           <!-- Información de la tarea relacionada -->
           <div
             class="bg-light border rounded p-2 mb-2 small"
-            *ngIf="notification.task"
+            *ngIf="getTaskInfo(notification)"
           >
             <div class="d-flex align-items-center">
               <i class="bi bi-list-task text-muted me-2"></i>
-              <strong class="text-dark">{{ notification.task.title }}</strong>
+              <strong class="text-dark">{{
+                getTaskInfo(notification)?.title
+              }}</strong>
               <span
-                *ngIf="notification.task.dueDate"
+                *ngIf="getTaskInfo(notification)?.dueDate"
                 class="text-muted ms-auto"
               >
                 <i class="bi bi-calendar3 me-1"></i>
-                {{ notification.task.dueDate | date : "dd/MM/yyyy" }}
+                {{ getTaskInfo(notification)?.dueDate | date : "dd/MM/yyyy" }}
               </span>
             </div>
           </div>
