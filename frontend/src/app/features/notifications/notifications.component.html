@@ -1,88 +1,120 @@
 <div class="notifications-modal-container">
-  <div class="notifications-modal">
+  <div class="notifications-modal shadow-lg border-0">
     <!-- Header -->
-    <div class="notifications-header">
+    <div class="notifications-header bg-light border-bottom">
       <div class="d-flex justify-content-between align-items-center">
-        <h6 class="mb-0">
-          <i class="bi bi-bell me-2"></i>
+        <h6 class="mb-0 text-dark fw-semibold">
+          <i class="bi bi-bell me-2 text-muted"></i>
           Notificaciones
         </h6>
-        <button
-          class="btn btn-sm btn-outline-primary"
-          (click)="markAllAsRead()"
-          *ngIf="hasUnreadNotifications()"
-          title="Marcar todas como leídas"
-        >
-          <i class="bi bi-check-all me-1"></i>
-          Marcar todas
-        </button>
+        <div class="d-flex align-items-center gap-2">
+          <button
+            class="btn btn-sm btn-outline-primary"
+            (click)="markAllAsRead()"
+            *ngIf="hasUnreadNotifications()"
+            title="Marcar todas como leídas"
+          >
+            <i class="bi bi-check-all me-1"></i>
+            Marcar todas
+          </button>
+        </div>
       </div>
     </div>
 
     <!-- Loading -->
-    <div *ngIf="loading" class="loading-container">
+    <div *ngIf="loading" class="loading-container text-center py-5">
       <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Cargando...</span>
       </div>
-      <p class="mt-3 mb-0 text-muted">Cargando notificaciones...</p>
+      <p class="mt-3 mb-0 text-muted small">Cargando notificaciones...</p>
     </div>
 
     <!-- Lista de notificaciones -->
-    <div class="notifications-list" *ngIf="!loading">
+    <div
+      class="notifications-list overflow-auto"
+      *ngIf="!loading"
+      style="max-height: 520px"
+    >
       <div
         *ngFor="
           let notification of notifications;
           trackBy: trackByNotificationId
         "
-        class="notification-item-modal"
-        [class.unread]="!notification.read"
+        class="notification-item-modal border-bottom p-3 position-relative d-flex align-items-start"
+        [class.bg-light]="!notification.read"
+        [class.border-start]="!notification.read"
+        [class.border-primary]="!notification.read"
+        [class.border-4]="!notification.read"
         (click)="navigateToTask(notification)"
         [attr.tabindex]="0"
         [attr.aria-label]="'Notificación: ' + notification.message"
         role="button"
+        style="cursor: pointer; transition: all 0.2s ease"
       >
         <!-- Indicador de no leída -->
-        <div class="unread-indicator-modal" *ngIf="!notification.read"></div>
+        <div
+          class="position-absolute top-0 start-0 mt-3 ms-2"
+          *ngIf="!notification.read"
+        >
+          <span
+            class="badge bg-primary rounded-circle p-1"
+            style="width: 8px; height: 8px"
+          ></span>
+        </div>
 
         <!-- Icono basado en el tipo de notificación -->
         <div
-          class="notification-icon-modal"
-          [class]="getNotificationColor(notification.type)"
+          class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-2 bg-light border me-3"
+          style="width: 40px; height: 40px"
         >
-          <i [class]="getNotificationIcon(notification.type)"></i>
+          <i
+            [class]="
+              getNotificationIcon(notification.type) +
+              ' ' +
+              getNotificationColor(notification.type)
+            "
+          ></i>
         </div>
 
         <!-- Contenido principal -->
-        <div class="notification-body-modal">
-          <div class="notification-title-modal">
+        <div class="flex-grow-1">
+          <div class="fw-semibold text-dark small mb-1">
             {{ getNotificationTitle(notification.type) }}
           </div>
 
-          <div class="notification-message-modal">
+          <div class="text-muted small mb-2" style="line-height: 1.4">
             {{ notification.message }}
           </div>
 
           <!-- Información de la tarea relacionada -->
-          <div class="notification-task-modal" *ngIf="notification.task">
-            <i class="bi bi-list-task"></i>
-            <strong>{{ notification.task.title }}</strong>
-            <span *ngIf="notification.task.dueDate" class="text-muted ms-auto">
-              <i class="bi bi-calendar3 me-1"></i>
-              {{ notification.task.dueDate | date : "dd/MM/yyyy" }}
-            </span>
+          <div
+            class="bg-light border rounded p-2 mb-2 small"
+            *ngIf="notification.task"
+          >
+            <div class="d-flex align-items-center">
+              <i class="bi bi-list-task text-muted me-2"></i>
+              <strong class="text-dark">{{ notification.task.title }}</strong>
+              <span
+                *ngIf="notification.task.dueDate"
+                class="text-muted ms-auto"
+              >
+                <i class="bi bi-calendar3 me-1"></i>
+                {{ notification.task.dueDate | date : "dd/MM/yyyy" }}
+              </span>
+            </div>
           </div>
 
           <!-- Timestamp -->
-          <div class="notification-time-modal">
-            <i class="bi bi-clock"></i>
+          <div class="d-flex align-items-center text-muted small">
+            <i class="bi bi-clock me-1"></i>
             {{ getTimeAgo(notification.createdAt) }}
           </div>
         </div>
 
         <!-- Acciones - Solo eliminar -->
-        <div class="notification-actions-modal">
+        <div class="flex-shrink-0 ms-2">
           <button
-            class="btn"
+            class="btn btn-sm btn-outline-danger border-0"
             (click)="deleteNotification(notification, $event)"
             title="Eliminar notificación"
             [attr.aria-label]="'Eliminar notificación: ' + notification.message"
@@ -93,10 +125,13 @@
       </div>
 
       <!-- Estado vacío -->
-      <div *ngIf="notifications.length === 0" class="empty-state-modal">
-        <i class="bi bi-bell-slash"></i>
-        <h6>No tienes notificaciones</h6>
-        <p>
+      <div *ngIf="notifications.length === 0" class="text-center py-5 px-4">
+        <i class="bi bi-bell-slash display-4 text-muted mb-3"></i>
+        <h6 class="text-dark fw-medium mb-2">No tienes notificaciones</h6>
+        <p
+          class="text-muted small mb-0"
+          style="max-width: 280px; margin: 0 auto; line-height: 1.5"
+        >
           Te notificaremos cuando tengas nuevas tareas asignadas, cuando alguna
           esté por vencer, o cuando haya actualizaciones importantes.
         </p>

@@ -189,9 +189,9 @@ import { NotificationsComponent } from '../../../features/notifications/notifica
                 </span>
               </a>
               <div
-                class="dropdown-menu dropdown-menu-end p-0"
+                class="dropdown-menu dropdown-menu-end p-0 border-0"
                 [class.show]="activeDropdown === 'notifications'"
-                style="border: none; box-shadow: none;"
+                style="background: white; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15); min-width: auto; width: auto;"
               >
                 <app-notifications
                   *ngIf="activeDropdown === 'notifications'"

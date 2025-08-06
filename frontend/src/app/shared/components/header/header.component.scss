@@ -70,6 +70,19 @@
   left: auto;
 }
 
+/* Estilos específicos para el dropdown de notificaciones */
+.nav-item.dropdown .dropdown-menu {
+  &:has(app-notifications) {
+    padding: 0 !important;
+    border: 1px solid #e3e6f0 !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15) !important;
+    background: white !important;
+    min-width: auto !important;
+    width: auto !important;
+    border-radius: 12px !important;
+  }
+}
+
 .dropdown-item {
   display: block;
   width: 100%;
