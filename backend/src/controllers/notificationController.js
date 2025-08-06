@@ -5,15 +5,6 @@ class NotificationController {
   async getUserNotifications(req, res, next) {
     try {
       const userId = req.user._id || req.user.userId;
-      console.log(
-        '🔔 [NotificationController] Obteniendo notificaciones para usuario:',
-        userId
-      );
-      console.log('🔔 [NotificationController] Usuario completo:', {
-        id: req.user._id,
-        email: req.user.email,
-        name: req.user.name,
-      });
 
       const { limit = 20, skip = 0, unreadOnly = false } = req.query;
 
@@ -25,20 +16,12 @@ class NotificationController {
 
       const notifications = await Notification.getByUserId(userId, options);
 
-      console.log(
-        `✅ [NotificationController] ${notifications.length} notificaciones encontradas`
-      );
-
       res.json({
         success: true,
         data: notifications,
         count: notifications.length,
       });
     } catch (error) {
-      console.error(
-        '❌ [NotificationController] Error al obtener notificaciones:',
-        error
-      );
       next(error);
     }
   }
@@ -47,10 +30,6 @@ class NotificationController {
   async markAsRead(req, res, next) {
     try {
       const { notificationId } = req.params;
-      console.log(
-        '📖 [NotificationController] Marcando notificación como leída:',
-        notificationId
-      );
 
       const notification = await Notification.findById(notificationId);
 
@@ -77,10 +56,6 @@ class NotificationController {
         data: updatedNotification,
       });
     } catch (error) {
-      console.error(
-        '❌ [NotificationController] Error al marcar como leída:',
-        error
-      );
       next(error);
     }
   }
@@ -89,10 +64,6 @@ class NotificationController {
   async markAllAsRead(req, res, next) {
     try {
       const userId = req.user._id || req.user.userId;
-      console.log(
-        '📖 [NotificationController] Marcando todas las notificaciones como leídas para usuario:',
-        userId
-      );
 
       const result = await Notification.updateMany(
         { userId: userId, read: false },
@@ -102,20 +73,12 @@ class NotificationController {
         }
       );
 
-      console.log(
-        `✅ [NotificationController] ${result.modifiedCount} notificaciones marcadas como leídas`
-      );
-
       res.json({
         success: true,
         message: `${result.modifiedCount} notificaciones marcadas como leídas`,
         modifiedCount: result.modifiedCount,
       });
     } catch (error) {
-      console.error(
-        '❌ [NotificationController] Error al marcar todas como leídas:',
-        error
-      );
       next(error);
     }
   }
@@ -124,10 +87,6 @@ class NotificationController {
   async deleteNotification(req, res, next) {
     try {
       const { notificationId } = req.params;
-      console.log(
-        '🗑️ [NotificationController] Eliminando notificación:',
-        notificationId
-      );
 
       const notification = await Notification.findById(notificationId);
 
@@ -148,19 +107,11 @@ class NotificationController {
 
       await Notification.findByIdAndDelete(notificationId);
 
-      console.log(
-        '✅ [NotificationController] Notificación eliminada exitosamente'
-      );
-
       res.json({
         success: true,
         message: 'Notificación eliminada exitosamente',
       });
     } catch (error) {
-      console.error(
-        '❌ [NotificationController] Error al eliminar notificación:',
-        error
-      );
       next(error);
     }
   }
@@ -169,29 +120,17 @@ class NotificationController {
   async getUnreadCount(req, res, next) {
     try {
       const userId = req.user._id || req.user.userId;
-      console.log(
-        '🔢 [NotificationController] Obteniendo conteo de no leídas para usuario:',
-        userId
-      );
 
       const count = await Notification.countDocuments({
         userId: userId,
         read: false,
       });
 
-      console.log(
-        `✅ [NotificationController] ${count} notificaciones no leídas`
-      );
-
       res.json({
         success: true,
         count: count,
       });
     } catch (error) {
-      console.error(
-        '❌ [NotificationController] Error al obtener conteo:',
-        error
-      );
       next(error);
     }
   }

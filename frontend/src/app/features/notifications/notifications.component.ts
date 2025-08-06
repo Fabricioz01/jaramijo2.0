@@ -23,15 +23,9 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    console.log('🔔 [NotificationsComponent] Inicializando componente...');
     this.subscription.add(
       this.notificationService.notifications$.subscribe(
         (notifications: Notification[]) => {
-          console.log(
-            '📝 [NotificationsComponent] Notificaciones recibidas:',
-            notifications.length
-          );
-          console.log('📝 [NotificationsComponent] Datos:', notifications);
           this.notifications = notifications;
           this.loading = false;
         }
@@ -49,30 +43,18 @@ export class NotificationsComponent implements OnInit, OnDestroy {
 
   markAsRead(notification: Notification): void {
     if (!notification.read && notification._id) {
-      this.notificationService.markAsRead(notification._id).subscribe({
-        error: (error: any) =>
-          console.error('Error al marcar notificación como leída:', error),
-      });
+      this.notificationService.markAsRead(notification._id).subscribe();
     }
   }
 
   markAllAsRead(): void {
-    this.notificationService.markAllAsRead().subscribe({
-      error: (error: any) =>
-        console.error(
-          'Error al marcar todas las notificaciones como leídas:',
-          error
-        ),
-    });
+    this.notificationService.markAllAsRead().subscribe();
   }
 
   deleteNotification(notification: Notification, event: Event): void {
     event.stopPropagation();
     if (notification._id) {
-      this.notificationService.deleteNotification(notification._id).subscribe({
-        error: (error: any) =>
-          console.error('Error al eliminar notificación:', error),
-      });
+      this.notificationService.deleteNotification(notification._id).subscribe();
     }
   }
 

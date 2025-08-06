@@ -306,7 +306,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
   toggleDropdown(dropdownName: string, event: Event): void {
     event.preventDefault();
     event.stopPropagation();
-    console.log('[Header] toggleDropdown:', dropdownName);
     if (this.activeDropdown === dropdownName) {
       this.activeDropdown = null;
     } else {
@@ -316,25 +315,21 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   navigateTo(route: string): void {
     this.activeDropdown = null; // Cerrar dropdown después de navegar
-    console.log('[Header] navigateTo:', route);
     this.router.navigate([route]);
   }
 
   navigateToProfile(): void {
     this.activeDropdown = null;
-    console.log('[Header] navigateToProfile');
     this.router.navigate(['/usuarios/perfil']);
   }
 
   navigateToSettings(): void {
     this.activeDropdown = null;
-    console.log('[Header] navigateToSettings');
     this.router.navigate(['/configuracion']);
   }
 
   logout(): void {
     this.activeDropdown = null;
-    console.log('[Header] logout');
     this.authService.logout().subscribe({
       complete: () => {
         this.router.navigate(['/login']);

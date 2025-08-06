@@ -58,10 +58,6 @@ notificationSchema.statics.createTaskAssignedNotification = async function (
   userId,
   taskTitle
 ) {
-  console.log('📩 [Notification] Creando notificación de tarea asignada');
-  console.log(`   - Usuario: ${userId}`);
-  console.log(`   - Tarea: ${taskTitle}`);
-
   try {
     const notification = new this({
       userId: userId,
@@ -73,24 +69,14 @@ notificationSchema.statics.createTaskAssignedNotification = async function (
     });
 
     const savedNotification = await notification.save();
-    console.log(
-      '✅ [Notification] Notificación creada exitosamente:',
-      savedNotification._id
-    );
     return savedNotification;
   } catch (error) {
-    console.error('❌ [Notification] Error al crear notificación:', error);
     throw error;
   }
 };
 
 // Método estático para marcar como leída
 notificationSchema.statics.markAsRead = async function (notificationId) {
-  console.log(
-    '📖 [Notification] Marcando notificación como leída:',
-    notificationId
-  );
-
   try {
     const result = await this.findByIdAndUpdate(
       notificationId,
@@ -101,21 +87,14 @@ notificationSchema.statics.markAsRead = async function (notificationId) {
       { new: true }
     );
 
-    console.log('✅ [Notification] Notificación marcada como leída');
     return result;
   } catch (error) {
-    console.error('❌ [Notification] Error al marcar como leída:', error);
     throw error;
   }
 };
 
 // Método estático para obtener notificaciones de un usuario
 notificationSchema.statics.getByUserId = async function (userId, options = {}) {
-  console.log(
-    '🔍 [Notification] Obteniendo notificaciones para usuario:',
-    userId
-  );
-
   const { limit = 20, skip = 0, unreadOnly = false } = options;
 
   try {
@@ -130,12 +109,8 @@ notificationSchema.statics.getByUserId = async function (userId, options = {}) {
       .limit(limit)
       .skip(skip);
 
-    console.log(
-      `✅ [Notification] ${notifications.length} notificaciones encontradas`
-    );
     return notifications;
   } catch (error) {
-    console.error('❌ [Notification] Error al obtener notificaciones:', error);
     throw error;
   }
 };

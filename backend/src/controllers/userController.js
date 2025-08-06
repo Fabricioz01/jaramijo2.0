@@ -103,34 +103,20 @@ class UserController {
 
   async getNotifications(req, res, next) {
     try {
-      console.log(
-        '🔔 [getNotifications] Iniciando obtención de notificaciones'
-      );
-      console.log('🔔 [getNotifications] Usuario ID:', req.user._id);
-
       const userId = req.user._id;
       const user = await userService.getById(userId);
 
       if (!user) {
-        console.log('❌ [getNotifications] Usuario no encontrado:', userId);
         return res.status(404).json({
           error: 'Usuario no encontrado',
         });
       }
-
-      console.log('📝 [getNotifications] Usuario encontrado:', user.email);
-      console.log(
-        '📝 [getNotifications] Notificaciones sin poblar:',
-        user.notifications.length
-      );
 
       // Poblar las notificaciones con información de la tarea
       await user.populate({
         path: 'notifications.taskId',
         select: 'title description dueDate status',
       });
-
-      console.log('📝 [getNotifications] Notificaciones pobladas');
 
       // Filtrar notificaciones que tienen tareas válidas
       const validNotifications = user.notifications.filter(
@@ -154,15 +140,6 @@ class UserController {
       }));
 
       const unreadCount = notifications.filter((n) => !n.read).length;
-
-      console.log(
-        '✅ [getNotifications] Notificaciones procesadas:',
-        notifications.length
-      );
-      console.log(
-        '✅ [getNotifications] Notificaciones no leídas:',
-        unreadCount
-      );
 
       res.json({
         message: 'Notificaciones obtenidas exitosamente',

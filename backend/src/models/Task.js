@@ -56,67 +56,35 @@ const taskSchema = new mongoose.Schema({
 
 // Middleware para notificaciones automáticas
 taskSchema.post('save', async function (doc, next) {
-  console.log('🔔 [Task] Middleware post-save ejecutado para tarea:', doc._id);
-  console.log('🔍 [Task] isNew:', this.isNew);
-  console.log('🔍 [Task] assignedToIds:', doc.assignedToIds);
-  console.log('🔍 [Task] assignedToIds length:', doc.assignedToIds?.length);
-
   try {
     // Verificar si es una nueva tarea y tiene usuarios asignados
     if (doc.assignedToIds && doc.assignedToIds.length > 0) {
-      console.log('📨 [Task] Procesando notificaciones...');
-      console.log(`   - Tarea: ${doc.title}`);
-      console.log(`   - Usuarios asignados: ${doc.assignedToIds.length}`);
-
       const Notification = require('./Notification');
-      console.log('📦 [Task] Modelo Notification cargado');
 
       // Verificar si ya existen notificaciones para esta tarea
       const existingNotifications = await Notification.find({
         taskId: doc._id,
       });
-      console.log(
-        `🔍 [Task] Notificaciones existentes: ${existingNotifications.length}`
-      );
 
       // Solo crear notificaciones si no existen ya
       if (existingNotifications.length === 0) {
-        console.log('✨ [Task] Creando nuevas notificaciones...');
-
         // Crear notificación para cada usuario asignado
         for (const userId of doc.assignedToIds) {
           try {
-            console.log(
-              `🎯 [Task] Creando notificación para usuario: ${userId}`
-            );
             await Notification.createTaskAssignedNotification(
               doc._id,
               userId,
               doc.title
             );
-            console.log(`✅ [Task] Notificación enviada al usuario: ${userId}`);
           } catch (notifError) {
-            console.error(
-              `❌ [Task] Error al enviar notificación al usuario ${userId}:`,
-              notifError
-            );
+            // Manejo de error para notificaciones individuales
           }
         }
-      } else {
-        console.log(
-          '⚠️ [Task] Ya existen notificaciones para esta tarea, omitiendo...'
-        );
       }
-    } else {
-      console.log(
-        'ℹ️ [Task] Tarea sin usuarios asignados, omitiendo notificaciones'
-      );
-      console.log('🔍 [Task] assignedToIds es:', doc.assignedToIds);
     }
 
     next();
   } catch (error) {
-    console.error('❌ [Task] Error en middleware post-save:', error);
     next(); // No fallar la creación de la tarea por errores de notificación
   }
 });

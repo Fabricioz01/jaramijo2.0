@@ -6,19 +6,8 @@ const { validationResult } = require('express-validator');
 class TaskController {
   async create(req, res, next) {
     try {
-      console.log('🔨 [TaskController] Creando nueva tarea...');
-      console.log('📋 [TaskController] Datos recibidos:', {
-        title: req.body.title,
-        assignedToIds: req.body.assignedToIds,
-        departamentoId: req.body.departamentoId,
-      });
-
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        console.log(
-          '❌ [TaskController] Errores de validación:',
-          errors.array()
-        );
         return res.status(400).json({
           success: false,
           message: 'Datos de entrada inválidos',
@@ -26,14 +15,7 @@ class TaskController {
         });
       }
 
-      console.log('📝 [TaskController] Llamando a taskService.create...');
       const task = await taskService.create(req.body);
-
-      console.log('✅ [TaskController] Tarea creada exitosamente:', {
-        id: task._id,
-        title: task.title,
-        assignedUsers: task.assignedToIds?.length || 0,
-      });
 
       res.status(201).json({
         success: true,
@@ -41,7 +23,6 @@ class TaskController {
         data: task,
       });
     } catch (error) {
-      console.error('❌ [TaskController] Error al crear tarea:', error);
       next(error);
     }
   }

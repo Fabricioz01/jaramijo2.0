@@ -21,8 +21,8 @@ export class NotificationService {
   public unreadCount$ = this.unreadCountSubject.asObservable();
 
   constructor(private http: HttpClient) {
-    // Polling cada 30 segundos para verificar nuevas notificaciones
-    timer(0, 30000)
+    // para refrescar las notificaciones cada 7 segundos
+    timer(0, 7000)
       .pipe(
         switchMap(() => this.loadNotifications()),
         catchError(() => of({ success: true, data: [], count: 0 }))
@@ -31,14 +31,9 @@ export class NotificationService {
   }
 
   loadNotifications(): Observable<any> {
-    console.log('🔔 [NotificationService] Cargando notificaciones...');
     return this.http.get<any>(`${this.API_URL}`).pipe(
       tap((response) => {
-        console.log('✅ [NotificationService] Respuesta recibida:', response);
         if (response.success && response.data) {
-          console.log(
-            `📝 [NotificationService] ${response.count} notificaciones cargadas`
-          );
           this.notificationsSubject.next(response.data);
           const unreadCount = response.data.filter(
             (n: Notification) => !n.read
@@ -47,10 +42,6 @@ export class NotificationService {
         }
       }),
       catchError((error) => {
-        console.error(
-          '❌ [NotificationService] Error al cargar notificaciones:',
-          error
-        );
         // En caso de error, mantener el estado actual
         return of({
           success: true,
