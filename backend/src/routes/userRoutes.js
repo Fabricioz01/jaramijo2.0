@@ -11,6 +11,28 @@ router.use(authJwt);
 // GET /api/v1/users
 router.get('/', userController.getAll);
 
+// RUTAS DE NOTIFICACIONES (deben ir ANTES de /:id)
+// GET /api/v1/users/notifications
+router.get('/notifications', userController.getNotifications);
+
+// PATCH /api/v1/users/notifications/:notificationId/read
+router.patch(
+  '/notifications/:notificationId/read',
+  userController.markNotificationAsRead
+);
+
+// PATCH /api/v1/users/notifications/mark-all-read
+router.patch(
+  '/notifications/mark-all-read',
+  userController.markAllNotificationsAsRead
+);
+
+// DELETE /api/v1/users/notifications/:notificationId
+router.delete(
+  '/notifications/:notificationId',
+  userController.deleteNotification
+);
+
 // GET /api/v1/users/:id
 router.get('/:id', userController.getById);
 

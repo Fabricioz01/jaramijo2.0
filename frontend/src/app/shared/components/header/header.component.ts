@@ -1,12 +1,15 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, HostListener, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
+import { NotificationService } from '../../../core/services/notification.service';
+import { NotificationsComponent } from '../../../features/notifications/notifications.component';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, NotificationsComponent],
   template: `
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
       <div class="container-fluid">
@@ -167,6 +170,35 @@ import { AuthService } from '../../../core/services/auth.service';
           </ul>
 
           <div class="navbar-nav">
+            <!-- Notificaciones -->
+            <div class="nav-item dropdown position-relative me-3">
+              <a
+                class="nav-link position-relative"
+                href="#"
+                role="button"
+                (click)="toggleDropdown('notifications', $event)"
+                style="cursor: pointer;"
+              >
+                <i class="bi bi-bell fs-5"></i>
+                <span
+                  *ngIf="unreadCount > 0"
+                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                >
+                  {{ unreadCount > 99 ? '99+' : unreadCount }}
+                  <span class="visually-hidden">notificaciones no leídas</span>
+                </span>
+              </a>
+              <div
+                class="dropdown-menu dropdown-menu-end p-0"
+                [class.show]="activeDropdown === 'notifications'"
+                style="border: none; box-shadow: none;"
+              >
+                <app-notifications
+                  *ngIf="activeDropdown === 'notifications'"
+                ></app-notifications>
+              </div>
+            </div>
+
             <!-- Usuario -->
             <div class="nav-item dropdown position-relative">
               <a
@@ -215,12 +247,18 @@ import { AuthService } from '../../../core/services/auth.service';
   `,
   styleUrls: ['./header.component.scss'],
 })
-export class HeaderComponent implements OnInit {
+export class HeaderComponent implements OnInit, OnDestroy {
   user: any = null;
   showMobileMenu = false;
   activeDropdown: string | null = null;
+  unreadCount = 0;
+  private subscription = new Subscription();
 
-  constructor(public authService: AuthService, private router: Router) {}
+  constructor(
+    public authService: AuthService,
+    private router: Router,
+    private notificationService: NotificationService
+  ) {}
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
@@ -232,6 +270,17 @@ export class HeaderComponent implements OnInit {
     this.authService.currentUser$.subscribe((user) => {
       this.user = user;
     });
+
+    // Suscribirse al contador de notificaciones no leídas
+    this.subscription.add(
+      this.notificationService.unreadCount$.subscribe((count: number) => {
+        this.unreadCount = count;
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
   }
 
   // Eliminar lógica local de permisos. Usar solo AuthService

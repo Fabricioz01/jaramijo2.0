@@ -12,6 +12,23 @@
   border-radius: 0.25rem;
 }
 
+// Estilos específicos para el icono de notificaciones
+.nav-link {
+  &.position-relative {
+    .badge {
+      font-size: 0.65rem;
+      padding: 0.2rem 0.4rem;
+      min-width: 1.2rem;
+      height: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: -0.1rem;
+      margin-left: -0.1rem;
+    }
+  }
+}
+
 .dropdown-item {
   transition: background-color 0.2s ease;
 }

@@ -1,25 +1,47 @@
 const taskService = require('../services/taskService');
 const fileService = require('../services/fileService');
+const User = require('../models/User');
 const { validationResult } = require('express-validator');
 
 class TaskController {
   async create(req, res, next) {
     try {
+      console.log('🔨 [TaskController] Creando nueva tarea...');
+      console.log('📋 [TaskController] Datos recibidos:', {
+        title: req.body.title,
+        assignedToIds: req.body.assignedToIds,
+        departamentoId: req.body.departamentoId,
+      });
+
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.log(
+          '❌ [TaskController] Errores de validación:',
+          errors.array()
+        );
         return res.status(400).json({
-          error: 'Datos de entrada inválidos',
-          details: errors.array(),
+          success: false,
+          message: 'Datos de entrada inválidos',
+          errors: errors.array(),
         });
       }
 
+      console.log('📝 [TaskController] Llamando a taskService.create...');
       const task = await taskService.create(req.body);
 
+      console.log('✅ [TaskController] Tarea creada exitosamente:', {
+        id: task._id,
+        title: task.title,
+        assignedUsers: task.assignedToIds?.length || 0,
+      });
+
       res.status(201).json({
+        success: true,
         message: 'Tarea creada exitosamente',
         data: task,
       });
     } catch (error) {
+      console.error('❌ [TaskController] Error al crear tarea:', error);
       next(error);
     }
   }
@@ -108,7 +130,27 @@ class TaskController {
         });
       }
 
+      // Obtener la tarea original para comparar asignaciones
+      const originalTask = await taskService.getById(req.params.id);
       const task = await taskService.update(req.params.id, req.body);
+
+      // Si se asignaron nuevos usuarios, crear notificaciones
+      if (req.body.assignedToIds && req.body.assignedToIds.length > 0) {
+        const originalAssignedIds = originalTask.assignedToIds.map((user) =>
+          typeof user === 'object' ? user._id.toString() : user.toString()
+        );
+        const newAssignedIds = req.body.assignedToIds.filter(
+          (userId) => !originalAssignedIds.includes(userId.toString())
+        );
+
+        if (newAssignedIds.length > 0) {
+          const taskForNotification = {
+            ...task,
+            assignedToIds: newAssignedIds,
+          };
+          await this.createTaskAssignedNotifications(taskForNotification);
+        }
+      }
 
       res.json({
         message: 'Tarea actualizada exitosamente',

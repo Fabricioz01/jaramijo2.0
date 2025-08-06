@@ -10,6 +10,8 @@ require('./models/Role');
 require('./models/Permission');
 require('./models/Direccion');
 require('./models/Departamento');
+require('./models/Task');
+require('./models/Notification');
 
 const app = express();
 
@@ -28,6 +30,11 @@ mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
     console.log('✅ Conectado a MongoDB');
+
+    // Inicializar el servicio de notificaciones después de conectar a la BD
+    const notificationService = require('./services/notificationService');
+    notificationService.startDueTasksChecker();
+    console.log('🔔 Servicio de notificaciones iniciado');
   })
   .catch((error) => {
     console.error('❌ Error conectando a MongoDB:', error);
@@ -53,6 +60,7 @@ const taskRoutes = require('./routes/taskRoutes');
 const roleRoutes = require('./routes/roleRoutes');
 const permissionRoutes = require('./routes/permissionRoutes');
 const fileRoutes = require('./routes/fileRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 // Rutas de la API
 app.use('/api/v1/auth', authRoutes);
@@ -63,6 +71,7 @@ app.use('/api/v1/tasks', taskRoutes);
 app.use('/api/v1/roles', roleRoutes);
 app.use('/api/v1/permissions', permissionRoutes);
 app.use('/api/v1/files', fileRoutes);
+app.use('/api/v1/notifications', notificationRoutes);
 
 // Ruta 404 para APIs no encontradas
 app.use('/api/*', (req, res) => {

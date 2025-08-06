@@ -100,6 +100,159 @@ class UserController {
       next(error);
     }
   }
+
+  async getNotifications(req, res, next) {
+    try {
+      console.log(
+        '🔔 [getNotifications] Iniciando obtención de notificaciones'
+      );
+      console.log('🔔 [getNotifications] Usuario ID:', req.user._id);
+
+      const userId = req.user._id;
+      const user = await userService.getById(userId);
+
+      if (!user) {
+        console.log('❌ [getNotifications] Usuario no encontrado:', userId);
+        return res.status(404).json({
+          error: 'Usuario no encontrado',
+        });
+      }
+
+      console.log('📝 [getNotifications] Usuario encontrado:', user.email);
+      console.log(
+        '📝 [getNotifications] Notificaciones sin poblar:',
+        user.notifications.length
+      );
+
+      // Poblar las notificaciones con información de la tarea
+      await user.populate({
+        path: 'notifications.taskId',
+        select: 'title description dueDate status',
+      });
+
+      console.log('📝 [getNotifications] Notificaciones pobladas');
+
+      // Filtrar notificaciones que tienen tareas válidas
+      const validNotifications = user.notifications.filter(
+        (notification) => notification.taskId
+      );
+
+      const notifications = validNotifications.map((notification) => ({
+        _id: notification._id,
+        message: notification.message,
+        taskId: notification.taskId._id,
+        read: notification.read,
+        type: notification.type,
+        createdAt: notification.createdAt,
+        task: {
+          _id: notification.taskId._id,
+          title: notification.taskId.title,
+          description: notification.taskId.description,
+          dueDate: notification.taskId.dueDate,
+          status: notification.taskId.status,
+        },
+      }));
+
+      const unreadCount = notifications.filter((n) => !n.read).length;
+
+      console.log(
+        '✅ [getNotifications] Notificaciones procesadas:',
+        notifications.length
+      );
+      console.log(
+        '✅ [getNotifications] Notificaciones no leídas:',
+        unreadCount
+      );
+
+      res.json({
+        message: 'Notificaciones obtenidas exitosamente',
+        data: {
+          notifications,
+          unreadCount,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async markNotificationAsRead(req, res, next) {
+    try {
+      const userId = req.user._id;
+      const notificationId = req.params.notificationId;
+
+      const user = await userService.getById(userId);
+      if (!user) {
+        return res.status(404).json({
+          error: 'Usuario no encontrado',
+        });
+      }
+
+      const notification = user.notifications.id(notificationId);
+      if (!notification) {
+        return res.status(404).json({
+          error: 'Notificación no encontrada',
+        });
+      }
+
+      notification.read = true;
+      await user.save();
+
+      res.json({
+        message: 'Notificación marcada como leída',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async markAllNotificationsAsRead(req, res, next) {
+    try {
+      const userId = req.user._id;
+
+      const user = await userService.getById(userId);
+      if (!user) {
+        return res.status(404).json({
+          error: 'Usuario no encontrado',
+        });
+      }
+
+      user.notifications.forEach((notification) => {
+        notification.read = true;
+      });
+
+      await user.save();
+
+      res.json({
+        message: 'Todas las notificaciones marcadas como leídas',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async deleteNotification(req, res, next) {
+    try {
+      const userId = req.user._id;
+      const notificationId = req.params.notificationId;
+
+      const user = await userService.getById(userId);
+      if (!user) {
+        return res.status(404).json({
+          error: 'Usuario no encontrado',
+        });
+      }
+
+      user.notifications.id(notificationId).remove();
+      await user.save();
+
+      res.json({
+        message: 'Notificación eliminada exitosamente',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new UserController();

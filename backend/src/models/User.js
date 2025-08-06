@@ -54,6 +54,32 @@ const userSchema = new mongoose.Schema({
       default: [],
     },
   ],
+  notifications: [
+    {
+      message: {
+        type: String,
+        required: true,
+      },
+      taskId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Task',
+        required: true,
+      },
+      read: {
+        type: Boolean,
+        default: false,
+      },
+      type: {
+        type: String,
+        enum: ['task_assigned', 'task_due_today', 'task_overdue'],
+        required: true,
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
   active: {
     type: Boolean,
     default: true,
