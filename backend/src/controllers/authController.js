@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const userService = require('../services/userService');
 
 class AuthController {
   async login(req, res, next) {
@@ -162,6 +163,114 @@ class AuthController {
       res.status(500).json({
         success: false,
         message: 'Error interno del servidor',
+      });
+    }
+  }
+
+  // Métodos para recuperación de contraseña
+  async requestPasswordReset(req, res) {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({
+          success: false,
+          message: 'El correo electrónico es requerido',
+        });
+      }
+
+      console.log('🔄 Solicitud de recuperación para:', email);
+
+      const result = await userService.requestPasswordReset(email);
+
+      // Siempre devolver éxito por seguridad, pero solo enviar correo si el usuario existe
+      res.json({
+        success: true,
+        message: 'Si el correo existe en nuestro sistema, recibirás las instrucciones para restablecer tu contraseña en unos minutos.',
+        data: {
+          email: email // No revelar si existe o no
+        }
+      });
+
+    } catch (error) {
+      console.error('❌ Error en requestPasswordReset:', error);
+      
+      // Siempre devolver el mismo mensaje por seguridad
+      res.json({
+        success: true,
+        message: 'Si el correo existe en nuestro sistema, recibirás las instrucciones para restablecer tu contraseña en unos minutos.',
+      });
+    }
+  }
+
+  async verifyResetToken(req, res) {
+    try {
+      const { token } = req.params;
+
+      if (!token) {
+        return res.status(400).json({
+          success: false,
+          message: 'Token requerido',
+        });
+      }
+
+      const result = await userService.verifyResetToken(token);
+
+      res.json({
+        success: true,
+        message: 'Token válido',
+        data: result
+      });
+
+    } catch (error) {
+      console.error('❌ Error en verifyResetToken:', error);
+      res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+
+  async resetPassword(req, res) {
+    try {
+      const { token, password, confirmPassword } = req.body;
+
+      if (!token || !password || !confirmPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Token, contraseña y confirmación son requeridos',
+        });
+      }
+
+      if (password !== confirmPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Las contraseñas no coinciden',
+        });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({
+          success: false,
+          message: 'La contraseña debe tener al menos 6 caracteres',
+        });
+      }
+
+      console.log('🔐 Restableciendo contraseña con token:', token.substring(0, 8) + '...');
+
+      const result = await userService.resetPassword(token, password);
+
+      res.json({
+        success: true,
+        message: result.message,
+        data: result.user
+      });
+
+    } catch (error) {
+      console.error('❌ Error en resetPassword:', error);
+      res.status(400).json({
+        success: false,
+        message: error.message,
       });
     }
   }

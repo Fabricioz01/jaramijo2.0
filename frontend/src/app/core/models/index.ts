@@ -7,3 +7,4 @@ export * from './permission.model';
 export * from './task.model';
 export * from './file.model';
 export * from './notification.model';
+export * from './password-reset.model';

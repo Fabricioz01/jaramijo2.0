@@ -8,6 +8,11 @@ import {
   RefreshTokenRequest,
   AuthUser,
   ApiResponse,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
+  VerifyTokenResponse,
 } from '../models';
 
 @Injectable({
@@ -207,5 +212,51 @@ export class AuthService {
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('currentUser');
     this.currentUserSubject.next(null);
+  }
+
+  // Métodos para recuperación de contraseña
+  requestPasswordReset(email: ForgotPasswordRequest): Observable<ForgotPasswordResponse> {
+    console.log('🔄 AuthService: Solicitando recuperación de contraseña para:', email.email);
+    
+    return this.http
+      .post<ForgotPasswordResponse>(`${this.API_URL}/request-password-reset`, email)
+      .pipe(
+        tap((response) => {
+          console.log('✅ AuthService: Solicitud de recuperación exitosa:', response);
+        }),
+        tap(null, (error) => {
+          console.error('❌ AuthService: Error en solicitud de recuperación:', error);
+        })
+      );
+  }
+
+  verifyResetToken(token: string): Observable<VerifyTokenResponse> {
+    console.log('🔍 AuthService: Verificando token de reset:', token.substring(0, 8) + '...');
+    
+    return this.http
+      .get<VerifyTokenResponse>(`${this.API_URL}/verify-reset-token/${token}`)
+      .pipe(
+        tap((response) => {
+          console.log('✅ AuthService: Token verificado:', response);
+        }),
+        tap(null, (error) => {
+          console.error('❌ AuthService: Error verificando token:', error);
+        })
+      );
+  }
+
+  resetPassword(resetData: ResetPasswordRequest): Observable<ResetPasswordResponse> {
+    console.log('🔐 AuthService: Restableciendo contraseña');
+    
+    return this.http
+      .post<ResetPasswordResponse>(`${this.API_URL}/reset-password`, resetData)
+      .pipe(
+        tap((response) => {
+          console.log('✅ AuthService: Contraseña restablecida exitosamente:', response);
+        }),
+        tap(null, (error) => {
+          console.error('❌ AuthService: Error restableciendo contraseña:', error);
+        })
+      );
   }
 }

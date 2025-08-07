@@ -80,6 +80,15 @@ const userSchema = new mongoose.Schema({
       },
     },
   ],
+  // Campos para recuperación de contraseña
+  resetPasswordToken: {
+    type: String,
+    required: false,
+  },
+  resetPasswordExpires: {
+    type: Date,
+    required: false,
+  },
   active: {
     type: Boolean,
     default: true,

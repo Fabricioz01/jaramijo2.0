@@ -18,6 +18,35 @@ const authValidation = {
       .notEmpty()
       .withMessage('Token de refresh es requerido'),
   ],
+
+  requestPasswordReset: [
+    body('email')
+      .isEmail()
+      .withMessage('Debe ser un email válido')
+      .normalizeEmail(),
+  ],
+
+  resetPassword: [
+    body('token')
+      .notEmpty()
+      .withMessage('Token es requerido')
+      .isLength({ min: 10 })
+      .withMessage('Token inválido'),
+    body('password')
+      .notEmpty()
+      .withMessage('La contraseña es requerida')
+      .isLength({ min: 6 })
+      .withMessage('La contraseña debe tener al menos 6 caracteres'),
+    body('confirmPassword')
+      .notEmpty()
+      .withMessage('La confirmación de contraseña es requerida')
+      .custom((value, { req }) => {
+        if (value !== req.body.password) {
+          throw new Error('Las contraseñas no coinciden');
+        }
+        return true;
+      }),
+  ],
 };
 
 const direccionValidation = {
