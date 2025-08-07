@@ -456,7 +456,7 @@ export class UsuariosListComponent implements OnInit {
   copyToClipboard(id: string, userName: string): void {
     navigator.clipboard.writeText(id).then(() => {
       // Show success message
-      this.alertService.success(`ID de ${userName} copiado al portapapeles`);
+      this.alertService.success(`El correo de ${userName} copiado al portapapeles`);
     }).catch(err => {
       console.error('Error al copiar al portapapeles: ', err);
       this.alertService.error('Error al copiar ID');
