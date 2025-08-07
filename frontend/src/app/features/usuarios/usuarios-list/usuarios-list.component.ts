@@ -110,10 +110,17 @@ import { ConfirmModalComponent } from '../../../shared/components/alerts/confirm
                       <div class="avatar-circle me-3">
                         {{ getInitials(usuario.name) }}
                       </div>
-                      <div>
+                      <div class="flex-grow-1">
                         <div class="fw-semibold">{{ usuario.name }}</div>
-                        <small class="text-muted">ID: {{ usuario._id }}</small>
                       </div>
+                      <button
+                        class="btn btn-sm btn-outline-secondary"
+                        (click)="copyToClipboard(usuario._id, usuario.name)"
+                        title="Copiar ID"
+                        type="button"
+                      >
+                        <i class="bi bi-copy"></i>
+                      </button>
                     </div>
                   </td>
                   <td>{{ usuario.email }}</td>
@@ -444,5 +451,15 @@ export class UsuariosListComponent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/dashboard']);
+  }
+
+  copyToClipboard(id: string, userName: string): void {
+    navigator.clipboard.writeText(id).then(() => {
+      // Show success message
+      this.alertService.success(`ID de ${userName} copiado al portapapeles`);
+    }).catch(err => {
+      console.error('Error al copiar al portapapeles: ', err);
+      this.alertService.error('Error al copiar ID');
+    });
   }
 }

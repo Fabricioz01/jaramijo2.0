@@ -1,3 +1,127 @@
 /* You can add global styles to this file, and also import other style files */
 @import "bootstrap/scss/bootstrap";
 @import "bootstrap-icons/font/bootstrap-icons.css";
+
+/* Global spacing for pages with header - More flexible selectors */
+app-header ~ .container-fluid.py-4,
+app-header + .container-fluid.py-4,
+app-header + * + .container-fluid.py-4,
+app-header + * + * + .container-fluid.py-4 {
+  padding-left: 15% !important;
+  padding-right: 15% !important;
+}
+
+/* Also target dashboard content */
+.dashboard-content {
+  padding-left: 15% !important;
+  padding-right: 15% !important;
+}
+
+/* Specific targeting for components that might have modals or other elements */
+app-departamentos-list .container-fluid.py-4,
+app-direcciones-list .container-fluid.py-4,
+app-roles-list .container-fluid.py-4,
+app-usuarios-list .container-fluid.py-4 {
+  padding-left: 15% !important;
+  padding-right: 15% !important;
+}
+
+/* Ensure tables fit properly and are not too wide */
+.table-responsive {
+  overflow-x: auto !important;
+}
+
+.table td:first-child {
+  min-width: 200px; /* Adjust user column width */
+  max-width: 250px;
+}
+
+.table td:nth-child(2) {
+  min-width: 150px; /* Email column */
+  max-width: 200px;
+}
+
+.table td:nth-child(3) {
+  min-width: 120px; /* Department column */
+  max-width: 150px;
+}
+
+.table td:nth-child(4) {
+  min-width: 100px; /* Roles column */
+  max-width: 120px;
+}
+
+.table td:nth-child(5) {
+  min-width: 80px; /* Status column */
+  max-width: 100px;
+}
+
+.table td:nth-child(6),
+.table td:nth-child(7) {
+  min-width: 130px; /* Date columns */
+  max-width: 150px;
+}
+
+.table td:last-child {
+  min-width: 120px; /* Actions column */
+  width: 120px;
+}
+
+/* Copy button styles */
+.btn-outline-secondary.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  border-radius: 0.375rem;
+}
+
+/* Make table text wrap properly */
+.table td {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  app-header ~ .container-fluid.py-4,
+  app-header + .container-fluid.py-4,
+  app-header + * + .container-fluid.py-4,
+  app-header + * + * + .container-fluid.py-4,
+  .dashboard-content,
+  app-departamentos-list .container-fluid.py-4,
+  app-direcciones-list .container-fluid.py-4,
+  app-roles-list .container-fluid.py-4,
+  app-usuarios-list .container-fluid.py-4 {
+    padding-left: 10% !important;
+    padding-right: 10% !important;
+  }
+}
+
+@media (max-width: 768px) {
+  app-header ~ .container-fluid.py-4,
+  app-header + .container-fluid.py-4,
+  app-header + * + .container-fluid.py-4,
+  app-header + * + * + .container-fluid.py-4,
+  .dashboard-content,
+  app-departamentos-list .container-fluid.py-4,
+  app-direcciones-list .container-fluid.py-4,
+  app-roles-list .container-fluid.py-4,
+  app-usuarios-list .container-fluid.py-4 {
+    padding-left: 5% !important;
+    padding-right: 5% !important;
+  }
+}
+
+@media (max-width: 576px) {
+  app-header ~ .container-fluid.py-4,
+  app-header + .container-fluid.py-4,
+  app-header + * + .container-fluid.py-4,
+  app-header + * + * + .container-fluid.py-4,
+  .dashboard-content,
+  app-departamentos-list .container-fluid.py-4,
+  app-direcciones-list .container-fluid.py-4,
+  app-roles-list .container-fluid.py-4,
+  app-usuarios-list .container-fluid.py-4 {
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+  }
+}
