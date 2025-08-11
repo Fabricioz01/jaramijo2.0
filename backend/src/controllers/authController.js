@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const userService = require('../services/userService');
+const authService = require('../services/authService');
 
 class AuthController {
   async login(req, res, next) {
@@ -181,24 +182,17 @@ class AuthController {
 
       console.log('🔄 Solicitud de recuperación para:', email);
 
-      const result = await userService.requestPasswordReset(email);
+      // Usar authService en lugar de userService directamente
+      const result = await authService.requestPasswordReset(email);
 
-      // Siempre devolver éxito por seguridad, pero solo enviar correo si el usuario existe
-      res.json({
-        success: true,
-        message: 'Si el correo existe en nuestro sistema, recibirás las instrucciones para restablecer tu contraseña en unos minutos.',
-        data: {
-          email: email // No revelar si existe o no
-        }
-      });
-
+      // Devolver la respuesta basada en si el usuario existe o no
+      res.json(result);
     } catch (error) {
       console.error('❌ Error en requestPasswordReset:', error);
-      
-      // Siempre devolver el mismo mensaje por seguridad
-      res.json({
-        success: true,
-        message: 'Si el correo existe en nuestro sistema, recibirás las instrucciones para restablecer tu contraseña en unos minutos.',
+
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor',
       });
     }
   }
@@ -219,9 +213,8 @@ class AuthController {
       res.json({
         success: true,
         message: 'Token válido',
-        data: result
+        data: result,
       });
-
     } catch (error) {
       console.error('❌ Error en verifyResetToken:', error);
       res.status(400).json({
@@ -256,16 +249,18 @@ class AuthController {
         });
       }
 
-      console.log('🔐 Restableciendo contraseña con token:', token.substring(0, 8) + '...');
+      console.log(
+        '🔐 Restableciendo contraseña con token:',
+        token.substring(0, 8) + '...'
+      );
 
       const result = await userService.resetPassword(token, password);
 
       res.json({
         success: true,
         message: result.message,
-        data: result.user
+        data: result.user,
       });
-
     } catch (error) {
       console.error('❌ Error en resetPassword:', error);
       res.status(400).json({

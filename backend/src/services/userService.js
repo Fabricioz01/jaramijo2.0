@@ -130,14 +130,16 @@ class UserService {
   // Métodos para recuperación de contraseña
   async requestPasswordReset(email) {
     console.log('🔍 Buscando usuario con email:', email);
-    
-    const user = await User.findOne({ email: email.toLowerCase() })
-      .populate('departamentoId', 'name');
-    
+
+    const user = await User.findOne({ email: email.toLowerCase() }).populate(
+      'departamentoId',
+      'name'
+    );
+
     if (!user) {
       console.log('❌ Usuario no encontrado para:', email);
-      // No lanzar error por seguridad, solo registrar el intento
-      throw new Error('Usuario no encontrado');
+      // No lanzar error, dejamos que authService maneje esta validación
+      return null;
     }
 
     if (!user.active) {
@@ -149,23 +151,29 @@ class UserService {
 
     // Generar token seguro
     const resetToken = crypto.randomBytes(32).toString('hex');
-    
+
     // Establecer el token y su expiración (1 hora)
     user.resetPasswordToken = resetToken;
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hora
-    
+
     await user.save();
     console.log('✅ Token de reset generado y guardado para:', user.email);
 
     // Enviar correo
     try {
-      await emailService.sendPasswordResetEmail(user.email, resetToken, user.name);
-      console.log(`✅ Correo de recuperación enviado exitosamente a: ${user.email}`);
-      
+      await emailService.sendPasswordResetEmail(
+        user.email,
+        resetToken,
+        user.name
+      );
+      console.log(
+        `✅ Correo de recuperación enviado exitosamente a: ${user.email}`
+      );
+
       return {
         message: 'Correo de recuperación enviado exitosamente',
         email: user.email,
-        success: true
+        success: true,
       };
     } catch (error) {
       console.error('❌ Error enviando correo:', error);
@@ -180,7 +188,7 @@ class UserService {
   async resetPassword(token, newPassword) {
     const user = await User.findOne({
       resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now() }
+      resetPasswordExpires: { $gt: Date.now() },
     });
 
     if (!user) {
@@ -208,21 +216,21 @@ class UserService {
     }
 
     console.log(`✅ Contraseña restablecida para: ${user.email}`);
-    
+
     return {
       message: 'Contraseña actualizada correctamente',
       user: {
         id: user._id,
         name: user.name,
-        email: user.email
-      }
+        email: user.email,
+      },
     };
   }
 
   async verifyResetToken(token) {
     const user = await User.findOne({
       resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now() }
+      resetPasswordExpires: { $gt: Date.now() },
     }).select('name email resetPasswordExpires');
 
     if (!user) {
@@ -233,9 +241,9 @@ class UserService {
       valid: true,
       user: {
         name: user.name,
-        email: user.email
+        email: user.email,
       },
-      expiresAt: user.resetPasswordExpires
+      expiresAt: user.resetPasswordExpires,
     };
   }
 }

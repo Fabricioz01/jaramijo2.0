@@ -21,7 +21,7 @@ export class ErrorInterceptor implements HttpInterceptor {
   ): Observable<HttpEvent<any>> {
     return next.handle(req).pipe(
       catchError((error: HttpErrorResponse) => {
-        if (error.status === 401) {
+        if (error.status === 401 && this.authService.isAuthenticated()) {
           // Token expirado o inválido
           this.authService.logout().subscribe({
             complete: () => {

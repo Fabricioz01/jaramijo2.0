@@ -81,8 +81,58 @@ class AuthService {
   }
 
   async logout() {
-    // En una implementación más completa, aquí se agregaría el token a una blacklist
     return { message: 'Logout exitoso' };
+  }
+
+  async requestPasswordReset(email) {
+    try {
+      console.log('🔍 Validando solicitud de recuperación para:', email);
+
+      // Llamar directamente al userService que ya valida si existe el usuario
+      const result = await userService.requestPasswordReset(email);
+
+      // Si userService devuelve null, significa que el usuario no existe
+      if (result === null) {
+        return {
+          success: false,
+          message: 'El correo no existe en el sistema.',
+        };
+      }
+
+      // Si llegamos aquí, el proceso fue exitoso
+      return {
+        success: true,
+        message:
+          'Se han enviado las instrucciones para restablecer tu contraseña a tu correo electrónico.',
+        data: {
+          email: email,
+        },
+      };
+    } catch (error) {
+      console.error('Error en requestPasswordReset:', error);
+
+      // Manejar errores específicos
+      if (error.message === 'Usuario inactivo') {
+        return {
+          success: false,
+          message: 'El usuario está inactivo. Contacta al administrador.',
+        };
+      }
+
+      if (error.message === 'Error al enviar el correo de recuperación') {
+        return {
+          success: false,
+          message:
+            'Error al enviar el correo de recuperación. Inténtalo nuevamente.',
+        };
+      }
+
+      return {
+        success: false,
+        message:
+          'Error al procesar la solicitud de recuperación de contraseña.',
+      };
+    }
   }
 }
 
