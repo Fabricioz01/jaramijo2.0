@@ -36,8 +36,16 @@ export class DashboardChartsComponent
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    // Debug: Verificar los datos que llegan
+    if (changes['usuariosPorRol']) {
+      console.log('Datos de usuariosPorRol recibidos:', this.usuariosPorRol);
+    }
+
     if (this.chart1 || this.chart2 || this.chart3 || this.chart4) {
-      this.updateCharts();
+      // Pequeño delay para asegurar que los datos estén actualizados
+      setTimeout(() => {
+        this.updateCharts();
+      }, 100);
     }
   }
 
@@ -148,14 +156,24 @@ export class DashboardChartsComponent
     // 4. Usuarios por rol (Barra)
     const ctx4 = document.getElementById('chart4') as HTMLCanvasElement;
     if (ctx4) {
+      // Si no hay datos, mostrar un mensaje o datos por defecto
+      const labels =
+        this.usuariosPorRol.length > 0
+          ? this.usuariosPorRol.map((e) => e.rol)
+          : ['Sin datos'];
+      const data =
+        this.usuariosPorRol.length > 0
+          ? this.usuariosPorRol.map((e) => e.cantidad)
+          : [0];
+
       this.chart4 = new Chart(ctx4, {
         type: 'bar',
         data: {
-          labels: this.usuariosPorRol.map((e) => e.rol),
+          labels: labels,
           datasets: [
             {
               label: 'Usuarios',
-              data: this.usuariosPorRol.map((e) => e.cantidad),
+              data: data,
               backgroundColor: '#6610f2',
               borderRadius: 6,
               barPercentage: 0.7,
@@ -199,10 +217,17 @@ export class DashboardChartsComponent
       this.chart3.update();
     }
     if (this.chart4) {
-      this.chart4.data.labels = this.usuariosPorRol.map((e) => e.rol);
-      (this.chart4.data.datasets[0].data as number[]) = this.usuariosPorRol.map(
-        (e) => e.cantidad
-      );
+      const labels =
+        this.usuariosPorRol.length > 0
+          ? this.usuariosPorRol.map((e) => e.rol)
+          : ['Sin datos'];
+      const data =
+        this.usuariosPorRol.length > 0
+          ? this.usuariosPorRol.map((e) => e.cantidad)
+          : [0];
+
+      this.chart4.data.labels = labels;
+      (this.chart4.data.datasets[0].data as number[]) = data;
       this.chart4.update();
     }
   }
