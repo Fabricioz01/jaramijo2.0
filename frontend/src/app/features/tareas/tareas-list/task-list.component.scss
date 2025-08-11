@@ -69,19 +69,29 @@
     background-color: #ffc107 !important;
     color: #000 !important;
   }
-  
+
   &.bg-info {
     background-color: #0dcaf0 !important;
     color: #000 !important;
   }
-  
+
   &.bg-success {
     background-color: #198754 !important;
     color: #fff !important;
   }
-  
+
   &.bg-secondary {
     background-color: #6c757d !important;
     color: #fff !important;
   }
+}
+
+.card {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
 }

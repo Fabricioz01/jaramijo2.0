@@ -79,6 +79,7 @@ type RoleWithPermissions = Role & {
         <div
           class="col-md-6 col-lg-4 mb-4"
           *ngFor="let rol of rolesFiltrados; let i = index"
+          (click)="verRol(rol._id)"
         >
           <div class="card h-100 border-0 shadow-lg rounded-4 overflow-hidden">
             <div
@@ -265,6 +266,13 @@ type RoleWithPermissions = Role & {
       .action-item.text-danger:hover {
         background: #ffeaea;
         color: #b71c1c;
+      }
+      .card {
+        cursor: pointer;
+      }
+      .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
       }
       @keyframes fadeInMenu {
         from {
