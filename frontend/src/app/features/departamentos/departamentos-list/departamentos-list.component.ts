@@ -313,7 +313,6 @@ export class DepartamentosListComponent implements OnInit {
     this.cargando = true;
     this.departamentoService.getAll().subscribe({
       next: (response: any) => {
-        console.log('✅ Departamentos cargados:', response);
         this.departamentos = response.data || [];
         this.departamentosFiltrados = [...this.departamentos];
         this.cargando = false;

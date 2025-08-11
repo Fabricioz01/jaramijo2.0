@@ -126,7 +126,6 @@ class EmailService {
       };
 
       const result = await this.transporter.sendMail(mailOptions);
-      console.log('✅ Correo de recuperación enviado:', result.messageId);
       return { success: true, messageId: result.messageId };
     } catch (error) {
       console.error('❌ Error enviando correo:', error);
@@ -222,7 +221,6 @@ class EmailService {
       };
 
       const result = await this.transporter.sendMail(mailOptions);
-      console.log('✅ Notificación de cambio de contraseña enviada:', result.messageId);
       return { success: true, messageId: result.messageId };
     } catch (error) {
       console.error('❌ Error enviando notificación:', error);
@@ -235,7 +233,6 @@ class EmailService {
   async verifyConnection() {
     try {
       await this.transporter.verify();
-      console.log('✅ Conexión de correo verificada correctamente');
       return true;
     } catch (error) {
       console.error('❌ Error en la configuración de correo:', error);

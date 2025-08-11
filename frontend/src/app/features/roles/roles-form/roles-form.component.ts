@@ -510,7 +510,6 @@ export class RolesFormComponent implements OnInit, AfterViewChecked {
       if (this.isEditing) {
         this.roleService.update(this.rolId!, roleData).subscribe({
           next: (response) => {
-            console.log('Rol actualizado:', response);
             this.alertService.success(
               response.message || 'Rol actualizado exitosamente'
             );
@@ -528,7 +527,6 @@ export class RolesFormComponent implements OnInit, AfterViewChecked {
       } else {
         this.roleService.create(roleData).subscribe({
           next: (response) => {
-            console.log('Rol creado:', response);
             this.alertService.success(
               response.message || 'Rol creado exitosamente'
             );

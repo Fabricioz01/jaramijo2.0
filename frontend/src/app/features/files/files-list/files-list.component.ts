@@ -324,7 +324,6 @@ export class FilesListComponent implements OnInit {
     this.cargando = true;
     this.fileService.getAll().subscribe({
       next: (response: any) => {
-        console.log('✅ Archivos cargados:', response);
         this.archivos = response.data || [];
         this.archivosFiltrados = [...this.archivos];
         this.cargando = false;
@@ -461,7 +460,6 @@ export class FilesListComponent implements OnInit {
   }
 
   descargarArchivo(archivo: FileModel): void {
-    console.log('Descargando archivo:', archivo);
     this.fileService.downloadFile(archivo._id, archivo.originalName);
     this.alertService.success('Descargando archivo...');
   }

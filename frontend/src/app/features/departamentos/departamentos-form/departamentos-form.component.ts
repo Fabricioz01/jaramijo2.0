@@ -229,7 +229,6 @@ export class DepartamentosFormComponent implements OnInit {
           .update(this.departamentoId!, departamentoData)
           .subscribe({
             next: (response) => {
-              console.log('Departamento actualizado:', response);
               this.alertService.success(
                 response.message || 'Departamento actualizado exitosamente'
               );
@@ -247,7 +246,6 @@ export class DepartamentosFormComponent implements OnInit {
       } else {
         this.departamentoService.create(departamentoData).subscribe({
           next: (response) => {
-            console.log('Departamento creado:', response);
             this.alertService.success(
               response.message || 'Departamento creado exitosamente'
             );

@@ -22,16 +22,11 @@ export class ProfileComponent implements OnInit {
 
   ngOnInit(): void {
     const currentUser = this.authService.getCurrentUser();
-    console.log(
-      '[ProfileComponent] currentUser obtenido de AuthService:',
-      currentUser
-    );
+    
     const userId = this.getUserId(currentUser);
-    console.log('[ProfileComponent] id usado para getById:', userId);
     if (userId) {
       this.userService.getById(userId).subscribe({
         next: (resp) => {
-          console.log('[ProfileComponent] Respuesta de getById:', resp);
           // Mapear roleIds a roles para compatibilidad con el HTML
           const user = resp.data;
           if (user && Array.isArray(user.roleIds)) {

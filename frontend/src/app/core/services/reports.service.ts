@@ -167,17 +167,14 @@ export class ReportsService {
     users: any[],
     roles: any[]
   ): { rol: string; cantidad: number }[] {
-    console.log('Procesando usuarios por rol:', { users, roles });
 
     const grouped = users.reduce((acc: any, user: any) => {
       const userRoles = user.roleIds || [];
-      console.log(`Usuario ${user.name}: roles =`, userRoles);
 
       userRoles.forEach((role: any) => {
         // Si el role ya viene populated (con name), usamos su name directamente
         const roleName =
           role.name || roles.find((r) => r._id === role._id)?.name || 'Sin Rol';
-        console.log(`Rol encontrado: ${roleName}`);
         acc[roleName] = (acc[roleName] || 0) + 1;
       });
       return acc;
@@ -188,7 +185,6 @@ export class ReportsService {
       cantidad: cantidad as number,
     }));
 
-    console.log('Resultado groupUsersByRole:', result);
     return result;
   }
 

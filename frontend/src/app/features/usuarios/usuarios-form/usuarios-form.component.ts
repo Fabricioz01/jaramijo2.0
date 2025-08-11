@@ -582,7 +582,6 @@ export class UsuariosFormComponent implements OnInit {
       if (this.isEditing) {
         this.userService.update(this.usuarioId!, userData).subscribe({
           next: (response) => {
-            console.log('Usuario actualizado:', response);
             this.alertService.success(
               response.message || 'Usuario actualizado exitosamente'
             );
@@ -600,7 +599,6 @@ export class UsuariosFormComponent implements OnInit {
       } else {
         this.userService.create(userData).subscribe({
           next: (response) => {
-            console.log('Usuario creado:', response);
             this.alertService.success(
               response.message || 'Usuario creado exitosamente'
             );

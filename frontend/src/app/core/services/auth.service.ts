@@ -115,17 +115,12 @@ export class AuthService {
   }
 
   login(credentials: LoginRequest): Observable<LoginResponse> {
-    console.log(
-      '🔑 AuthService: Attempting login with URL:',
-      `${this.API_URL}/login`
-    );
-    console.log('🔑 AuthService: Credentials:', credentials);
+  
 
     return this.http
       .post<LoginResponse>(`${this.API_URL}/login`, credentials)
       .pipe(
         tap((response) => {
-          console.log('✅ AuthService: Login successful:', response);
           if (response.data) {
             this.setCurrentUser(response.data.user);
             this.setTokens(response.data.tokens);
@@ -216,13 +211,11 @@ export class AuthService {
 
   // Métodos para recuperación de contraseña
   requestPasswordReset(email: ForgotPasswordRequest): Observable<ForgotPasswordResponse> {
-    console.log('🔄 AuthService: Solicitando recuperación de contraseña para:', email.email);
     
     return this.http
       .post<ForgotPasswordResponse>(`${this.API_URL}/request-password-reset`, email)
       .pipe(
         tap((response) => {
-          console.log('✅ AuthService: Solicitud de recuperación exitosa:', response);
         }),
         tap(null, (error) => {
           console.error('❌ AuthService: Error en solicitud de recuperación:', error);
@@ -231,13 +224,11 @@ export class AuthService {
   }
 
   verifyResetToken(token: string): Observable<VerifyTokenResponse> {
-    console.log('🔍 AuthService: Verificando token de reset:', token.substring(0, 8) + '...');
     
     return this.http
       .get<VerifyTokenResponse>(`${this.API_URL}/verify-reset-token/${token}`)
       .pipe(
         tap((response) => {
-          console.log('✅ AuthService: Token verificado:', response);
         }),
         tap(null, (error) => {
           console.error('❌ AuthService: Error verificando token:', error);
@@ -246,13 +237,11 @@ export class AuthService {
   }
 
   resetPassword(resetData: ResetPasswordRequest): Observable<ResetPasswordResponse> {
-    console.log('🔐 AuthService: Restableciendo contraseña');
     
     return this.http
       .post<ResetPasswordResponse>(`${this.API_URL}/reset-password`, resetData)
       .pipe(
         tap((response) => {
-          console.log('✅ AuthService: Contraseña restablecida exitosamente:', response);
         }),
         tap(null, (error) => {
           console.error('❌ AuthService: Error restableciendo contraseña:', error);

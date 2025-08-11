@@ -14,7 +14,6 @@ router.get('/', taskController.getAll);
 
 // POST /api/v1/tasks/:id/resolve - Resolver una tarea con archivo (debe ir antes que /:id)
 router.post('/:id/resolve', upload.single('file'), taskController.resolveTask);
-console.log('✅ Ruta registrada: POST /:id/resolve');
 
 // POST /api/v1/tasks/:id/attach - Subir archivo a una tarea
 router.post('/:id/attach', upload.single('file'), taskController.attachFile);

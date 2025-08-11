@@ -86,7 +86,6 @@ class AuthService {
 
   async requestPasswordReset(email) {
     try {
-      console.log('🔍 Validando solicitud de recuperación para:', email);
 
       // Llamar directamente al userService que ya valida si existe el usuario
       const result = await userService.requestPasswordReset(email);

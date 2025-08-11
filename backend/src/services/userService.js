@@ -129,7 +129,6 @@ class UserService {
 
   // Métodos para recuperación de contraseña
   async requestPasswordReset(email) {
-    console.log('🔍 Buscando usuario con email:', email);
 
     const user = await User.findOne({ email: email.toLowerCase() }).populate(
       'departamentoId',
@@ -137,17 +136,13 @@ class UserService {
     );
 
     if (!user) {
-      console.log('❌ Usuario no encontrado para:', email);
       // No lanzar error, dejamos que authService maneje esta validación
       return null;
     }
 
     if (!user.active) {
-      console.log('❌ Usuario inactivo:', email);
       throw new Error('Usuario inactivo');
     }
-
-    console.log('✅ Usuario encontrado:', user.name, '-', user.email);
 
     // Generar token seguro
     const resetToken = crypto.randomBytes(32).toString('hex');
@@ -157,7 +152,6 @@ class UserService {
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hora
 
     await user.save();
-    console.log('✅ Token de reset generado y guardado para:', user.email);
 
     // Enviar correo
     try {
@@ -165,9 +159,6 @@ class UserService {
         user.email,
         resetToken,
         user.name
-      );
-      console.log(
-        `✅ Correo de recuperación enviado exitosamente a: ${user.email}`
       );
 
       return {
@@ -215,7 +206,6 @@ class UserService {
       // No lanzamos error porque el cambio ya se realizó
     }
 
-    console.log(`✅ Contraseña restablecida para: ${user.email}`);
 
     return {
       message: 'Contraseña actualizada correctamente',

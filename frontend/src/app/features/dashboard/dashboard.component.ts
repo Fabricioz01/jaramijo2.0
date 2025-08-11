@@ -46,22 +46,16 @@ export class DashboardComponent implements OnInit {
   ngOnInit(): void {
     // Al iniciar, refresca el usuario logueado desde el backend
     const currentUser = this.authService.getCurrentUser();
-    console.log('[Dashboard] Usuario actual en AuthService:', currentUser);
     if (currentUser?._id) {
       this.userService.getById(currentUser._id).subscribe((resp) => {
-        console.log('[Dashboard] Respuesta de getById:', resp);
         if (resp.data) {
           this.authService.setCurrentUserFromDashboard(resp.data); // método nuevo
-          console.log(
-            '[Dashboard] Usuario actualizado en AuthService:',
-            resp.data
-          );
+        
         }
       });
     }
     this.authService.currentUser$.subscribe((user) => {
       this.user = user;
-      console.log('[Dashboard] Usuario en observable actualizado:', user);
     });
     this.cargarDatos();
   }

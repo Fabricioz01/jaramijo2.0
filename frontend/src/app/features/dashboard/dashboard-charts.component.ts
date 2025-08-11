@@ -38,7 +38,6 @@ export class DashboardChartsComponent
   ngOnChanges(changes: SimpleChanges): void {
     // Debug: Verificar los datos que llegan
     if (changes['usuariosPorRol']) {
-      console.log('Datos de usuariosPorRol recibidos:', this.usuariosPorRol);
     }
 
     if (this.chart1 || this.chart2 || this.chart3 || this.chart4) {

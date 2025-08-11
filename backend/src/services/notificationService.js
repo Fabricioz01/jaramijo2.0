@@ -35,9 +35,6 @@ class NotificationService {
         await this.createOverdueNotifications(task);
       }
 
-      console.log(
-        `Verificación de tareas completada: ${tasksDueToday.length} tareas vencen hoy, ${overdueTasks.length} tareas vencidas`
-      );
     } catch (error) {
       console.error('Error al verificar tareas vencidas:', error);
     }

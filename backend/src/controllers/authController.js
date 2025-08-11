@@ -7,7 +7,6 @@ const authService = require('../services/authService');
 class AuthController {
   async login(req, res, next) {
     try {
-      console.log('🔐 Intento de login:', req.body);
 
       const { email, password } = req.body;
 
@@ -18,13 +17,11 @@ class AuthController {
         });
       }
 
-      // Buscar usuario por email
       const user = await User.findOne({ email })
         .populate('roleIds')
         .populate('departamentoId');
 
       if (!user) {
-        console.log('❌ Usuario no encontrado:', email);
         return res.status(401).json({
           success: false,
           message: 'Credenciales inválidas',
@@ -35,7 +32,6 @@ class AuthController {
       const isValidPassword = await bcrypt.compare(password, user.passwordHash);
 
       if (!isValidPassword) {
-        console.log('❌ Contraseña inválida para:', email);
         return res.status(401).json({
           success: false,
           message: 'Credenciales inválidas',
@@ -44,7 +40,6 @@ class AuthController {
 
       // Verificar si el usuario está activo
       if (!user.active) {
-        console.log('❌ Usuario inactivo:', email);
         return res.status(401).json({
           success: false,
           message: 'Usuario inactivo',
@@ -68,7 +63,6 @@ class AuthController {
         { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN }
       );
 
-      console.log('✅ Login exitoso para:', email);
 
       // Respuesta exitosa
       res.json({
@@ -180,7 +174,6 @@ class AuthController {
         });
       }
 
-      console.log('🔄 Solicitud de recuperación para:', email);
 
       // Usar authService en lugar de userService directamente
       const result = await authService.requestPasswordReset(email);
@@ -248,11 +241,6 @@ class AuthController {
           message: 'La contraseña debe tener al menos 6 caracteres',
         });
       }
-
-      console.log(
-        '🔐 Restableciendo contraseña con token:',
-        token.substring(0, 8) + '...'
-      );
 
       const result = await userService.resetPassword(token, password);
 
