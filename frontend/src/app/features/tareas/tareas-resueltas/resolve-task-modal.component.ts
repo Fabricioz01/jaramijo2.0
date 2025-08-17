@@ -27,11 +27,9 @@ export class ResolveTaskModalComponent {
   uploading = false;
   showErrors = false;
 
-  // Nuevas propiedades para mejorar la UX
   dragOver = false;
-  uploadProgress = 0; // porcentaje para la barra de progreso
+  uploadProgress = 0;
 
-  // Mensajes de validación estilo toast dentro del modal
   validationMessage: string | null = null;
   validationType: 'error' | 'info' = 'error';
   showValidation = false;
@@ -65,7 +63,6 @@ export class ResolveTaskModalComponent {
 
       const file = target.files[0];
 
-      // Validar archivo
       if (!this.isValidFile(file)) {
         return;
       }
@@ -86,17 +83,14 @@ export class ResolveTaskModalComponent {
       return;
     }
 
-    // Iniciar animación de subida y emitir el archivo al componente padre
     this.uploading = true;
     this.uploadProgress = 0;
 
-    // Emitir el archivo inmediatamente para que el padre haga la subida
     this.confirm.emit(this.selectedFile);
 
-    // Simulación visual de progreso hasta 100%
     const interval = setInterval(() => {
       if (this.uploadProgress < 95) {
-        this.uploadProgress += Math.floor(Math.random() * 8) + 4; // 4-11
+        this.uploadProgress += Math.floor(Math.random() * 8) + 4;
         if (this.uploadProgress > 95) this.uploadProgress = 95;
       } else {
         clearInterval(interval);
@@ -123,8 +117,7 @@ export class ResolveTaskModalComponent {
   }
 
   private isValidFile(file: File): boolean {
-    // Validar tamaño (10MB máximo)
-    const maxSize = 10 * 1024 * 1024; // 10MB en bytes
+    const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
       this.showValidationMessage(
         'El archivo es demasiado grande. El tamaño máximo permitido es 10MB.',
@@ -133,7 +126,6 @@ export class ResolveTaskModalComponent {
       return false;
     }
 
-    // Validar tipo de archivo
     const allowedTypes = [
       'application/pdf',
       'application/vnd.ms-excel',
@@ -175,12 +167,10 @@ export class ResolveTaskModalComponent {
     }
   }
 
-  // Método para resetear el modal desde el componente padre
   public resetModal(): void {
     this.reset();
   }
 
-  // Nuevas utilidades para la UI
   triggerFileInput(): void {
     if (this.fileInput && this.fileInput.nativeElement) {
       this.fileInput.nativeElement.click();
@@ -244,7 +234,6 @@ export class ResolveTaskModalComponent {
     return 'bi-file-earmark-fill';
   }
 
-  // Atajo: cerrar modal con Escape
   @HostListener('document:keydown.escape', ['$event'])
   onEscape(event: KeyboardEvent): void {
     if (this.visible) {

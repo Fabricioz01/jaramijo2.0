@@ -20,7 +20,6 @@
       </div>
 
       <div class="modal-body">
-        <!-- input siempre presente para poder abrir el explorador desde cualquier botón -->
         <input
           #fileInput
           type="file"
@@ -34,7 +33,6 @@
           resolución.
         </p>
 
-        <!-- Mostrar dropzone solo cuando NO hay archivo seleccionado -->
         <div
           *ngIf="!selectedFile"
           class="dropzone mb-3"
@@ -57,7 +55,6 @@
           </div>
         </div>
 
-        <!-- Vista del archivo seleccionado -->
         <div
           *ngIf="selectedFile"
           class="selected-file card mb-3 p-3 d-flex flex-column shadow-sm position-relative"
@@ -75,7 +72,6 @@
             </div>
           </div>
 
-          <!-- Acciones del archivo: alineadas a la derecha en la parte inferior de la tarjeta -->
           <div class="w-100 d-flex justify-content-end mt-3 actions">
             <button
               class="btn btn-outline-secondary btn-sm me-2"
@@ -110,7 +106,6 @@
           </div>
         </div>
 
-        <!-- Notificación elegante dentro del modal -->
         <div
           *ngIf="showValidation"
           class="toast-notification"
