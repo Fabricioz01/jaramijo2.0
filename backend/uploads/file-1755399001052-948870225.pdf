@@ -1,0 +1,90 @@
+{
+  "tareas": {
+    "total": 1,
+    "completadas": 0,
+    "pendientes": 1,
+    "vencidas": 0,
+    "porEstado": [
+      {
+        "estado": "Completada",
+        "cantidad": 0
+      },
+      {
+        "estado": "En Progreso",
+        "cantidad": 0
+      },
+      {
+        "estado": "Pendiente",
+        "cantidad": 1
+      },
+      {
+        "estado": "Vencida",
+        "cantidad": 0
+      }
+    ],
+    "porPrioridad": [
+      {
+        "prioridad": "Media",
+        "cantidad": 1
+      }
+    ],
+    "porDepartamento": [
+      {
+        "departamento": "Sin Departamento",
+        "cantidad": 1
+      }
+    ]
+  },
+  "usuarios": {
+    "total": 6,
+    "activos": 6,
+    "inactivos": 0,
+    "porRol": []
+  },
+  "archivos": {
+    "total": 1,
+    "tamanioTotal": 152660,
+    "porTipo": [
+      {
+        "tipo": "PDF",
+        "cantidad": 1,
+        "tamanio": 152660
+      }
+    ]
+  },
+  "rendimiento": {
+    "tareasCompletadasPorMes": [
+      {
+        "mes": "Febrero 2025",
+        "cantidad": 0
+      },
+      {
+        "mes": "Marzo 2025",
+        "cantidad": 0
+      },
+      {
+        "mes": "Abril 2025",
+        "cantidad": 0
+      },
+      {
+        "mes": "Mayo 2025",
+        "cantidad": 0
+      },
+      {
+        "mes": "Junio 2025",
+        "cantidad": 0
+      },
+      {
+        "mes": "Julio 2025",
+        "cantidad": 0
+      }
+    ],
+    "tiempoPromedioComplecion": 0,
+    "usuariosMasActivos": [
+      {
+        "usuario": "Usuario Desconocido",
+        "tareas": 1
+      }
+    ]
+  }
+}

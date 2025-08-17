@@ -1,11 +1,11 @@
 <div
-  class="modal fade show d-block"
+  class="modal fade show d-block modal-lg"
   *ngIf="visible"
   tabindex="-1"
   style="background-color: rgba(0, 0, 0, 0.5)"
 >
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content animated-scale enhanced">
       <div class="modal-header">
         <h5 class="modal-title">
           <i class="bi bi-check-circle me-2 text-success"></i>
@@ -20,76 +20,164 @@
       </div>
 
       <div class="modal-body">
-        <p class="text-muted mb-4">
-          Para resolver esta tarea, debe subir un archivo PDF o Excel que
-          contenga la evidencia o documentación de la resolución.
+        <!-- input siempre presente para poder abrir el explorador desde cualquier botón -->
+        <input
+          #fileInput
+          type="file"
+          class="d-none"
+          (change)="onFileSelected($event)"
+          accept=".pdf,.xlsx,.xls"
+        />
+
+        <p class="text-muted mb-3">
+          Sube un único archivo (PDF o Excel) que contenga la evidencia de la
+          resolución.
         </p>
 
-        <div class="mb-3">
-          <label class="form-label fw-semibold">Archivo de resolución *</label>
-          <input
-            type="file"
-            class="form-control"
-            (change)="onFileSelected($event)"
-            accept=".pdf,.xlsx,.xls"
-            [class.is-invalid]="!selectedFile && showErrors"
-          />
-          <div class="form-text">
-            Formatos permitidos: PDF, Excel (.xlsx, .xls). Tamaño máximo: 10MB
-          </div>
-          <div class="invalid-feedback" *ngIf="!selectedFile && showErrors">
-            Debe seleccionar un archivo para resolver la tarea
+        <!-- Mostrar dropzone solo cuando NO hay archivo seleccionado -->
+        <div
+          *ngIf="!selectedFile"
+          class="dropzone mb-3"
+          [class.dragover]="dragOver"
+          (click)="triggerFileInput()"
+          (dragover)="$event.preventDefault(); onDragOver($event)"
+          (dragleave)="onDragLeave($event)"
+          (drop)="onDrop($event)"
+          role="button"
+          tabindex="0"
+          aria-label="Área para subir archivo: haga click o arrastre un archivo aquí"
+        >
+          <div class="dz-content text-center">
+            <i class="bi bi-cloud-arrow-up-fill dz-icon"></i>
+            <div class="dz-text">
+              <strong>Arrastra y suelta</strong> o
+              <span class="text-primary">haz click</span>
+            </div>
+            <div class="dz-sub">PDF · Excel (.xlsx, .xls) — Máx 10MB</div>
           </div>
         </div>
 
+        <!-- Vista del archivo seleccionado -->
         <div
-          class="alert alert-info d-flex align-items-center"
           *ngIf="selectedFile"
+          class="selected-file card mb-3 p-3 d-flex flex-column shadow-sm position-relative"
         >
-          <i class="bi bi-info-circle me-2"></i>
-          <div>
-            <strong>Archivo seleccionado:</strong><br />
-            <span class="text-muted"
-              >{{ selectedFile.name }} ({{
-                formatFileSize(selectedFile.size)
-              }})</span
-            >
+          <div class="d-flex align-items-center">
+            <i class="file-icon bi {{ fileIconClass(selectedFile) }} me-3"></i>
+            <div class="flex-grow-1">
+              <div class="fw-semibold">{{ selectedFile.name }}</div>
+              <div class="text-muted small">
+                {{ formatFileSize(selectedFile.size) }}
+              </div>
+              <div class="mt-2 small text-muted">
+                Tipo: {{ selectedFile.type || "Archivo" }}
+              </div>
+            </div>
           </div>
+
+          <!-- Acciones del archivo: alineadas a la derecha en la parte inferior de la tarjeta -->
+          <div class="w-100 d-flex justify-content-end mt-3 actions">
+            <button
+              class="btn btn-outline-secondary btn-sm me-2"
+              (click)="triggerFileInput()"
+              title="Cambiar archivo"
+              aria-label="Cambiar archivo"
+            >
+              <i class="bi bi-pencil"></i>
+              <span class="ms-1 d-none d-sm-inline">Cambiar</span>
+            </button>
+            <button
+              class="btn btn-danger btn-sm"
+              (click)="removeSelectedFile()"
+              title="Eliminar archivo"
+              aria-label="Eliminar archivo"
+            >
+              <i class="bi bi-trash"></i>
+              <span class="ms-1 d-none d-sm-inline">Eliminar</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="progress mb-3" *ngIf="uploading || uploadProgress > 0">
+          <div
+            class="progress-bar progress-bar-striped progress-bar-animated"
+            role="progressbar"
+            [style.width.%]="uploadProgress"
+            aria-valuemin="0"
+            aria-valuemax="100"
+          >
+            {{ uploadProgress }}%
+          </div>
+        </div>
+
+        <!-- Notificación elegante dentro del modal -->
+        <div
+          *ngIf="showValidation"
+          class="toast-notification"
+          [class.error]="validationType === 'error'"
+          [class.info]="validationType === 'info'"
+        >
+          <i
+            class="bi"
+            [ngClass]="
+              validationType === 'error'
+                ? 'bi-x-circle-fill'
+                : 'bi-check-circle-fill'
+            "
+          ></i>
+          <div class="toast-text">{{ validationMessage }}</div>
+          <button
+            class="btn-close-small"
+            (click)="showValidation = false"
+            aria-label="Cerrar notificación"
+          >
+            ×
+          </button>
         </div>
 
         <div class="alert alert-warning d-flex align-items-start">
           <i class="bi bi-exclamation-triangle me-2 mt-1"></i>
           <div>
             <strong>Importante:</strong> Una vez que resuelva la tarea, el
-            estado cambiará a "Resuelta" y no se podrá modificar. Asegúrese de
-            que el archivo contenga toda la información necesaria.
+            estado cambiará a "Resuelta" y no se podrá modificar.
           </div>
+        </div>
+
+        <div class="text-danger small mt-2" *ngIf="!selectedFile && showErrors">
+          Debe seleccionar un archivo para resolver la tarea.
         </div>
       </div>
 
       <div class="modal-footer">
-        <button
-          type="button"
-          class="btn btn-secondary"
-          (click)="onCancel()"
-          [disabled]="uploading"
-        >
-          Cancelar
-        </button>
-        <button
-          type="button"
-          class="btn btn-success"
-          (click)="onConfirm()"
-          [disabled]="!selectedFile || uploading"
-        >
-          <span
-            *ngIf="uploading"
-            class="spinner-border spinner-border-sm me-2"
-            role="status"
-          ></span>
-          <i *ngIf="!uploading" class="bi bi-check-circle me-2"></i>
-          {{ uploading ? "Resolviendo..." : "Resolver Tarea" }}
-        </button>
+        <div class="w-100 d-flex justify-content-between align-items-center">
+          <div>
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              (click)="onCancel()"
+              [disabled]="uploading"
+            >
+              Cancelar
+            </button>
+          </div>
+
+          <div>
+            <button
+              type="button"
+              class="btn btn-success"
+              (click)="onConfirm()"
+              [disabled]="!selectedFile || uploading"
+            >
+              <span
+                *ngIf="uploading"
+                class="spinner-border spinner-border-sm me-2"
+                role="status"
+              ></span>
+              <i *ngIf="!uploading" class="bi bi-check-circle me-2"></i>
+              {{ uploading ? "Resolviendo..." : "Resolver Tarea" }}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
