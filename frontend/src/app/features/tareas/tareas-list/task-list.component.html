@@ -104,7 +104,11 @@
                 <li *ngIf="canResolveTask(task)">
                   <button
                     class="action-item"
-                    (click)="resolverTarea(task._id); closeMenu()"
+                    (click)="
+                      resolverTarea(task._id);
+                      closeMenu();
+                      $event.stopPropagation()
+                    "
                   >
                     <i class="bi bi-check-circle me-2"></i>Resolver Tarea
                   </button>
