@@ -119,3 +119,13 @@
   overflow: hidden;
   border-top: 1px solid rgba(0, 0, 0, 0.15);
 }
+
+// Animación para el indicador de refresco de permisos
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

@@ -15,7 +15,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(
       withInterceptors([
         (req, next) =>
-          new AuthInterceptor(inject(AuthService)).intercept(req, {
+          new AuthInterceptor(inject(AuthService), inject(Router)).intercept(req, {
             handle: next,
           }),
         (req, next) =>

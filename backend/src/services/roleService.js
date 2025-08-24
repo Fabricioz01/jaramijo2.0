@@ -1,4 +1,5 @@
 const Role = require('../models/Role');
+const userService = require('./userService');
 
 class RoleService {
   async create(roleData) {
@@ -36,6 +37,15 @@ class RoleService {
       throw new Error('Rol no encontrado');
     }
 
+    // Actualizar el timestamp de todos los usuarios que tienen este rol
+    // Esto permite que el sistema de sincronización automática detecte los cambios
+    try {
+      await userService.updateUsersWithRole(id);
+    } catch (error) {
+      console.warn('⚠️ No se pudieron actualizar todos los usuarios con este rol:', error.message);
+      // No lanzamos error porque la actualización del rol fue exitosa
+    }
+
     return role;
   }
 
@@ -60,6 +70,13 @@ class RoleService {
       role.permissionIds.push(permissionId);
       role.updatedAt = Date.now();
       await role.save();
+
+      // Actualizar usuarios que tienen este rol
+      try {
+        await userService.updateUsersWithRole(roleId);
+      } catch (error) {
+        console.warn('⚠️ No se pudieron actualizar todos los usuarios con este rol:', error.message);
+      }
     }
 
     return await this.getById(roleId);
@@ -77,6 +94,13 @@ class RoleService {
     );
     role.updatedAt = Date.now();
     await role.save();
+
+    // Actualizar usuarios que tienen este rol
+    try {
+      await userService.updateUsersWithRole(roleId);
+    } catch (error) {
+      console.warn('⚠️ No se pudieron actualizar todos los usuarios con este rol:', error.message);
+    }
 
     return await this.getById(roleId);
   }

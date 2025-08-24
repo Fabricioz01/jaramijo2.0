@@ -15,11 +15,14 @@ export interface LoginResponse {
 }
 
 export interface AuthUser {
-  _id: string;
+  _id?: string;  // ID de MongoDB
+  id?: string;   // ID alternativo (para compatibilidad)
   name: string;
   email: string;
   departamentoId: any;
   roleIds: any[];
+  roles?: any[]; // Roles poblados
+  departamento?: any; // Departamento poblado
   active: boolean;
   createdAt: Date;
   updatedAt: Date;

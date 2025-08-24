@@ -37,7 +37,13 @@ class UserService {
     const user = await User.findById(id)
       .populate('direccionId')
       .populate('departamentoId')
-      .populate('roleIds')
+      .populate({
+        path: 'roleIds',
+        populate: {
+          path: 'permissionIds',
+          select: 'action resource descripcion'
+        }
+      })
       .select('-passwordHash');
 
     if (!user) {
@@ -235,6 +241,25 @@ class UserService {
       },
       expiresAt: user.resetPasswordExpires,
     };
+  }
+
+  /**
+   * Actualiza el timestamp updatedAt de todos los usuarios que tienen un rol específico
+   * Esto es necesario para que el sistema de sincronización automática detecte cambios
+   */
+  async updateUsersWithRole(roleId) {
+    try {
+      const result = await User.updateMany(
+        { roleIds: roleId },
+        { updatedAt: Date.now() }
+      );
+      
+      console.log(`✅ Actualizados ${result.modifiedCount} usuarios con rol ${roleId}`);
+      return result;
+    } catch (error) {
+      console.error('❌ Error actualizando usuarios con rol:', error);
+      throw error;
+    }
   }
 }
 

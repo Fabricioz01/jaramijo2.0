@@ -79,7 +79,6 @@ type RoleWithPermissions = Role & {
         <div
           class="col-md-6 col-lg-4 mb-4"
           *ngFor="let rol of rolesFiltrados; let i = index"
-          (click)="verRol(rol._id)"
         >
           <div class="card h-100 border-0 shadow-lg rounded-4 overflow-hidden">
             <div
@@ -88,7 +87,7 @@ type RoleWithPermissions = Role & {
               <div
                 class="d-flex justify-content-between align-items-start mb-3"
               >
-                <div>
+                <div (click)="verRol(rol._id)" style="cursor: pointer; flex-grow: 1;">
                   <h5 class="card-title fw-bold text-primary mb-1">
                     {{ rol.name }}
                   </h5>
@@ -142,7 +141,7 @@ type RoleWithPermissions = Role & {
                 </div>
               </div>
 
-              <div class="mb-3">
+              <div class="mb-3" (click)="verRol(rol._id)" style="cursor: pointer;">
                 <span
                   class="badge bg-light text-dark border border-primary fw-semibold me-2 px-3 py-2 rounded-pill"
                 >
@@ -155,7 +154,7 @@ type RoleWithPermissions = Role & {
                 </span>
               </div>
 
-              <div class="mb-3">
+              <div class="mb-3" (click)="verRol(rol._id)" style="cursor: pointer;">
                 <small class="text-muted fw-semibold"
                   >Permisos asignados:</small
                 >
@@ -175,7 +174,7 @@ type RoleWithPermissions = Role & {
                 </div>
               </div>
 
-              <div class="d-flex align-items-center mt-auto pt-2">
+              <div class="d-flex align-items-center mt-auto pt-2" (click)="verRol(rol._id)" style="cursor: pointer;">
                 <i class="bi bi-calendar-event text-primary me-2"></i>
                 <small class="text-muted">
                   Creado:
@@ -266,9 +265,6 @@ type RoleWithPermissions = Role & {
       .action-item.text-danger:hover {
         background: #ffeaea;
         color: #b71c1c;
-      }
-      .card {
-        cursor: pointer;
       }
       .card:hover {
         transform: translateY(-2px);

@@ -4,6 +4,7 @@ export * from './direccion.service';
 export * from './departamento.service';
 export * from './role.service';
 export * from './permission.service';
+export * from './permission-sync.service';
 export * from './task.service';
 export * from './file.service';
 export * from './alert.service';

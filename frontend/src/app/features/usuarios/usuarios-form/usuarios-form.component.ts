@@ -13,6 +13,7 @@ import { DepartamentoService } from '../../../core/services/departamento.service
 import { RoleService } from '../../../core/services/role.service';
 import { DireccionService } from '../../../core/services/direccion.service';
 import { AlertService } from '../../../core/services/alert.service';
+import { PermissionSyncService } from '../../../core/services/permission-sync.service';
 import { Departamento, Role, Direccion } from '../../../core/models';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 
@@ -383,6 +384,7 @@ export class UsuariosFormComponent implements OnInit {
     private roleService: RoleService,
     private direccionService: DireccionService,
     private alertService: AlertService,
+    private permissionSyncService: PermissionSyncService,
     public authService: AuthService
   ) {
     this.usuarioForm = this.fb.group({
@@ -585,6 +587,10 @@ export class UsuariosFormComponent implements OnInit {
             this.alertService.success(
               response.message || 'Usuario actualizado exitosamente'
             );
+            
+            // Notificar que un usuario fue actualizado para refrescar permisos si es necesario
+            this.permissionSyncService.notifyUserUpdated(this.usuarioId!);
+            
             this.loading = false;
             this.goBack();
           },

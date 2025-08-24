@@ -11,6 +11,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { RoleService } from '../../../core/services/role.service';
 import { PermissionService } from '../../../core/services/permission.service';
 import { AlertService } from '../../../core/services/alert.service';
+import { PermissionSyncService } from '../../../core/services/permission-sync.service';
 import { HeaderComponent } from '../../../shared/components/header/header.component';
 
 @Component({
@@ -328,6 +329,7 @@ export class RolesFormComponent implements OnInit, AfterViewChecked {
     private roleService: RoleService,
     private permissionService: PermissionService,
     private alertService: AlertService,
+    private permissionSyncService: PermissionSyncService,
     private cdr: ChangeDetectorRef
   ) {
     this.rolForm = this.fb.group({
@@ -513,6 +515,10 @@ export class RolesFormComponent implements OnInit, AfterViewChecked {
             this.alertService.success(
               response.message || 'Rol actualizado exitosamente'
             );
+            
+            // Notificar que un rol fue actualizado para refrescar permisos automáticamente
+            this.permissionSyncService.notifyRoleUpdated();
+            
             this.loading = false;
             this.goBack();
           },
@@ -530,6 +536,9 @@ export class RolesFormComponent implements OnInit, AfterViewChecked {
             this.alertService.success(
               response.message || 'Rol creado exitosamente'
             );
+            
+            // No necesario refrescar permisos para rol nuevo ya que no afecta usuarios existentes
+            
             this.loading = false;
             this.goBack();
           },
