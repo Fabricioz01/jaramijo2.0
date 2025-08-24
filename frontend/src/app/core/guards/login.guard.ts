@@ -13,7 +13,7 @@ export class LoginGuard implements CanActivate {
       return true;
     }
 
-    this.router.navigate(['/dashboard']);
+    this.router.navigate(['/tareas-home']);
     return false;
   }
 }

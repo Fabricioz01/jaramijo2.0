@@ -5,7 +5,7 @@ import { LoginGuard } from './core/guards/login.guard';
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: '/dashboard',
+    redirectTo: '/tareas-home',
     pathMatch: 'full',
   },
   {
@@ -31,6 +31,14 @@ export const routes: Routes = [
         (m) => m.ResetPasswordComponent
       ),
     canActivate: [LoginGuard],
+  },
+  {
+    path: 'tareas-home',
+    loadComponent: () =>
+      import('./features/tareas/tareas-home/tareas-home.component').then(
+        (m) => m.TareasHomeComponent
+      ),
+    canActivate: [AuthGuard],
   },
   {
     path: 'dashboard',
@@ -101,6 +109,6 @@ export const routes: Routes = [
 
   {
     path: '**',
-    redirectTo: '/dashboard',
+    redirectTo: '/tareas-home',
   },
 ];

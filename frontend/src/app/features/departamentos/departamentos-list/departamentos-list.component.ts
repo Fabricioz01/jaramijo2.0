@@ -372,17 +372,13 @@ export class DepartamentosListComponent implements OnInit {
   confirmarEliminar(): void {
     if (!this.departamentoAEliminar) return;
     this.departamentoService.delete(this.departamentoAEliminar._id).subscribe({
-      next: (response) => {
-        this.alertService.success(
-          response.message || 'Departamento eliminado exitosamente'
-        );
+      next: () => {
+        this.alertService.success('Departamento eliminado exitosamente');
         this.cargarDepartamentos();
         this.cancelarEliminar();
       },
-      error: (error) => {
-        const errorMessage =
-          error.error?.message || 'Error al eliminar departamento';
-        this.alertService.error(errorMessage);
+      error: () => {
+        this.alertService.error('Error al eliminar departamento');
         this.cancelarEliminar();
       },
     });
@@ -403,7 +399,7 @@ export class DepartamentosListComponent implements OnInit {
     return this.authService.canAccessAction('departamentos', 'create');
   }
   canEditDepartamento(): boolean {
-    return this.authService.canAccessAction('departamentos', 'update');
+    return this.authService.canAccessAction('departamentos', 'edit');
   }
   canDeleteDepartamento(): boolean {
     return this.authService.canAccessAction('departamentos', 'delete');

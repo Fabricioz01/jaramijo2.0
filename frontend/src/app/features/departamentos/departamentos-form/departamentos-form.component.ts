@@ -230,33 +230,27 @@ export class DepartamentosFormComponent implements OnInit {
           .subscribe({
             next: (response) => {
               this.alertService.success(
-                response.message || 'Departamento actualizado exitosamente'
+                'Departamento actualizado exitosamente'
               );
               this.loading = false;
               this.goBack();
             },
             error: (error) => {
               console.error('Error al actualizar departamento:', error);
-              const errorMessage =
-                error.error?.message || 'Error al actualizar el departamento';
-              this.alertService.error(errorMessage);
+              this.alertService.error('Error al actualizar el departamento');
               this.loading = false;
             },
           });
       } else {
         this.departamentoService.create(departamentoData).subscribe({
           next: (response) => {
-            this.alertService.success(
-              response.message || 'Departamento creado exitosamente'
-            );
+            this.alertService.success('Departamento creado exitosamente');
             this.loading = false;
             this.goBack();
           },
           error: (error) => {
             console.error('Error al crear departamento:', error);
-            const errorMessage =
-              error.error?.message || 'Error al crear el departamento';
-            this.alertService.error(errorMessage);
+            this.alertService.error('Error al crear el departamento');
             this.loading = false;
           },
         });

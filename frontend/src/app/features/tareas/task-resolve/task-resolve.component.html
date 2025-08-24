@@ -1,0 +1,189 @@
+<div class="task-resolve-container">
+  <!-- Header with navigation -->
+  <app-header></app-header>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="loading">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando tarea...</p>
+  </div>
+
+  <!-- Task Resolve Content -->
+  <div class="resolve-content" *ngIf="!loading && task">
+    <!-- Breadcrumb Navigation -->
+    <nav class="breadcrumb-nav">
+      <button mat-button (click)="goBack()" class="breadcrumb-btn">
+        <mat-icon>arrow_back</mat-icon>
+        Volver al inicio
+      </button>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-current">Resolver Tarea</span>
+    </nav>
+
+    <!-- Task Card -->
+    <mat-card class="task-detail-card">
+      <mat-card-header>
+        <div class="task-header-content">
+          <mat-card-title class="task-title">{{ task.title }}</mat-card-title>
+          <div class="status-badge" [class]="getStatusClass(task.status)">
+            {{ getStatusLabel(task.status) }}
+          </div>
+        </div>
+        <mat-card-subtitle class="task-department">
+          <mat-icon>business</mat-icon>
+          {{ task.departamentoId.name }}
+          <span *ngIf="task.departamentoId.direccionId" class="direction">
+            - {{ task.departamentoId.direccionId.name }}
+          </span>
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content class="task-content">
+        <!-- Description -->
+        <div class="task-section" *ngIf="task.description">
+          <h3 class="section-title">
+            <mat-icon>description</mat-icon>
+            Descripción
+          </h3>
+          <p class="task-description">{{ task.description }}</p>
+        </div>
+
+        <!-- Task Meta Info -->
+        <div class="task-meta-grid">
+          <!-- Due Date -->
+          <div class="meta-item" *ngIf="task.dueDate">
+            <div class="meta-label">
+              <mat-icon>schedule</mat-icon>
+              Fecha de Vencimiento
+            </div>
+            <div class="meta-value" [class.overdue]="isOverdue(task.dueDate)">
+              {{ formatDueDate(task.dueDate) }}
+            </div>
+          </div>
+
+          <!-- Assigned Users -->
+          <div
+            class="meta-item"
+            *ngIf="task.assignedToIds && task.assignedToIds.length > 0"
+          >
+            <div class="meta-label">
+              <mat-icon>people</mat-icon>
+              Asignado a
+            </div>
+            <div class="meta-value">
+              {{ getAssignedUsersText(task.assignedToIds) }}
+            </div>
+          </div>
+
+          <!-- Creation Date -->
+          <div class="meta-item">
+            <div class="meta-label">
+              <mat-icon>event</mat-icon>
+              Fecha de Creación
+            </div>
+            <div class="meta-value">
+              {{ task.createdAt | date : "dd/MM/yyyy HH:mm" }}
+            </div>
+          </div>
+
+          <!-- Last Updated -->
+          <div class="meta-item">
+            <div class="meta-label">
+              <mat-icon>update</mat-icon>
+              Última Actualización
+            </div>
+            <div class="meta-value">
+              {{ task.updatedAt | date : "dd/MM/yyyy HH:mm" }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Attachments -->
+        <div
+          class="task-section"
+          *ngIf="task.attachmentIds && task.attachmentIds.length > 0"
+        >
+          <h3 class="section-title">
+            <mat-icon>attach_file</mat-icon>
+            Archivos Adjuntos ({{ task.attachmentIds.length }})
+          </h3>
+          <div class="attachments-grid">
+            <div
+              *ngFor="let attachment of task.attachmentIds"
+              class="attachment-item"
+            >
+              <mat-icon class="attachment-icon">description</mat-icon>
+              <div class="attachment-info">
+                <span class="attachment-name">{{
+                  attachment.originalName
+                }}</span>
+                <small class="attachment-size">
+                  {{ attachment.size / 1024 / 1024 | number : "1.0-2" }} MB
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Current Resolution File -->
+        <div class="task-section" *ngIf="task.resolutionFileId">
+          <h3 class="section-title">
+            <mat-icon>check_circle</mat-icon>
+            Archivo de Resolución Actual
+          </h3>
+          <div class="resolution-file">
+            <mat-icon class="resolution-icon">description</mat-icon>
+            <div class="resolution-info">
+              <span class="resolution-name">{{
+                task.resolutionFileId.originalName
+              }}</span>
+              <small class="resolution-size">
+                {{
+                  task.resolutionFileId.size / 1024 / 1024 | number : "1.0-2"
+                }}
+                MB
+              </small>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions class="task-actions">
+        <button mat-button (click)="goBack()" class="action-btn secondary">
+          <mat-icon>arrow_back</mat-icon>
+          Volver
+        </button>
+
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="openResolveModal()"
+          class="action-btn primary"
+        >
+          <mat-icon>upload</mat-icon>
+          {{
+            task.resolutionFileId ? "Actualizar Resolución" : "Subir Resolución"
+          }}
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-container" *ngIf="!loading && !task">
+    <mat-icon class="error-icon">error</mat-icon>
+    <h3>Tarea no encontrada</h3>
+    <p>La tarea que buscas no existe o no tienes permisos para verla.</p>
+    <button mat-raised-button color="primary" (click)="goBack()">
+      Volver al inicio
+    </button>
+  </div>
+</div>
+
+<!-- Resolve Task Modal -->
+<app-resolve-task-modal
+  [visible]="showResolveModal"
+  (confirm)="onResolveTask($event)"
+  (cancel)="closeResolveModal()"
+>
+</app-resolve-task-modal>

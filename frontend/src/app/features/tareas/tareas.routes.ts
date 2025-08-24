@@ -23,6 +23,13 @@ export const tareasRoutes: Routes = [
       ),
   },
   {
+    path: ':id/resolver',
+    loadComponent: () =>
+      import('./task-resolve/task-resolve.component').then(
+        (m) => m.TaskResolveComponent
+      ),
+  },
+  {
     path: ':id/ver',
     loadComponent: () =>
       import('./tareas-detail/tareas-detail.component').then(

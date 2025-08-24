@@ -115,8 +115,8 @@ import { ConfirmModalComponent } from '../../../shared/components/alerts/confirm
                       </div>
                       <button
                         class="btn btn-sm btn-outline-secondary"
-                        (click)="copyToClipboard(usuario._id, usuario.name)"
-                        title="Copiar ID"
+                        (click)="copyToClipboard(usuario.email, usuario.name)"
+                        title="Copiar Email"
                         type="button"
                       >
                         <i class="bi bi-copy"></i>
@@ -453,13 +453,18 @@ export class UsuariosListComponent implements OnInit {
     this.router.navigate(['/dashboard']);
   }
 
-  copyToClipboard(id: string, userName: string): void {
-    navigator.clipboard.writeText(id).then(() => {
-      // Show success message
-      this.alertService.success(`El correo de ${userName} copiado al portapapeles`);
-    }).catch(err => {
-      console.error('Error al copiar al portapapeles: ', err);
-      this.alertService.error('Error al copiar ID');
-    });
+  copyToClipboard(email: string, userName: string): void {
+    navigator.clipboard
+      .writeText(email)
+      .then(() => {
+        // Show success message
+        this.alertService.success(
+          `El correo de ${userName} copiado al portapapeles`
+        );
+      })
+      .catch((err) => {
+        console.error('Error al copiar al portapapeles: ', err);
+        this.alertService.error('Error al copiar Correo');
+      });
   }
 }

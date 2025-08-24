@@ -15,7 +15,7 @@ import { NotificationsComponent } from '../../../features/notifications/notifica
       <div class="container-fluid">
         <a
           class="navbar-brand fw-bold"
-          [routerLink]="['/dashboard']"
+          [routerLink]="['/tareas-home']"
           style="cursor: pointer;"
         >
           <i class="bi bi-building me-2"></i>
@@ -39,6 +39,15 @@ import { NotificationsComponent } from '../../../features/notifications/notifica
             <li class="nav-item">
               <a
                 class="nav-link active"
+                [routerLink]="['/tareas-home']"
+                style="cursor: pointer;"
+              >
+                <i class="bi bi-check2-square me-1"></i>Inicio
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
                 [routerLink]="['/dashboard']"
                 style="cursor: pointer;"
               >

@@ -1,0 +1,228 @@
+<div class="tareas-home-container">
+  <!-- Header with navigation -->
+  <app-header></app-header>
+
+  <!-- Header Section -->
+  <div class="header-section">
+    <h1 class="page-title">Gestión de Tareas</h1>
+    <p class="page-subtitle">Administra tus tareas pendientes y en progreso</p>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="status-filters">
+      <button
+        mat-raised-button
+        [color]="selectedStatus === 'all' ? 'primary' : ''"
+        (click)="filterByStatus('all')"
+        class="filter-btn"
+      >
+        <mat-icon>view_list</mat-icon>
+        Todas las activas
+      </button>
+      <button
+        mat-raised-button
+        [color]="selectedStatus === 'pending' ? 'primary' : ''"
+        (click)="filterByStatus('pending')"
+        class="filter-btn"
+      >
+        <mat-icon>schedule</mat-icon>
+        Pendientes
+      </button>
+      <button
+        mat-raised-button
+        [color]="selectedStatus === 'in_progress' ? 'primary' : ''"
+        (click)="filterByStatus('in_progress')"
+        class="filter-btn"
+      >
+        <mat-icon>update</mat-icon>
+        En Progreso
+      </button>
+    </div>
+  </div>
+
+  <!-- Tasks Grid Section -->
+  <div class="tasks-grid" *ngIf="filteredTasks.length > 0">
+    <mat-card
+      *ngFor="let task of filteredTasks"
+      class="task-card"
+      [class.overdue]="isOverdue(task.dueDate)"
+      [class.due-soon]="isDueSoon(task.dueDate)"
+    >
+      <!-- Task Status Badge -->
+      <div class="status-badge" [class]="getStatusClass(task.status)">
+        <mat-icon>{{ getStatusIcon(task.status) }}</mat-icon>
+        <span>{{ getStatusLabel(task.status) }}</span>
+      </div>
+
+      <mat-card-header>
+        <mat-card-title class="task-title">{{ task.title }}</mat-card-title>
+        <mat-card-subtitle class="task-department">
+          {{ task.departamentoId.name }}
+          <span *ngIf="task.departamentoId.direccionId" class="direction">
+            - {{ task.departamentoId.direccionId.name }}
+          </span>
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <!-- Description -->
+        <div class="task-description" *ngIf="task.description">
+          <p
+            [class.expanded]="expandedTasks.has(task._id)"
+            class="description-text"
+          >
+            {{ task.description }}
+          </p>
+          <button
+            mat-button
+            *ngIf="task.description && task.description.length > 150"
+            (click)="toggleDescription(task._id)"
+            class="expand-btn"
+          >
+            {{ expandedTasks.has(task._id) ? "Ver menos" : "Ver más" }}
+          </button>
+        </div>
+
+        <!-- Due Date -->
+        <div class="task-meta" *ngIf="task.dueDate">
+          <mat-icon class="meta-icon">access_time</mat-icon>
+          <span class="due-date" [class.overdue-text]="isOverdue(task.dueDate)">
+            Vence: {{ formatDueDate(task.dueDate) }}
+          </span>
+        </div>
+
+        <!-- Assigned Users -->
+        <div
+          class="task-meta"
+          *ngIf="task.assignedToIds && task.assignedToIds.length > 0"
+        >
+          <mat-icon class="meta-icon">person</mat-icon>
+          <span class="assigned-users">
+            Asignado a: {{ getAssignedUsersText(task.assignedToIds) }}
+          </span>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions align="end">
+        <button
+          mat-button
+          (click)="viewTaskDetail(task._id)"
+          class="action-btn secondary"
+        >
+          <mat-icon>visibility</mat-icon>
+          Ver Detalle
+        </button>
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="goToDelivery(task._id)"
+          class="action-btn primary"
+        >
+          <mat-icon>file_upload</mat-icon>
+          Subir Entrega
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <!-- No Tasks Message -->
+  <div class="no-tasks" *ngIf="filteredTasks.length === 0 && !loading">
+    <mat-icon class="no-tasks-icon">assignment_late</mat-icon>
+    <h3>No hay tareas {{ getNoTasksMessage() }}</h3>
+    <p>
+      ¡Perfecto! No tienes tareas {{ getNoTasksMessage() }} en este momento.
+    </p>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="loading">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando tareas...</p>
+  </div>
+
+  <!-- Calendar Section -->
+  <div class="calendar-section">
+    <h2 class="calendar-title">
+      <mat-icon>event</mat-icon>
+      Calendario de Vencimientos
+    </h2>
+
+    <div class="calendar-container">
+      <div class="calendar-header">
+        <button mat-icon-button (click)="previousMonth()">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <h3 class="month-year">{{ getMonthYearText() }}</h3>
+        <button mat-icon-button (click)="nextMonth()">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+
+      <div class="calendar-grid">
+        <!-- Days of week header -->
+        <div class="day-header" *ngFor="let day of daysOfWeek">{{ day }}</div>
+
+        <!-- Calendar days -->
+        <div
+          *ngFor="let day of calendarDays"
+          class="calendar-day"
+          [class.other-month]="!day.isCurrentMonth"
+          [class.has-tasks]="day.hasTasks"
+          [class.today]="day.isToday"
+          (click)="day.hasTasks ? openTasksModal(day) : null"
+        >
+          <span class="day-number">{{ day.day }}</span>
+
+          <div class="tasks-indicator" *ngIf="day.hasTasks">
+            <span class="task-count">{{ day.tasks.length }}</span>
+            <small>Vencimiento{{ day.tasks.length > 1 ? "s" : "" }}</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tasks Modal for Calendar Day -->
+<div
+  class="modal-backdrop"
+  *ngIf="selectedDayTasks"
+  (click)="closeTasksModal()"
+>
+  <div class="tasks-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>
+        Tareas que vencen el {{ selectedDayTasks!.date | date : "dd/MM/yyyy" }}
+      </h3>
+      <button mat-icon-button (click)="closeTasksModal()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <div class="modal-content">
+      <div
+        *ngFor="let task of selectedDayTasks!.tasks"
+        class="modal-task-item"
+        (click)="goToDelivery(task._id)"
+      >
+        <div class="modal-task-info">
+          <h4>{{ task.title }}</h4>
+          <p>{{ task.departamentoId.name }}</p>
+          <span class="status-label" [class]="getStatusClass(task.status)">
+            {{ getStatusLabel(task.status) }}
+          </span>
+        </div>
+        <mat-icon class="task-arrow">arrow_forward</mat-icon>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Resolve Task Modal -->
+<app-resolve-task-modal
+  [visible]="showResolveModal"
+  (confirm)="onResolveTask($event)"
+  (cancel)="closeResolveModal()"
+>
+</app-resolve-task-modal>
